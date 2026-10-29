@@ -1,0 +1,30 @@
+{
+  "name": "photocurator-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test:e2e": "playwright test",
+    "pretest:e2e": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.13.0",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.13.0",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.7",
+    "svelte-eslint-parser": "^1.10.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^7.3.7",
+    "vitest": "^4.1.12"
+  }
+}

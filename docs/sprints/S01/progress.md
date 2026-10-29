@@ -1,0 +1,18 @@
+- 12:44:03 · refine · 001 002 003 004 · started
+- 12:48:34 · refine · 001 002 003 004 · done
+- 12:48:34 · 002 · build · started
+- 2026-10-29 12:48 · 002 · D1 Svelte-Frontend-Geruest · started
+- 2026-10-29 12:51 · 002 · D1 Svelte-Frontend-Geruest · done
+- 2026-10-29 12:51 · 002 · D2 Repo-Hygiene · started
+- 2026-10-29 12:51 · 002 · D2 Repo-Hygiene · done
+- 2026-10-29 12:51 · 002 · D3 Go-Backend-Geruest · started
+- 2026-10-29 12:53 · 002 · D3 Go-Backend-Geruest · done
+- 2026-10-29 12:53 · 002 · D4 Dockerfile Werkzeuge Fixtures · started
+- 2026-10-29 13:01 · 002 · D4 Dockerfile Werkzeuge Fixtures · done
+- 2026-10-29 13:01 · 002 · D5 E2E-Harness · started
+- 2026-10-29 13:04 · 002 · D5 E2E-Harness · done
+- 2026-10-29 13:04 · 002 · verify · started
+- 2026-10-29 13:05 · 002 · verify · done
+- 2026-10-29 13:05 · 002 · review 1 · started
+- 2026-10-29 13:06 · 002 · review 1 · done
+- 2026-10-29 13:06 · 002 · story · done

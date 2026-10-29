@@ -1,0 +1,12 @@
+services:
+  photocurator:
+    build:
+      context: ../../..
+      target: runtime
+    image: photocurator:dev
+    ports:
+      - "127.0.0.1:18470:8080"
+    volumes:
+      - ${PC_E2E_ROOT}/photos:/photos
+      - ${PC_E2E_ROOT}/data:/data
+      - ${PC_E2E_ROOT}/backup:/backup
