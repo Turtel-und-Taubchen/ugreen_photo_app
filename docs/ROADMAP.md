@@ -7,15 +7,15 @@ links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are i
 
 ## Where we stand
 
-- Planung des MVP steht (Konzept, Tech Spec, Backlog mit 21 Stories, Sprints S01–S05); noch nichts gebaut.
-- Nächster Schritt: Planung prüfen, dann `/sprint S01`.
-- Wartet auf den Nutzer: Freigabe der Planung; offene Punkte im [Konzept §11](concepts/photocurator.md#11-offene-punkte).
+- S01 (M1) ist gebaut: Projektgerüst, Spike-Werkzeug, Compose-Deployment, Anmeldung; Regression-Gate grün.
+- Nächster Schritt: Spike auf dem NAS durchführen (vor dem Refinement von S03), dann `/sprint S02`.
+- Wartet auf den Nutzer: Spike-Protokoll, NAS-Lauf der Compose-Anleitung, Push/Merge.
 
 ## Phase overview
 
 | Phase | Goal | Milestones | Status |
 | --- | --- | --- | --- |
-| 1 — MVP | Batch-Tags, Batch-Orte und Arbeitslisten schreiben UGREEN-taugliche Metadaten sicher in die Dateien | 0/5 | ▶ **in progress** |
+| 1 — MVP | Batch-Tags, Batch-Orte und Arbeitslisten schreiben UGREEN-taugliche Metadaten sicher in die Dateien | 1/5 | ▶ **in progress** |
 | 2 — Nach dem MVP | Komfort und Erweiterungen laut [Backlog](BACKLOG.md#nach-dem-mvp-vorgemerkt-noch-nicht-geschnitten) | 0/? | planned |
 
 ## Current phase: 1 — MVP
@@ -24,7 +24,7 @@ Concept: [concepts/photocurator.md](concepts/photocurator.md).
 
 | M | Milestone | Status | Sprints | Note |
 | --- | --- | --- | --- | --- |
-| M1 | Fundament & Spike-Werkzeug | planned | [S01](sprints/S01/sprint.md) | Danach Spike-Durchführung auf dem NAS durch den Nutzer |
+| M1 | Fundament & Spike-Werkzeug | done 2026-10-29 | [S01](sprints/S01/review.md) | Danach Spike-Durchführung auf dem NAS durch den Nutzer |
 | M2 | Bibliothek sehen und auswählen | planned | [S02](sprints/S02/sprint.md) | Rein lesend, unabhängig vom Spike |
 | M3 | Sicher schreiben und taggen | planned | [S03](sprints/S03/sprint.md) | Startet erst mit Spike-Ergebnis |
 | M4 | Orte setzen, schneller taggen | planned | [S04](sprints/S04/sprint.md) | |
@@ -45,6 +45,14 @@ Small things a sprint surfaced that need no decision and no story yet — for th
 sprint runs, or for the next cut. One line each, with where it came from. Done items are
 removed, not struck through. A line older than three sprints is promoted to a story or removed
 by `/roadmap check`.
+
+- Image `photocurator:dev` ist ~978 MB (ffmpeg-Abhängigkeiten) — gegen NAS-Ziele prüfen; Quelle: [S01 review](sprints/S01/review.md)
+- `internal/config` nutzt `x/sys/unix` ohne Build-Tag, Go baut nur im Docker; Quelle: [S01 review](sprints/S01/review.md)
+- Login-Limiter räumt seine Map nur bei erneutem Zugriff derselben IP auf; Quelle: [S01 review](sprints/S01/review.md)
+- Session-Lookup läuft auch für statische Assets; Quelle: [S01 review](sprints/S01/review.md)
+- 360-px-Layout der Login-Seite visuell prüfen; Quelle: [S01 review](sprints/S01/review.md)
+- E2E-Setup-Fehler überspringt Teardown (nächster Lauf räumt auf); Quelle: [S01 review](sprints/S01/review.md)
+- `test-support` im Profil auf `internal/testsupport/` setzen; Quelle: [S01 review](sprints/S01/review.md)
 
 ## History
 

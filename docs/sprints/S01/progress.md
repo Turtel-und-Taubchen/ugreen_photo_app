@@ -66,3 +66,4 @@
 - 2026-10-29 14:52 · 004 · review fix 1 · started
 - 2026-10-29 14:57 · 004 · review fix 1 · done
 - 2026-10-29 14:57 · 004 · story · done
+- 2026-10-29 14:58 · gate · short suites · started

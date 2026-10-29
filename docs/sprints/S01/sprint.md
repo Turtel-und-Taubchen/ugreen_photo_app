@@ -1,6 +1,6 @@
 ---
 sprint: S01
-status: in-progress
+status: done
 branch: main
 milestone: M1
 ---
@@ -34,4 +34,11 @@ Protokoll, mit dem auf dem NAS geklärt wird, welche Metadatenfelder UGREEN Foto
 
 ## Regression gate
 
-<!-- Filled by `/sprint` phase 2b: the commands run, minutes taken, result, commit, and a verdict per failure. -->
+Lauf auf `ad4eb4d` (HEAD nach Story 004), je einmal, alle grün:
+
+- `npm --prefix web run build && docker build --target runtime -t photocurator:dev .` — grün, <1 min
+- `docker build --target test . && npm --prefix web run test` — grün, <1 min (Go-Test-Layer aus dem Cache, Vitest 7/7)
+- `npm --prefix web run test:e2e` — grün, <1 min, 4/4 (auth, deployment, smoke ×2)
+- `e2e-all`: `none` (nicht gesetzt)
+
+Keine Fehler, keine Quarantäne-Einträge. Hinweis: Das Go-`test`-Stage kam aus dem Docker-Cache; die Go-Tests wurden in den Story-Gates je frisch gebaut und liefen dort grün.
