@@ -6,23 +6,17 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"testing/fstest"
 
-	"photocurator/internal/api"
 	"photocurator/internal/version"
 )
 
 const indexHTML = "<html>photocurator-index</html>"
 
+// get requests target as a signed-in user; the unauthenticated view is covered in auth_test.go.
 func get(t *testing.T, target string) *httptest.ResponseRecorder {
 	t.Helper()
-	h := api.NewHandler(fstest.MapFS{
-		"index.html":    {Data: []byte(indexHTML)},
-		"assets/app.js": {Data: []byte("console.log(1)")},
-	})
-	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
-	return rec
+	s := newTestServer(t)
+	return s.do(http.MethodGet, target, "", s.signedIn(t, "anna"))
 }
 
 func TestHealthReportsStatusAndVersion(t *testing.T) {

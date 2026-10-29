@@ -50,3 +50,19 @@
 - 2026-10-29 14:09 · 003 · review 1 · started
 - 2026-10-29 14:10 · 003 · review 1 · done
 - 2026-10-29 14:10 · 003 · story · done
+- 2026-10-29 14:10 · 004 · build · started
+- 2026-10-29 14:11 · 004 · D1 Argon2id/users.conf/hash-password · started
+- 2026-10-29 14:24 · 004 · D1 Argon2id/users.conf/hash-password · done
+- 2026-10-29 14:24 · 004 · D2 app.db/sessions/limiter · started
+- 2026-10-29 14:34 · 004 · D2 app.db/sessions/limiter · done
+- 2026-10-29 14:34 · 004 · D3 HTTP login/middleware/CSRF (hard) · started
+- 2026-10-29 14:42 · 004 · D3 HTTP login/middleware/CSRF (hard) · done
+- 2026-10-29 14:42 · 004 · D4 UI + e2e flow · started
+- 2026-10-29 14:45 · 004 · D4 UI + e2e flow · done
+- 2026-10-29 14:45 · 004 · verify · started
+- 2026-10-29 14:51 · 004 · verify · done
+- 2026-10-29 14:51 · 004 · review 1 · started
+- 2026-10-29 14:52 · 004 · review 1 · done
+- 2026-10-29 14:52 · 004 · review fix 1 · started
+- 2026-10-29 14:57 · 004 · review fix 1 · done
+- 2026-10-29 14:57 · 004 · story · done

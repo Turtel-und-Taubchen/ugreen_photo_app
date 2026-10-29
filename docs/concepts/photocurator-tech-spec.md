@@ -220,7 +220,10 @@ täglich gelöscht.
 
 | Methode | Pfad | Zweck |
 | --- | --- | --- |
-| POST | `/api/login`, `/api/logout` | Anmeldung |
+| GET | `/api/health` | Lebenszeichen + Version (offen, für den Container-Healthcheck) |
+| POST | `/api/login` | Anmeldung: `{username, password}` → `{username}` + Session-Cookie; Fehlschlag immer 401 mit identischer Meldung; gesperrte IP → 429 + `Retry-After` |
+| POST | `/api/logout` | Session serverseitig löschen, Cookie mit `Max-Age` ≤ 0 → 204 |
+| GET | `/api/me` | Angemeldeter Nutzer: `{username}` |
 | GET | `/api/photos?filter…&after=<cursor>` | Liste mit Keyset-Cursor |
 | GET | `/api/photos/groups?filter…` | Tages-/Monatsgruppen mit Anzahl |
 | GET | `/api/photos/{id}` | Details |
@@ -233,6 +236,17 @@ täglich gelöscht.
 | GET/POST/DELETE | `/api/places` | Lieblingsorte |
 | GET | `/api/stats?filter…` | Fortschritt |
 | POST | `/api/scan` | Neu einlesen |
+
+**Default-deny:** Jede Route liegt hinter der Session-Prüfung. Ohne gültige Session offen sind
+nur `POST /api/login`, `GET /api/health`, `GET /login` (liefert die SPA-Hülle) und `GET` auf
+Dateien, die im eingebetteten Frontend wirklich existieren — außer `index.html`, die
+App-Hülle unter `/` ist geschützt. Der Abgleich ist exakt auf den gesendeten Pfad; nicht
+kanonische Pfade (`..`, `//`, `.`, abschließender `/`, abweichendes Percent-Encoding) sind nie
+offen. Ohne Session: `/api/*` → 401 JSON, Seiten-`GET`/`HEAD` → 302 `/login`, andere Methoden
+auf Seitenpfaden → 401 JSON (kein Redirect, damit kein Client einen Schreibversuch als `GET`
+wiederholt). Angemeldet: `GET /login` → 302 `/`. Danach prüft die CSRF-Schicht: schreibende
+Methoden (nicht `GET`/`HEAD`/`OPTIONS`) unter `/api/` ohne `X-Requested-With` → 403, auch für
+`/api/login`; ohne Session gewinnt die 401.
 
 **Auswahl** wird als `{ filter, include_ids, exclude_ids }` übertragen, damit „ganzer Monat"
 oder „alle Treffer" ohne Tausende IDs funktioniert; der Server löst sie beim Job-Start in eine
@@ -300,8 +314,10 @@ services:
 
 | Thema | Maßnahme |
 | --- | --- |
-| Anmeldung | 2 Nutzer in `users.conf` mit Argon2id-Hashes (`photocurator hash-password`); Session-Cookie `HttpOnly`, `SameSite=Strict`, zufällige 256-bit-ID, serverseitig als Hash gespeichert |
-| Brute Force | Rate-Limit pro IP (Platzhalter 5 Fehlversuche/Minute) |
+| Anmeldung | Nutzer in `users.conf` (Pfad `PC_USERS_FILE`, Standard `/data/users.conf`): eine Zeile `name:<argon2id-PHC>` pro Nutzer, `#`-Kommentare und Leerzeilen erlaubt, Namen case-sensitiv; Klartext wird beim Start abgewiesen; Hash erzeugen mit `photocurator hash-password`. Unbekannte Namen werden gegen einen Dummy-Hash geprüft, sodass jeder Versuch genau eine Argon2-Prüfung kostet; Passwörter werden nie geloggt. Eine Session, deren Nutzer nicht mehr in `users.conf` steht, ist ungültig |
+| Session | Cookie `pc_session`: `HttpOnly`, `SameSite=Strict`, `Path=/`, `Max-Age` = 30 Tage (gleitend, Erneuerung höchstens einmal pro Tag); **ohne `Secure`**, weil die App per HTTP im Heimnetz läuft. Zufällige 256-bit-ID, in `app.db` nur als SHA-256 gespeichert |
+| Zugriff | Default-deny für alle Routen, Ausnahmen siehe §6 |
+| Brute Force | Rate-Limit pro IP aus der TCP-Gegenstelle (`X-Forwarded-For` wird ignoriert): 5 Fehlversuche in 60 s → 60 s Sperre, auch mit richtigem Passwort 429 + `Retry-After`; Zähler nur im Speicher |
 | CSRF | `SameSite=Strict` + alle schreibenden Requests nur mit JSON und Header `X-Requested-With` |
 | Pfade | Alle Dateizugriffe über ID → `rel_path` aus dem Index; Auflösung mit `filepath.Clean` + Prüfung „unter /photos"; Symlinks nicht folgen |
 | ExifTool-Injection | Argumentdateien (`-@`), Werte zeilenweise, Zeilenumbrüche in Werten abgewiesen; kein Shell-Aufruf |

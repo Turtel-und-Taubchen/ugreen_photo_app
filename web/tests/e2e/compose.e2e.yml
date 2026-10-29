@@ -9,3 +9,11 @@ services:
     healthcheck:
       interval: 2s
       start_period: 5s
+    # Outside /data so it never collides with the writable data bind mount.
+    volumes:
+      - type: bind
+        source: ${PC_E2E_USERS_FILE}
+        target: /run/users.conf
+        read_only: true
+    environment:
+      PC_USERS_FILE: /run/users.conf

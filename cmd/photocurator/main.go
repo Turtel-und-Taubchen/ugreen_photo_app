@@ -14,8 +14,10 @@ import (
 	"time"
 
 	"photocurator/internal/api"
+	"photocurator/internal/auth"
 	"photocurator/internal/config"
 	"photocurator/internal/probe"
+	"photocurator/internal/store"
 	"photocurator/internal/version"
 	"photocurator/web"
 )
@@ -31,10 +33,12 @@ func main() {
 		os.Exit(serve(args))
 	case "probe":
 		os.Exit(probe.Run(args, os.Stderr))
+	case "hash-password":
+		os.Exit(hashPassword(os.Stdin, os.Stdout, os.Stderr))
 	case "healthcheck":
 		os.Exit(healthcheck(os.Getenv("PC_LISTEN")))
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve|probe|healthcheck]\n", cmd)
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve|probe|hash-password|healthcheck]\n", cmd)
 		os.Exit(2)
 	}
 }
@@ -48,16 +52,28 @@ func serve(args []string) int {
 	if addr == "" {
 		addr = ":8080"
 	}
-	if err := checkStart(config.PathsFromEnv(os.Getenv)); err != nil {
+	paths := config.PathsFromEnv(os.Getenv)
+	users, err := checkStart(paths)
+	if err != nil {
 		slog.Error("invalid configuration, refusing to start", "err", err)
 		return 1
 	}
+	db, err := store.OpenAppDB(paths.DataDir)
+	if err != nil {
+		slog.Error("app database", "err", err)
+		return 1
+	}
+	defer db.Close()
 	static, err := fs.Sub(web.Dist, "dist")
 	if err != nil {
 		slog.Error("embedded frontend", "err", err)
 		return 1
 	}
-	srv := &http.Server{Addr: addr, Handler: api.NewHandler(static), ReadHeaderTimeout: 10 * time.Second}
+	srv := &http.Server{Addr: addr, Handler: api.NewHandler(static, api.AuthDeps{
+		Users:    users,
+		Sessions: auth.NewSessionStore(db, nil),
+		Limiter:  auth.NewLoginLimiter(nil),
+	}), ReadHeaderTimeout: 10 * time.Second}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
@@ -80,7 +96,10 @@ func serve(args []string) int {
 	return 0
 }
 
-// checkStart must pass before any port is opened.
-func checkStart(p config.Paths) error {
-	return config.ValidatePaths(p)
+// checkStart (paths, then users file) must pass before any port is opened.
+func checkStart(p config.Paths) (auth.Users, error) {
+	if err := config.ValidatePaths(p); err != nil {
+		return nil, err
+	}
+	return auth.LoadUsers(p.UsersFile)
 }

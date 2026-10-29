@@ -41,6 +41,18 @@ Kopiere `.env.example` nach `.env` und trage die Werte ein:
 
 Beim Start prüft die App, dass der Fotopfad nicht `Inbox` enthält.
 
+## Nutzer anlegen
+
+Die App kennt nur die Nutzer aus `users.conf` im Datenordner (`/volume1/docker/photocurator/data/users.conf`, im Container `/data/users.conf`). Ohne diese Datei startet sie nicht. Pro Nutzer eine Zeile `name:hash`; Zeilen mit `#` und Leerzeilen werden ignoriert, Namen unterscheiden Groß- und Kleinschreibung.
+
+Erzeuge den Hash (das Passwort wird von der Eingabe gelesen und erscheint nicht in der Ausgabe):
+
+```
+docker run --rm -i photocurator:latest hash-password
+```
+
+Trage die ausgegebene Zeile mit dem Namen davor in `users.conf` ein, z. B. `anna:$argon2id$v=19$...`. Klartext-Passwörter lehnt die App beim Start ab. Starte danach den Container neu, damit die Datei neu gelesen wird.
+
 ## Image übertragen
 
 Das Compose-Projekt baut nichts selbst. Baue das Image auf dem Entwicklungsrechner und übertrage es:

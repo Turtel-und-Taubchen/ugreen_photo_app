@@ -1,7 +1,7 @@
 ---
 id: 004
 title: Einfache Anmeldung für zwei Nutzer
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E0 Fundament & Spike
 estimate: 3
@@ -16,18 +16,18 @@ Nutzer werden in einer Konfigurationsdatei gepflegt, eine Nutzerverwaltung im UI
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Ohne Anmeldung leitet jede Seite auf den Login um, und jeder API-Aufruf außer
+- [x] **AC1** — Ohne Anmeldung leitet jede Seite auf den Login um, und jeder API-Aufruf außer
   Login und Health liefert 401.
-- [ ] **AC2** — Beide in `users.conf` konfigurierten Nutzer können sich anmelden; bei falschen
+- [x] **AC2** — Beide in `users.conf` konfigurierten Nutzer können sich anmelden; bei falschen
   Daten erscheint eine Fehlermeldung, die nicht verrät, ob Name oder Passwort falsch war.
-- [ ] **AC3** — `photocurator hash-password` erzeugt einen Argon2id-Hash für `users.conf`;
+- [x] **AC3** — `photocurator hash-password` erzeugt einen Argon2id-Hash für `users.conf`;
   Klartext-Passwörter werden nie gespeichert.
-- [ ] **AC4** — Das Session-Cookie ist `HttpOnly` und `SameSite=Strict`; eine Sitzung bleibt
+- [x] **AC4** — Das Session-Cookie ist `HttpOnly` und `SameSite=Strict`; eine Sitzung bleibt
   bis zum Ablauf (Platzhalter: 30 Tage) gültig, Abmelden beendet sie sofort.
-- [ ] **AC5** — Nach zu vielen Fehlversuchen (Platzhalter: 5 pro Minute und IP) antwortet der
+- [x] **AC5** — Nach zu vielen Fehlversuchen (Platzhalter: 5 pro Minute und IP) antwortet der
   Login mit 429, bis die Sperrzeit abgelaufen ist.
-- [ ] **AC6** — Der angemeldete Nutzername ist in der Oberfläche sichtbar.
-- [ ] **AC7** — Schreibende API-Aufrufe ohne Header `X-Requested-With` werden abgewiesen
+- [x] **AC6** — Der angemeldete Nutzername ist in der Oberfläche sichtbar.
+- [x] **AC7** — Schreibende API-Aufrufe ohne Header `X-Requested-With` werden abgewiesen
   (CSRF-Schutz).
 
 ## Open Questions
@@ -247,3 +247,14 @@ Coverage-Gate: AC1 D3+D4 · AC2 D1+D3+D4 · AC3 D1+D2 · AC4 D2+D3+D4 · AC5 D2+
 AC7 D3+D4 — jedes Kriterium hat Deliverable und Test, keine manual residue.
 
 ## Done
+
+Zusammenfassung: Anmeldung für zwei Nutzer — Argon2id + `users.conf` + `photocurator hash-password`, `app.db` (modernc sqlite) mit Session-Store (30 Tage gleitend, nur SHA-256 in der DB), IP-Limiter (5/min → 429), Default-deny-Middleware + CSRF-Header-Pflicht, Login-Seite, Kopfzeile mit Nutzername/Abmelden, E2E-Flow.
+
+Commit: `004: Anmeldung für zwei Nutzer — Argon2id/users.conf/hash-password, Sessions in app.db, Limiter, Default-deny+CSRF, Login-UI, E2E`
+
+Verifikation (enge Gate; `test-story` none → volles `test`): build, `npm run check`, lint (docker + web), `docker build --target test .` + vitest (7), `e2e-story`: `cd web && npx playwright test tests/e2e/auth.spec.ts` — alles grün; nach Review-Fix erneut test/lint/e2e grün. Review: 1 Zyklus (default), Verdikt PASS, 3 Findings behoben. Volles Gate steht beim Sprint aus.
+AC → Test: AC1 auth_test.go (401 / Seiten-Umleitung) + e2e auth.spec.ts · AC2 auth_test.go (gleiche Antwort, eine Prüfung) + e2e · AC3 hash_password_test, users_test, password_test, sessions_test (nur Hash in DB) · AC4 auth_test (Cookie, Logout), sessions_test (30 Tage / 1×täglich), e2e (Cookie-Attribute) · AC5 ratelimit_test + auth_test (429 trotz XFF) · AC6 e2e (`current-user`) · AC7 auth_test (403 ohne Header) + e2e. Go-Tests laufen ohne `-v`; Nachweis = Paket ok + Test per grep vorhanden. Keine manual residue.
+
+Decisions: `users.conf` im E2E nach `/run/users.conf` gemountet (nicht unter `/data`, Kollision mit Datenmount), `PC_E2E_USERS_FILE` in `compose.ts`; nicht-GET auf Seitenpfaden ohne Sitzung → 401 JSON (Tech Spec §6); Logout 204; kaputter Login-Body → 400 ohne Fehlversuch; Sitzung eines entfernten Nutzers wird gelöscht; Dummy-Hash eager im Konstruktor. Offen/unbehoben: Limiter-Map räumt nur bei erneutem Zugriff der gleichen IP auf (Heimnetz vernachlässigbar); Session-DB-Lookup auch für Assets (nur Performance); 360-px-Layout nicht visuell geprüft; 30d-Grenze mit zwei Sitzungen statt einem Token getestet.
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 7

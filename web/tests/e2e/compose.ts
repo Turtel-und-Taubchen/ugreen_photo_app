@@ -8,6 +8,7 @@ export const E2E_PORT = 18470;
 /** The production compose file; the e2e run only overlays it, so it deploys what users deploy. */
 export const BASE_FILE = fileURLToPath(new URL('../../../deploy/docker-compose.yml', import.meta.url));
 export const OVERRIDE_FILE = fileURLToPath(new URL('./compose.e2e.yml', import.meta.url));
+export const USERS_FILE = fileURLToPath(new URL('../../../testdata/e2e/users.conf', import.meta.url));
 export const ROOT_FILE = fileURLToPath(new URL('../../test-results/.e2e-root', import.meta.url));
 
 /**
@@ -29,6 +30,7 @@ export function composeEnv(root: string): Record<string, string> {
     PORT: String(E2E_PORT),
     TZ: 'Europe/Vienna',
     NOMINATIM_CONTACT: 'e2e@example.invalid',
+    PC_E2E_USERS_FILE: USERS_FILE,
   };
 }
 

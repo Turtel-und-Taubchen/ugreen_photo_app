@@ -1,0 +1,64 @@
+// Package store opens the durable application database (app.db).
+package store
+
+import (
+	"database/sql"
+	"fmt"
+	"path/filepath"
+
+	_ "modernc.org/sqlite" // pure Go driver: the image has no C toolchain
+)
+
+// migrations[i] upgrades schema version i to i+1. Append only; never edit a shipped entry.
+var migrations = []string{
+	`CREATE TABLE sessions (
+		id_hash TEXT PRIMARY KEY,
+		username TEXT NOT NULL,
+		expires_at INTEGER NOT NULL,
+		renewed_at INTEGER NOT NULL
+	)`,
+}
+
+// OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.
+func OpenAppDB(dataDir string) (*sql.DB, error) {
+	path := filepath.Join(dataDir, "app.db")
+	dsn := "file:" + filepath.ToSlash(path) + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("app database %q cannot be opened: %v", path, err)
+	}
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("app database %q: %v", path, err)
+	}
+	return db, nil
+}
+
+func migrate(db *sql.DB) error {
+	var version int
+	if err := db.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil {
+		return err
+	}
+	if version > len(migrations) {
+		return fmt.Errorf("schema version %d is newer than this build supports (%d)", version, len(migrations))
+	}
+	for v := version; v < len(migrations); v++ {
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		// PRAGMA user_version takes no bound parameter; v is an int, so Sprintf is safe.
+		if _, err := tx.Exec(migrations[v]); err != nil {
+			tx.Rollback()
+			return fmt.Errorf("migration %d: %v", v+1, err)
+		}
+		if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, v+1)); err != nil {
+			tx.Rollback()
+			return err
+		}
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -14,7 +14,7 @@ func TestInstallGuideCoversEveryStep(t *testing.T) {
 	}
 	readme := string(raw)
 	for _, h := range []string{
-		"## Ordner anlegen", "## Nutzer und UID ermitteln", "## Rechte", "## .env anlegen",
+		"## Ordner anlegen", "## Nutzer und UID ermitteln", "## Rechte", "## .env anlegen", "## Nutzer anlegen",
 		"## Image übertragen", "## Projekt anlegen", "## Erster Aufruf", "## Update",
 	} {
 		if !strings.Contains(readme, "\n"+h+"\n") {

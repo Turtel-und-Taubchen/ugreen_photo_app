@@ -16,9 +16,10 @@ type Paths struct {
 	DataDir        string
 	BackupDir      string
 	PhotosHostPath string // optional; only checked for an Inbox segment
+	UsersFile      string
 }
 
-// PathsFromEnv reads PC_PHOTOS_DIR, PC_DATA_DIR, PC_BACKUP_DIR and PC_PHOTOS_HOST_PATH.
+// PathsFromEnv reads PC_PHOTOS_DIR, PC_DATA_DIR, PC_BACKUP_DIR and PC_PHOTOS_HOST_PATH, PC_USERS_FILE.
 func PathsFromEnv(get func(string) string) Paths {
 	def := func(key, d string) string {
 		if v := get(key); v != "" {
@@ -31,6 +32,7 @@ func PathsFromEnv(get func(string) string) Paths {
 		DataDir:        def("PC_DATA_DIR", "/data"),
 		BackupDir:      def("PC_BACKUP_DIR", "/backup"),
 		PhotosHostPath: get("PC_PHOTOS_HOST_PATH"),
+		UsersFile:      def("PC_USERS_FILE", "/data/users.conf"),
 	}
 }
 

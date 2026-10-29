@@ -16,18 +16,24 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// NewHandler serves the JSON API under /api/ and the SPA from static.
-func NewHandler(static fs.FS) http.Handler {
+// NewHandler serves the JSON API under /api/ and the SPA from static. Every route sits behind
+// RequireSession (deny by default) and CSRF; the open exceptions are listed in isOpen.
+func NewHandler(static fs.FS, deps AuthDeps) http.Handler {
+	a := newAuthAPI(deps)
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": version.Version})
 	})
+	mux.HandleFunc("POST /api/login", a.login)
+	mux.HandleFunc("POST /api/logout", a.logout)
+	mux.HandleFunc("GET /api/me", a.me)
 	// Unknown API paths must never fall through to the SPA's index.html.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 	})
+	// The SPA fallback also serves index.html for /login, the one page open without a session.
 	mux.Handle("/", spa(static))
-	return mux
+	return a.RequireSession(static, CSRF(mux))
 }
 
 func spa(static fs.FS) http.Handler {
