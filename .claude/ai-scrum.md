@@ -1,0 +1,187 @@
+# AI Scrum — Project Profile
+
+<!--
+  Written by `/ai-scrum:setup` (ai-scrum plugin). Safe to edit by hand — setup only
+  rewrites values you confirm, and never touches your `## Notes`.
+
+  This file holds FACTS the workflow commands need verbatim (verify commands, paths,
+  branch strategy). Project RULES and architecture guardrails stay in CLAUDE.md —
+  the commands read both.
+
+  The workflow itself lives in this repository: `.claude/commands/{refine,build,sprint,
+  roadmap,concept}.md` plus `.claude/agents/{deliverable-hard,story-review-hard}.md`.
+  Everyone who clones the repo can use it; the plugin is only needed to install or
+  update those files (`/ai-scrum:setup`). Hashes of the managed copies: .claude/ai-scrum.lock
+-->
+
+ai-scrum-version: 4.6.0
+project: PhotoCurator
+
+## Verify
+
+Commands the build step runs before a story may be called done. Use `none` when a
+step does not exist in this project.
+
+<!--
+  PLANNED values: the repository has no code yet. Story 002 (project skeleton) creates
+  exactly these entry points. Backend checks run inside Docker build stages because Go,
+  ExifTool, libvips and ffmpeg are not installed on the dev machine — and the tests must
+  run against the same native tools as the NAS container anyway.
+-->
+build: npm --prefix web run build && docker build --target runtime -t photocurator:dev .
+test: docker build --target test . && npm --prefix web run test
+lint: docker build --target lint . && npm --prefix web run lint
+typecheck: npm --prefix web run check
+e2e: npm --prefix web run test:e2e
+<!--
+  `e2e` is the acceptance gate for user-facing stories: an acceptance criterion that
+  describes something the user does is proven here, through the real surface. It is a
+  separate entry because it is usually slower than `test` and lives in its own suite.
+  `none` means the project has no such harness yet — see `ui-acceptance-required` below
+  for what the workflow then does instead.
+-->
+
+test-story: none <!-- e.g. npx vitest run --changed HEAD | npx jest --onlyChanged | pytest -q --picked | none -->
+e2e-story: cd web && npx playwright test {files} <!-- {files} relative to web/, e.g. tests/e2e/tagging.spec.ts -->
+e2e-story-slices: 1 <!-- 1 = one call; n > 1 only when e2e-story carries {shard} and one call could exceed ten minutes — /build then runs {shard} = 1/n … n/n in sequence -->
+e2e-all: none <!-- e.g. npm run ui:flows | npx playwright test --project=flows | none -->
+e2e-cleanup: docker compose -p photocurator-e2e down -v <!-- stops the e2e app container + fixture library a killed run leaves behind; does not touch a dev instance under another project name -->
+<!--
+  Narrow per story, broad per sprint. `/build` runs a story-sized gate; `/sprint` runs
+  the full one once, after the last story, and bisects a red result back to a story.
+
+  test-story = the tests affected by the story's changes. The story is not committed
+               yet when /build verifies, so compare against HEAD (the uncommitted diff),
+               never against the branch base. Fallback when missing or `none`: the full
+               `test`, exactly as before this key existed. Whatever the command selects, every
+               non-e2e test the story names in `## Acceptance Tests` must be among what
+               ran; if one is not, /build runs the full `test` instead. dotnet has no
+               built-in changed-file selection, so `none` is the usual value there;
+               pytest needs a plugin (`pytest-picked`, `pytest-testmon`).
+  e2e-story  = a TEMPLATE that runs only the e2e tests this story mapped its criteria to.
+               The `## Acceptance Tests` lines name file and test, not the invocation —
+               the syntax is the harness's, so it lives here, once, not in every story.
+               Placeholders: `{files}` = every distinct e2e file of the story,
+               space-separated, one run; `{file}` / `{test}` = one run per mapped line,
+               with its file and its test name. Fallback when missing or `none`: the full
+               `e2e`, as before. Ignored while `e2e` is `none`.
+  e2e-story-slices = how many calls /build splits one `e2e-story` run into. 1 (the default,
+               also when the key is missing) is one call. Set n > 1 and put `{shard}` into
+               `e2e-story` (e.g. `--shard={shard}`) when a story's selection can take longer
+               than ten minutes, the ceiling of a single tool call; /build then runs
+               `{shard}` = 1/n … n/n in sequence and reads the outputs as one run. Rule of
+               thumb: n = worst-case minutes of a full selection divided by 8, rounded up.
+  e2e-all    = every acceptance flow, where they are a suite of their own next to `e2e`
+               (e.g. `e2e` = screenshots + axe, `e2e-all` = all user flows). Runs only
+               in the sprint's regression gate, never per story. `none` = `e2e` already
+               covers them; do not set it to the same command as `e2e`.
+-->
+
+test-support: none <!-- planned: internal/testsupport/ (fixture photos, ExifTool helpers) once story 002/005 create it -->
+e2e-quarantine: none <!-- e.g. tests/e2e/quarantine.json | none — the expected-failure list the e2e-all runner reads; /sprint's regression gate writes a pre-existing or flaky test into it -->
+
+## Conventions
+
+doc-language: de <!-- language for generated artifacts: stories, sprint reviews, concepts -->
+requirements-path: docs/requirements
+sprints-path: docs/sprints
+roadmap-path: docs/ROADMAP.md
+concepts-path: docs/concepts
+systems-path: docs/systems
+story-id-format: NNN <!-- three digits + slug, e.g. 042-npc-haggling.md -->
+sprint-id-format: SNN <!-- e.g. S07 -->
+
+changelog-path: none
+<!--
+  Optional. Path to a USER-FACING changelog (e.g. version.md, CHANGELOG.md) — not the
+  git history. When set, /build and /sprint require an entry for every user-facing
+  change; when `none`, the rule is dormant and nothing asks for it.
+
+  The house style for such a file, if you set one:
+    - one entry per user-facing feature or fix, under `# Features` / `# Fixes`
+    - tests, refactors and internal changes do not appear — they change nothing for the user
+    - append to the current version section only; never restructure earlier ones
+    - short, punchy, a little funny. Not a paragraph explaining the implementation.
+    - the language is `doc-language`
+-->
+
+
+## Branching
+
+branch-base: main <!-- branch a sprint is cut from -->
+sprint-branch-pattern: sprint/{id}
+auto-commit-per-story: true <!-- /sprint commits once per story ON THE SPRINT BRANCH only -->
+protected-branches: main <!-- never commit here, never push, never merge — except the one `SNN: sprint started` commit /sprint makes on branch-base -->
+
+## Acceptance
+
+**Acceptance is the test suite, not a person with a click list.** Every acceptance
+criterion is proven by an automated test that the workflow writes as part of the story.
+A story is done when its criteria's tests pass and the clean-agent review is through —
+there is no separate manual gate, no "built, acceptance pending", no user tick.
+What a walk-through afterwards finds becomes a new story.
+
+ac-tests-required: true
+<!--
+  true  = P1 applies: every acceptance criterion needs a named automated test before
+          `status: ready` (`/refine` writes the AC → test mapping) and a passing one
+          before `status: done` (`/build` re-checks it). A criterion that genuinely
+          cannot be automated is declared as `manual residue` with a reason and does
+          not block anything — see below.
+  false = the mapping is advisory; the workflow only asks for tests where the story
+          itself does. Use this for throwaway or spike projects.
+-->
+
+ui-acceptance-required: true
+<!--
+  true  = a criterion that describes something the USER does is proven through the
+          real surface — the `e2e` command from `## Verify`. A console command, a
+          direct call into an internal module, or a renderer test with a faked
+          backend does not count as a substitute for the real path. Criteria without
+          a surface (core logic, IPC, parsing) are covered by `test`.
+          If `e2e` is `none`, the harness does not exist yet: `/refine` then plans it
+          as the story's first deliverable, or, when that is out of scope, covers the
+          criterion at the next level down AND names the gap in the story and the
+          sprint review. It never quietly becomes a manual step.
+  false = for a library, CLI, mod or service without a user-facing surface.
+-->
+
+manual-residue-allowed: true
+<!--
+  true  = a criterion that cannot be automated for a real reason (an OS signature
+          dialog, a specific piece of hardware, an external paid service) is marked
+          in the story as `manual residue: <reason>`. It is listed in the sprint
+          review and, if the project generates one, in `testplan.md` — the only
+          things left that anyone walks by hand. It does NOT hold the story or the
+          sprint open.
+  false = such a criterion has to be reformulated or dropped in refine.
+-->
+
+testplan: optional
+<!--
+  optional = `/sprint` writes `testplan.md` only for the criteria marked
+             `manual residue`, and skips the file entirely when there are none.
+  required = always write the full step-by-step plan (the old behaviour).
+  off      = never write it.
+  In no case is `testplan.md` an acceptance gate — the tests are.
+-->
+
+## Context to read before coding
+
+Files every implementation and review agent must read before touching code.
+Keep this short — it is pasted into every subagent prompt.
+
+- docs/concepts/photocurator-tech-spec.md
+- docs/concepts/photocurator-metadaten-strategie.md (exists after the spike, story 001)
+
+## Notes
+
+- Documentation (stories, concepts, reviews) in German; code, identifiers and code comments in English.
+- Target host: UGREEN DXP4800 Plus (x86_64, 8 GB RAM, UGOS Pro). Resource economy is a hard
+  requirement — the NAS also runs Phockup, the UGREEN photo indexer and other services.
+- The app works ONLY on `/volume1/Gemeinsame Fotos/Sortiert/` (JJJJ/MM). Never the Inbox, never
+  anything of UGOS or the UGREEN Fotos app itself.
+- Real-device checks in the UGREEN Fotos app cannot be automated (proprietary app on the NAS):
+  they are legitimate `manual residue`. Everything else is proven by tests against fixture files.
+- The metadata write strategy (which fields) is decided by the spike (story 001). Stories that
+  write metadata (009 ff.) must not be refined before its result document exists.
