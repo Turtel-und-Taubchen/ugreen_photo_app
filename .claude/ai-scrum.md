@@ -14,7 +14,7 @@
   update those files (`/ai-scrum:setup`). Hashes of the managed copies: .claude/ai-scrum.lock
 -->
 
-ai-scrum-version: 4.6.0
+ai-scrum-version: 4.7.0
 project: PhotoCurator
 
 ## Verify
@@ -108,9 +108,10 @@ changelog-path: none
 
 ## Branching
 
-branch-base: main <!-- branch a sprint is cut from -->
+branch-base: main <!-- the branch a sprint starts from: cut from with sprint-branch: true, committed on with false -->
+sprint-branch: false <!-- true = cut a sprint branch, commit there, you merge it; false = commit every story directly on branch-base -->
 sprint-branch-pattern: sprint/{id}
-auto-commit-per-story: true <!-- /sprint commits once per story ON THE SPRINT BRANCH only -->
+auto-commit-per-story: true <!-- /sprint commits once per story, on the sprint branch (or on branch-base with sprint-branch: false) -->
 protected-branches: main <!-- never commit here, never push, never merge — except the one `SNN: sprint started` commit /sprint makes on branch-base -->
 
 ## Acceptance
