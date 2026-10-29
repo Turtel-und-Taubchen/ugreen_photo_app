@@ -19,7 +19,7 @@ Protokoll, mit dem auf dem NAS geklärt wird, welche Metadatenfelder UGREEN Foto
 
 - [x] 002 — Projektgerüst — Go-Backend, Svelte-Frontend, Verify-Befehle, E2E-Harness
 - [x] 001 — Spike — welche Metadatenfelder liest UGREEN Fotos?
-- [ ] 003 — Deployment als Docker-Compose-Projekt auf UGOS Pro
+- [x] 003 — Deployment als Docker-Compose-Projekt auf UGOS Pro
 - [ ] 004 — Einfache Anmeldung für zwei Nutzer
 
 ## Notes

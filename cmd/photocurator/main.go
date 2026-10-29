@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"photocurator/internal/api"
+	"photocurator/internal/config"
 	"photocurator/internal/probe"
 	"photocurator/internal/version"
 	"photocurator/web"
@@ -30,8 +31,10 @@ func main() {
 		os.Exit(serve(args))
 	case "probe":
 		os.Exit(probe.Run(args, os.Stderr))
+	case "healthcheck":
+		os.Exit(healthcheck(os.Getenv("PC_LISTEN")))
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve|probe]\n", cmd)
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve|probe|healthcheck]\n", cmd)
 		os.Exit(2)
 	}
 }
@@ -44,6 +47,10 @@ func serve(args []string) int {
 	addr := os.Getenv("PC_LISTEN")
 	if addr == "" {
 		addr = ":8080"
+	}
+	if err := checkStart(config.PathsFromEnv(os.Getenv)); err != nil {
+		slog.Error("invalid configuration, refusing to start", "err", err)
+		return 1
 	}
 	static, err := fs.Sub(web.Dist, "dist")
 	if err != nil {
@@ -71,4 +78,9 @@ func serve(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+// checkStart must pass before any port is opened.
+func checkStart(p config.Paths) error {
+	return config.ValidatePaths(p)
 }

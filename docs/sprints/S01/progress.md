@@ -36,3 +36,17 @@
 - 2026-10-29 13:39 · 001 · verify · started
 - 2026-10-29 13:43 · 001 · verify · done
 - 2026-10-29 13:43 · 001 · story · done
+- 2026-10-29 13:43 · 003 · build · started
+- 2026-10-29 13:43 · 003 · D1 Compose, .env.example, Strukturtest · started
+- 2026-10-29 13:47 · 003 · D1 Compose, .env.example, Strukturtest · done
+- 2026-10-29 13:47 · 003 · D2 Startpruefung Pfade · started
+- 2026-10-29 13:55 · 003 · D2 Startpruefung Pfade · done
+- 2026-10-29 13:55 · 003 · D3 Healthcheck + E2E Deploy-Compose · started
+- 2026-10-29 14:02 · 003 · D3 Healthcheck + E2E Deploy-Compose · done
+- 2026-10-29 14:02 · 003 · D4 README + Tech-Spec · started
+- 2026-10-29 14:06 · 003 · D4 README + Tech-Spec · done
+- 2026-10-29 14:06 · 003 · verify · started
+- 2026-10-29 14:09 · 003 · verify · done
+- 2026-10-29 14:09 · 003 · review 1 · started
+- 2026-10-29 14:10 · 003 · review 1 · done
+- 2026-10-29 14:10 · 003 · story · done

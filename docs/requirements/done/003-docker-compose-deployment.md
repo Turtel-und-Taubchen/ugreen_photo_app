@@ -1,7 +1,7 @@
 ---
 id: 003
 title: Deployment als Docker-Compose-Projekt auf UGOS Pro
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E0 Fundament & Spike
 estimate: 3
@@ -16,20 +16,20 @@ andere Ordner bekommt, und ohne dass sie das NAS über Gebühr belastet.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `deploy/docker-compose.yml` bindet genau drei Host-Pfade ein: `Sortiert` →
+- [x] **AC1** — `deploy/docker-compose.yml` bindet genau drei Host-Pfade ein: `Sortiert` →
   `/photos`, App-Daten → `/data`, Backup → `/backup`; kein Inbox-Pfad, kein Docker-Socket
   (automatischer Test, der die Compose-Datei parst).
-- [ ] **AC2** — Der Dienst läuft mit `user: ${PUID}:${PGID}`, `read_only: true`,
+- [x] **AC2** — Der Dienst läuft mit `user: ${PUID}:${PGID}`, `read_only: true`,
   `cap_drop: [ALL]`, `no-new-privileges` und gesetzten Grenzen für Speicher und CPU (Test
   wie AC1).
-- [ ] **AC3** — Die App startet nicht und meldet einen verständlichen Fehler, wenn `/photos`
+- [x] **AC3** — Die App startet nicht und meldet einen verständlichen Fehler, wenn `/photos`
   fehlt, nicht beschreibbar ist oder der konfigurierte Fotopfad `Inbox` enthält; ebenso wenn
   `/data` oder `/backup` nicht beschreibbar sind.
-- [ ] **AC4** — Der Compose-Dienst hat einen Healthcheck; im E2E-Lauf meldet Docker den
+- [x] **AC4** — Der Compose-Dienst hat einen Healthcheck; im E2E-Lauf meldet Docker den
   Container als `healthy`.
-- [ ] **AC5** — `deploy/.env.example` enthält alle Variablen (PUID, PGID, Pfade, Port,
+- [x] **AC5** — `deploy/.env.example` enthält alle Variablen (PUID, PGID, Pfade, Port,
   Nominatim-Kontakt, Zeitzone) mit Kommentaren.
-- [ ] **AC6** — `deploy/README.md` (Deutsch) beschreibt die Installation in UGOS Pro Schritt für
+- [x] **AC6** — `deploy/README.md` (Deutsch) beschreibt die Installation in UGOS Pro Schritt für
   Schritt: Ordner anlegen, passenden Nutzer/UID ermitteln, Rechte, `.env`, Projekt anlegen,
   erster Aufruf, Update.
 - [ ] **AC7** — Installation auf dem echten DXP4800 Plus. **manual residue:** echtes NAS mit
@@ -205,3 +205,16 @@ Abdeckung: AC1/AC2/AC5 → D1 · AC3 → D2 · AC4 → D1 (Healthcheck-Eintrag) 
 AC7 → manual residue (README aus D4 ist die Anleitung dafür).
 
 ## Done
+
+Compose-Datei, `.env.example`, Pfad-Startprüfung (`internal/config`, Exit 1), `healthcheck`-Unterbefehl, E2E-Harness auf die Deploy-Compose umgestellt und deutsche Installationsanleitung samt Tech-Spec-Abgleich.
+
+**Commit:** `003: Docker-Compose-Deployment — deploy/compose+env+README, Pfad-Startprüfung, healthcheck, E2E gegen Deploy-Compose`
+
+**Verifikation (narrow gate):** `npm --prefix web run build && docker build --target runtime`, `docker build --target test` (alle Pakete ok), `--target lint`, `npm --prefix web run test`, `npm --prefix web run check`, `cd web && npx playwright test tests/e2e/deployment.spec.ts` — alle grün. Review (default, 1 Durchgang): PASS, keine Muss-Fixes.
+- AC1 → `TestComposeMountsOnlyPhotosDataBackup` ok · AC2 → `TestComposeServiceIsHardened` ok · AC3 → `paths_test.go` (4 Tests) + `TestServeRefusesToStartWithInvalidPaths` ok · AC4 → e2e "the compose service reports healthy" ok + `TestHealthcheckExitCodeFollowsHealthEndpoint` ok · AC5 → `TestEnvExampleDocumentsEveryComposeVariable` ok · AC6 → `TestInstallGuideCoversEveryStep` ok. (Go-Tests: Paket-`ok` im Stage `test`, nicht `-v`.)
+- AC7: manual residue — echtes NAS mit UGOS Pro.
+
+**Decisions:** Stage `test` läuft als USER 65532 (`chmod a+rX` auf Quellen/Module). E2E-Override benennt den Container `photocurator-e2e`, `compose.ts` setzt alle `${VAR}` explizit (BIND_IP=127.0.0.1, PORT=18470), `up --pull never --wait --wait-timeout 90`; E2E-Temp-Ordner 0777 (PUID = Host-UID). `npm run test:e2e` baut das Image nicht mehr — vorher `build` aus dem Profil.
+**Offene Findings (bewusst nicht behoben):** `internal/config` nutzt `x/sys/unix` ohne Build-Tag (Go läuft nur im Docker, nicht auf Windows); `checkStart` ist dünner Wrapper mit leicht redundanter Assertion; README-Test verlangt LF-Zeilenenden; Healthcheck-Werte in `TestComposeServiceIsHardened` nur auf Vorhandensein geprüft.
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 7

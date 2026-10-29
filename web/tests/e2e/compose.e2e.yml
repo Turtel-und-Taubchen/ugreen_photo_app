@@ -1,12 +1,11 @@
+# Overlay on deploy/docker-compose.yml for the e2e run; everything else (hardening,
+# read-only root, tmpfs, mounts, ports) comes from the production file via the
+# interpolation values in compose.ts.
 services:
   photocurator:
-    build:
-      context: ../../..
-      target: runtime
     image: photocurator:dev
-    ports:
-      - "127.0.0.1:18470:8080"
-    volumes:
-      - ${PC_E2E_ROOT}/photos:/photos
-      - ${PC_E2E_ROOT}/data:/data
-      - ${PC_E2E_ROOT}/backup:/backup
+    # Distinct from the production name so a local instance never blocks the e2e run.
+    container_name: photocurator-e2e
+    healthcheck:
+      interval: 2s
+      start_period: 5s

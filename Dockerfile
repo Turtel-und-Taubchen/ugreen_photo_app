@@ -24,6 +24,7 @@ RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
 COPY web/*.go ./web/
+COPY deploy ./deploy
 COPY testdata ./testdata
 COPY docs/concepts/photocurator-metadaten-strategie.md ./docs/concepts/photocurator-metadaten-strategie.md
 COPY --from=web /src/web/dist ./web/dist
@@ -55,6 +56,10 @@ ENV PATH=/usr/local/go/bin:/go/bin:$PATH GOPATH=/go GOCACHE=/tmp/gocache \
     CGO_ENABLED=0 GOTOOLCHAIN=local
 WORKDIR /src
 COPY --from=gobase /src /src
+# Tests run unprivileged so permission checks behave as on the NAS; module cache and source
+# stay root-owned and world-readable, only the temp dirs are writable.
+RUN chmod -R a+rX /go /src /usr/local/go && chmod 1777 /tmp
+USER 65532:65532
 RUN go test ./...
 
 FROM native AS runtime

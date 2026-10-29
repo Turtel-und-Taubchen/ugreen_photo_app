@@ -254,22 +254,21 @@ feste Dateiliste auf.
 ```yaml
 services:
   photocurator:
-    image: photocurator:latest
-    build: ..
+    image: ${PC_IMAGE:-photocurator:latest}
     container_name: photocurator
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     ports:
-      - "${BIND_IP:-0.0.0.0}:8470:8080"
+      - "${BIND_IP:-0.0.0.0}:${PORT:-8470}:8080"
     environment:
-      PC_USERS_FILE: /data/users.conf
-      PC_NOMINATIM_CONTACT: "${NOMINATIM_CONTACT}"
+      TZ: ${TZ}
+      PC_NOMINATIM_CONTACT: ${NOMINATIM_CONTACT}
+      PC_PHOTOS_HOST_PATH: ${PHOTOS_PATH}
       PC_PRESERVE_MTIME: "false"
-      TZ: Europe/Vienna
     volumes:
-      - "/volume1/Gemeinsame Fotos/Sortiert:/photos"
-      - "/volume1/docker/photocurator/data:/data"
-      - "/volume1/docker/photocurator/backup:/backup"
+      - ${PHOTOS_PATH}:/photos
+      - ${DATA_PATH}:/data
+      - ${BACKUP_PATH}:/backup
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -278,7 +277,10 @@ services:
     cpus: 2.0
     healthcheck:
       test: ["CMD", "/app/photocurator", "healthcheck"]
-      interval: 60s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 ```
 
 - Image: Multi-Stage — `web` (Node, baut Frontend) → `build` (Go) → `test`/`lint` (Go +
@@ -286,6 +288,9 @@ services:
   `libimage-exiftool-perl`, `libvips-tools`, `libheif`-Plugins, `ffmpeg`, `tini`).
 - `PUID/PGID` = UGOS-Nutzer mit Schreibrecht auf `Gemeinsame Fotos`.
 - Die Zeitzone (`TZ`) ist ein Platzhalter und gehört in `.env`.
+- Kein `build:` im Compose-Projekt: Das Image wird auf dem Entwicklungsrechner gebaut und per `docker save`/`docker load` auf das NAS übertragen (siehe `deploy/README.md`).
+- Der Healthcheck ruft `photocurator healthcheck` auf (Intervall 30 s, Timeout 5 s, 3 Versuche, Startphase 20 s).
+- `PC_PHOTOS_HOST_PATH` trägt den Host-Pfad von `PHOTOS_PATH`; die App nutzt ihn beim Start für den Inbox-Schutz (Host-Pfad darf keine `Inbox` enthalten). Gemountet wird nur `Sortiert`, nie die Inbox.
 - Die App prüft beim Start: `/photos` existiert, ist beschreibbar, Pfad enthält nicht
   `Inbox`; `/backup` und `/data` beschreibbar; sonst Abbruch mit klarer Meldung.
 - Ressourcen-Zielwerte (Platzhalter, gemessen in Story 021): Leerlauf < 150 MB RAM, Scan
@@ -301,7 +306,7 @@ services:
 | Pfade | Alle Dateizugriffe über ID → `rel_path` aus dem Index; Auflösung mit `filepath.Clean` + Prüfung „unter /photos"; Symlinks nicht folgen |
 | ExifTool-Injection | Argumentdateien (`-@`), Werte zeilenweise, Zeilenumbrüche in Werten abgewiesen; kein Shell-Aufruf |
 | Container | Nicht-root, read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, kein Docker-Socket, keine Inbox, Ressourcenlimits |
-| Netzwerk | Nur Heimnetz (Port nicht im Router freigeben); optional Bindung an LAN-IP; HTTPS über UGOS-Reverse-Proxy ist offener Punkt |
+| Netzwerk | Nur Heimnetz (Port nicht im Router freigeben); optional Bindung an LAN-IP; Entscheidung: HTTP im Heimnetz, vorerst kein HTTPS und kein Reverse-Proxy; Port niemals im Router freigeben |
 | Ausgehend | Nur Nominatim (Server) und OSM-Kacheln (Browser) |
 | Datenschutz | Keine Telemetrie; Nominatim erhält nur Suchbegriffe bzw. Koordinaten |
 
