@@ -16,3 +16,23 @@
 - 2026-10-29 13:05 · 002 · review 1 · started
 - 2026-10-29 13:06 · 002 · review 1 · done
 - 2026-10-29 13:06 · 002 · story · done
+- 13:07:00 · 001 · build · started
+- 2026-10-29 13:07 · 001 · D1 Feldmatrix + Bild-Testdateien · started
+- 2026-10-29 13:14 · 001 · D1 Feldmatrix + Bild-Testdateien · done
+- 2026-10-29 13:14 · 001 · D2 Video-Testdateien · started
+- 2026-10-29 13:21 · 001 · D2 Video-Testdateien · done
+- 2026-10-29 13:21 · 001 · D3 probe mutate · started
+- 2026-10-29 13:23 · 001 · D3 probe mutate · done
+- 2026-10-29 13:23 · 001 · D4 PROTOKOLL.md · started
+- 2026-10-29 13:27 · 001 · D4 PROTOKOLL.md · done
+- 2026-10-29 13:27 · 001 · D5 Strategie-Dokument · started
+- 2026-10-29 13:29 · 001 · D5 Strategie-Dokument · done
+- 2026-10-29 13:29 · 001 · verify · started
+- 2026-10-29 13:32 · 001 · verify · done
+- 2026-10-29 13:32 · 001 · review 1 · started
+- 2026-10-29 13:34 · 001 · review 1 · done
+- 2026-10-29 13:34 · 001 · review-fix 1 · started
+- 2026-10-29 13:39 · 001 · review-fix 1 · done
+- 2026-10-29 13:39 · 001 · verify · started
+- 2026-10-29 13:43 · 001 · verify · done
+- 2026-10-29 13:43 · 001 · story · done

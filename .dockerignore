@@ -6,5 +6,8 @@ web/dist
 data
 *.db
 .env
-docs
+docs/*
+!docs/concepts
+docs/concepts/*
+!docs/concepts/photocurator-metadaten-strategie.md
 .claude

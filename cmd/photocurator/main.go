@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"photocurator/internal/api"
+	"photocurator/internal/probe"
 	"photocurator/internal/version"
 	"photocurator/web"
 )
@@ -27,8 +28,10 @@ func main() {
 	switch cmd {
 	case "serve":
 		os.Exit(serve(args))
+	case "probe":
+		os.Exit(probe.Run(args, os.Stderr))
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve]\n", cmd)
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\nusage: photocurator [serve|probe]\n", cmd)
 		os.Exit(2)
 	}
 }

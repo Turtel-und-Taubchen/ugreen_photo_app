@@ -1,7 +1,7 @@
 ---
 id: 001
 title: Spike — welche Metadatenfelder liest UGREEN Fotos?
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E0 Fundament & Spike
 estimate: 5
@@ -24,34 +24,34 @@ Kandidatenfelder siehe [Tech Spec §3.1](../concepts/photocurator-tech-spec.md).
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `photocurator probe generate --out <dir>` erzeugt für jedes Format (JPEG, HEIC,
+- [x] **AC1** — `photocurator probe generate --out <dir>` erzeugt für jedes Format (JPEG, HEIC,
   PNG, MP4, MOV) und jedes für dieses Format schreibbare Kandidatenfeld genau eine Testdatei,
   deren eindeutiger Marker (z. B. `pcprobe-heic-xmpsubject`) nur in diesem einen Feld steht.
-- [ ] **AC2** — Ein automatischer Read-back-Test weist für jede erzeugte Datei nach, dass ihr
+- [x] **AC2** — Ein automatischer Read-back-Test weist für jede erzeugte Datei nach, dass ihr
   Marker im Zielfeld steht und in keinem anderen Kandidatenfeld.
-- [ ] **AC3** — Für Hierarchie-Felder enthält der Marker einen Pfad (z. B.
+- [x] **AC3** — Für Hierarchie-Felder enthält der Marker einen Pfad (z. B.
   `pcprobe|heic|hierarchical`), um zu sehen, wie UGREEN Hierarchien darstellt.
-- [ ] **AC4** — Für Ort gibt es je Format eine Datei nur mit GPS-Koordinaten (unterschiedliche,
+- [x] **AC4** — Für Ort gibt es je Format eine Datei nur mit GPS-Koordinaten (unterschiedliche,
   leicht erkennbare Orte je Feldvariante) und je eine nur mit Ortstext-Feldern.
-- [ ] **AC5** — Für MP4 und MOV gibt es zusätzlich Varianten ohne eingebettete Metadaten, aber
+- [x] **AC5** — Für MP4 und MOV gibt es zusätzlich Varianten ohne eingebettete Metadaten, aber
   mit Sidecar `<name>.xmp` bzw. `<name>.<ext>.xmp`.
-- [ ] **AC6** — Es gibt eine Datei mit allen Feldern gleichzeitig („combo") je Format sowie eine
+- [x] **AC6** — Es gibt eine Datei mit allen Feldern gleichzeitig („combo") je Format sowie eine
   WhatsApp-artige JPEG ohne jegliche Metadaten.
-- [ ] **AC7** — Alle Testdateien sind generiert (keine privaten Inhalte), zeigen ihren Marker
+- [x] **AC7** — Alle Testdateien sind generiert (keine privaten Inhalte), zeigen ihren Marker
   zusätzlich als Text im Bild bzw. Video und tragen ein festes, ungewöhnliches Aufnahmedatum
   (Platzhalter: 2001-01-01), damit sie in UGREEN Fotos leicht auffindbar sind.
-- [ ] **AC8** — Der Generator schreibt `PROTOKOLL.md` in den Ausgabeordner: eine Tabelle mit
+- [x] **AC8** — Der Generator schreibt `PROTOKOLL.md` in den Ausgabeordner: eine Tabelle mit
   einer Zeile je Datei (Datei, Format, Feld, Marker) und leeren Spalten für die Beobachtungen
   (in Suche gefunden, als Tag/Kategorie sichtbar, in bedingtem Album nutzbar, Ort angezeigt,
   Zeit bis sichtbar).
-- [ ] **AC9** — `photocurator probe mutate --dir <dir>` ändert in bereits indexierten
+- [x] **AC9** — `photocurator probe mutate --dir <dir>` ändert in bereits indexierten
   Testdateien den Marker in `XMP-dc:Subject` — einmal mit erhaltenem, einmal mit neuem
   Änderungsdatum — und das Protokoll enthält die Anleitung für den Erkennungstest (automatisch /
   nach manuellem Rescan / Verzögerung).
-- [ ] **AC10** — Das Protokoll enthält zusätzlich die Prüffragen: Welche Bedingungen bieten
+- [x] **AC10** — Das Protokoll enthält zusätzlich die Prüffragen: Welche Bedingungen bieten
   bedingte Alben überhaupt an? Schreibt UGREEN Fotos selbst Metadaten in Dateien (z. B. beim
   Taggen oder Favorisieren in der App)?
-- [ ] **AC11** — `docs/concepts/photocurator-metadaten-strategie.md` existiert mit der leeren
+- [x] **AC11** — `docs/concepts/photocurator-metadaten-strategie.md` existiert mit der leeren
   Feldmatrix, der vorläufigen Strategie aus der Tech Spec und einem Abschnitt „Entscheidung
   nach Spike" (auszufüllen nach der Durchführung).
 - [ ] **AC12** — Durchführung auf dem NAS und Eintrag der Beobachtungen. **manual residue:**
@@ -138,7 +138,7 @@ Reihenfolge D1 → D2 → D3 → D4 → D5. Kein Schreiben in echte Fotos; die D
 
 ## Deliverables
 
-- [ ] **D1 — Feldmatrix, Markerbild, Bild-Testdateien (JPEG/HEIC/PNG)**
+- [x] **D1 — Feldmatrix, Markerbild, Bild-Testdateien (JPEG/HEIC/PNG)**
   Dateien: `internal/probe/matrix.go`, `internal/probe/render.go`, `internal/probe/exiftool.go`,
   `internal/probe/generate.go`, `internal/probe/generate_test.go`, `internal/probe/matrix_test.go`,
   `cmd/photocurator/` (Unterbefehl `probe generate --out <dir>` an den bestehenden
@@ -181,7 +181,7 @@ Reihenfolge D1 → D2 → D3 → D4 → D5. Kein Schreiben in echte Fotos; die D
     Render-Ergebnis des eigenen Markers (kleine mittlere Abweichung) und eines fremden Markers
     (große Abweichung).
 
-- [ ] **D2 — Video-Testdateien (MP4/MOV) inkl. Sidecar-Varianten**
+- [x] **D2 — Video-Testdateien (MP4/MOV) inkl. Sidecar-Varianten**
   Dateien: `internal/probe/matrix.go` (Video-Zeilen ergänzen), `internal/probe/video.go`,
   `internal/probe/generate.go` (Video-Zweig aufrufen), `internal/probe/video_test.go`.
   Wiederverwenden: `render.go` (Markerbild), `exiftool.go` (Argumentdatei-Aufruf) und den
@@ -209,7 +209,7 @@ Reihenfolge D1 → D2 → D3 → D4 → D5. Kein Schreiben in echte Fotos; die D
     Videozeilen inkl. GPS, Ortstext, Combo), AC5, AC7 (Video: erstes Frame per ffmpeg
     extrahieren und wie in D1 mit dem Render-Ergebnis vergleichen; Datum prüfen).
 
-- [ ] **D3 — `probe mutate --dir <dir>` (Erkennungstest)**
+- [x] **D3 — `probe mutate --dir <dir>` (Erkennungstest)**
   Dateien: `internal/probe/mutate.go`, `internal/probe/mutate_test.go`,
   `internal/probe/generate.go` (die zwei Mutate-Dateien mit erzeugen), `cmd/photocurator/`
   (Unterbefehl `probe mutate --dir`). Wiederverwenden: `exiftool.go`, `render.go`.
@@ -225,7 +225,7 @@ Reihenfolge D1 → D2 → D3 → D4 → D5. Kein Schreiben in echte Fotos; die D
     nicht mehr; mtime von keep unverändert, von new neuer als vorher; zweiter Lauf ergibt `-v3`;
     Ordner ohne Probe-Dateien → Fehler, Ordnerinhalt unverändert.
 
-- [ ] **D4 — `PROTOKOLL.md` im Ausgabeordner**
+- [x] **D4 — `PROTOKOLL.md` im Ausgabeordner**
   Dateien: `internal/probe/protocol.go`, `internal/probe/protocol_test.go`,
   `internal/probe/generate.go` (am Ende `PROTOKOLL.md` schreiben). Eingabe: `Probes()` aus
   `matrix.go` plus die Mutate- und WhatsApp-Datei.
@@ -249,7 +249,7 @@ Reihenfolge D1 → D2 → D3 → D4 → D5. Kein Schreiben in echte Fotos; die D
     `exiftool -a -G1 <datei>` vergleichen.
   - Test (`protocol_test.go`): AC8, AC9 (Anleitungsteil), AC10.
 
-- [ ] **D5 — Strategie-Dokument `docs/concepts/photocurator-metadaten-strategie.md`**
+- [x] **D5 — Strategie-Dokument `docs/concepts/photocurator-metadaten-strategie.md`**
   Dateien: `docs/concepts/photocurator-metadaten-strategie.md` (neu, Deutsch),
   `internal/probe/strategydoc_test.go`, ggf. `.dockerignore` (das Dokument muss im Build-Kontext
   des Stages `test` liegen).
@@ -308,3 +308,34 @@ Playwright-Flow.
   automatisierbar (Nutzer, nach dem Sprint).
 
 ## Done
+
+Der Spike liefert das Werkzeug und das Protokoll: `photocurator probe generate --out <dir>` erzeugt
+alle Test-Bilder/-Videos (JPEG/HEIC/PNG/MP4/MOV, Sidecar-Varianten, Combo, WhatsApp-Kontrolle,
+zwei Mutate-JPEGs) samt `PROTOKOLL.md`; `probe mutate --dir <dir>` ändert den Marker für den
+Erkennungstest. Das Strategie-Dokument mit leerer Feldmatrix liegt unter `docs/concepts/`.
+
+**Commit:** `001: Spike-Werkzeug probe generate/mutate, PROTOKOLL.md, Metadaten-Strategie-Dokument`
+
+**Verifikation (Narrow Gate, kein `test-story`/`e2e-story` nötig):** `build`, `test` (Docker-Stage
+`test`, 17 Probe-Tests + web), `lint`, `typecheck` grün; kein e2e (CLI ohne Weboberfläche).
+Review: 1 Zyklus (default), Findings behoben und neu verifiziert.
+AC → Test (alle bestanden): AC1 `TestGenerate_OneFilePerFormatAndField` / `TestGenerateVideo_OneFilePerField`;
+AC2 `TestGenerate_MarkerOnlyInTargetField` / `TestGenerateVideo_MarkerOnlyInTargetField`;
+AC3 `TestProbes_HierarchyMarkersArePaths`; AC4 `TestGenerate_GPSOnlyAndLocationTextOnlyFiles` + Video-Test;
+AC5 `TestGenerateVideo_SidecarVariantsCarryMarkersOutsideTheVideo`; AC6 `TestGenerate_ComboAndWhatsAppLikeFile` + Video-Test;
+AC7 `TestGenerate_MarkerVisibleInPixelsDateFixedNameNeutral` / `TestGenerateVideo_MarkerVisibleInFrameAndDateFixed`;
+AC8 `TestProtocol_OneRowPerGeneratedFile`; AC9 `TestMutate_ReplacesSubjectKeepingAndRenewingMtime` + `TestProtocol_ContainsDetectionGuideAndQuestions`;
+AC10 `TestProtocol_ContainsDetectionGuideAndQuestions`; AC11 `TestStrategyDoc_ListsEveryProbeField`.
+AC12: manual residue — Durchführung in der proprietären UGREEN Fotos-App auf dem NAS (Nutzer, nach dem Sprint).
+Der volle Regressions-Gate (Sprint) steht aus.
+
+**Decisions:**
+- `UserData:Keywords` (Video) entfällt: ExifTool 13.25 kann das Feld weder in MP4 noch MOV schreiben (Code-Kommentar in `videoDefs()`); alle anderen Felder schreiben sauber.
+- HEIC-Encoder: `libheif-plugin-x265` im `native`-Stage des Dockerfile ergänzt (test + runtime).
+- IPTC-IIM City/Sub-location/Province-State sind auf 32 Bytes begrenzt; Combo-Marker von `loc-iptc` nutzen Kurzsuffixe (`city`, `sub`, `st`, `country`).
+- `Probe.Place` ist ein Struct {Name, Lat, Lon}; XMP-GPS wird vorzeichenbehaftet geschrieben.
+- ExifTool-Aufrufe übergeben Pfade nach `--`; Mutate ist nicht atomar (Fehler beim zweiten Schreiben lässt die erste Datei mutiert; Neustart zählt weiter).
+- `.dockerignore`/`Dockerfile`: nur `docs/concepts/photocurator-metadaten-strategie.md` kommt in den Build-Kontext des Test-Stages.
+- `testsupport` bot nichts Passendes für Probe-Dateien (nur `RepoRoot`/`CopyFixture`); Tests erzeugen in eigenen Temp-Ordnern.
+
+tiers: D 5 / hard 0 · review default · cycles 1 · agents 9

@@ -25,6 +25,7 @@ COPY cmd ./cmd
 COPY internal ./internal
 COPY web/*.go ./web/
 COPY testdata ./testdata
+COPY docs/concepts/photocurator-metadaten-strategie.md ./docs/concepts/photocurator-metadaten-strategie.md
 COPY --from=web /src/web/dist ./web/dist
 
 FROM gobase AS build
@@ -38,11 +39,12 @@ RUN unformatted="$(gofmt -l .)"; \
     go vet ./...
 
 FROM debian:trixie-slim AS native
-# libheif in trixie decodes HEIC only through a codec plugin; libde265 is the decode-only one
-# (no x265 encoder in the image). --no-install-recommends would otherwise drop it silently.
+# libheif in trixie decodes HEIC only through a codec plugin; libde265 is the decode-only one.
+# --no-install-recommends would otherwise drop it silently. libheif-plugin-x265 adds the HEVC
+# encoder that `photocurator probe generate` needs (vips heifsave) to create HEIC probe files.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      libimage-exiftool-perl libvips-tools libheif-plugin-libde265 ffmpeg tini ca-certificates \
+      libimage-exiftool-perl libvips-tools libheif-plugin-libde265 libheif-plugin-x265 ffmpeg tini ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 FROM native AS test
