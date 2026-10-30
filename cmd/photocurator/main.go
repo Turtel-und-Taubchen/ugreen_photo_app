@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 	_ "time/tzdata" // the runtime image has no zoneinfo, and TZ must resolve
@@ -22,6 +24,7 @@ import (
 	"photocurator/internal/metadata"
 	"photocurator/internal/probe"
 	"photocurator/internal/store"
+	"photocurator/internal/thumbs"
 	"photocurator/internal/version"
 	"photocurator/web"
 )
@@ -92,7 +95,31 @@ func serve(args []string) int {
 		Now:    time.Now,
 		Loc:    time.Local,
 	}
-	sched := library.NewScheduler(scanner.Run, scan.Interval, time.After)
+	thumbDir := filepath.Join(paths.DataDir, "thumbs")
+	if err := os.MkdirAll(thumbDir, 0o755); err != nil {
+		slog.Error("thumbnail cache", "err", err)
+		return 1
+	}
+	thumbSvc := thumbs.NewService(thumbDir, paths.PhotosDir, thumbs.Renderer{CacheDir: thumbDir, Root: paths.PhotosDir}, 1)
+	// Every completed scan queues the small previews of the whole index in browse order.
+	scanAndQueue := func(ctx context.Context, progress func(done, total int)) (library.Result, error) {
+		res, err := scanner.Run(ctx, progress)
+		if err != nil {
+			return res, err
+		}
+		all, lerr := library.AllPhotos(idxDB)
+		if lerr != nil {
+			slog.Error("thumbnail backlog", "err", lerr)
+			return res, nil
+		}
+		entries := make([]thumbs.Entry, len(all))
+		for i, p := range all {
+			entries[i] = thumbEntry(p)
+		}
+		thumbSvc.EnqueueBackground(entries)
+		return res, nil
+	}
+	sched := library.NewScheduler(scanAndQueue, scan.Interval, time.After)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
@@ -101,12 +128,25 @@ func serve(args []string) int {
 	scanDone := make(chan struct{})
 	go func() { defer close(scanDone); sched.Run(scanCtx) }()
 	defer func() { cancelScan(); <-scanDone }()
+	thumbSvc.Start(ctx)
+	defer thumbSvc.Stop()
 
 	srv := &http.Server{Addr: addr, Handler: api.NewHandler(static, api.AuthDeps{
 		Users:    users,
 		Sessions: auth.NewSessionStore(db, nil),
 		Limiter:  auth.NewLoginLimiter(nil),
-	}, api.LibraryDeps{Scan: library.Control{Scheduler: sched, DB: idxDB}}), ReadHeaderTimeout: 10 * time.Second}
+	}, api.LibraryDeps{
+		Scan: library.Control{Scheduler: sched, DB: idxDB},
+		Thumbs: &api.ThumbDeps{
+			Lookup: func(id int64) (thumbs.Entry, bool, error) {
+				p, ok, err := library.PhotoByID(idxDB, id)
+				return thumbEntry(p), ok, err
+			},
+			Service:  thumbSvc,
+			CacheDir: thumbDir,
+		},
+		Photos: photoList{idxDB},
+	}), ReadHeaderTimeout: 10 * time.Second}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()
 	slog.Info("photocurator listening", "addr", addr, "version", version.Version)
@@ -124,6 +164,16 @@ func serve(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+func thumbEntry(p library.Photo) thumbs.Entry {
+	return thumbs.Entry{ID: p.ID, RelPath: p.RelPath, MediaType: p.MediaType, Size: p.Size, MtimeNs: p.MtimeNs}
+}
+
+type photoList struct{ db *sql.DB }
+
+func (l photoList) List(after *library.ListCursor, limit int) ([]library.Photo, error) {
+	return library.ListPhotos(l.db, after, limit)
 }
 
 // checkStart (paths, users file, scan settings) must pass before any port is opened.

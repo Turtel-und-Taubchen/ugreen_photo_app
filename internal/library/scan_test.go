@@ -28,7 +28,7 @@ import (
 var fixtureMedia = []string{
 	"2024/07/sample.heic", "2024/07/sample.jpg", "2024/07/tagged.heic", "2024/07/tagged.jpg",
 	"2024/08/20240815_143005.jpg", "2024/08/IMG-20240812-WA0001.jpg", "2024/08/clip.mp4",
-	"2024/08/defekt.jpg", "2024/08/screenshot.png",
+	"2024/08/defekt.jpg", "2024/08/screenshot.png", "2024/08/short.mov",
 }
 
 // countingReader records which files the scanner hands to ExifTool.
@@ -599,8 +599,8 @@ func TestProgressCountsUpToTheNumberOfFilesToRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := [][2]int{{200, 259}, {259, 259}}
-	if !reflect.DeepEqual(calls, want) || res.Read != 259 {
+	want := [][2]int{{200, 260}, {260, 260}}
+	if !reflect.DeepEqual(calls, want) || res.Read != 260 {
 		t.Fatalf("progress %v (read %d), want %v", calls, res.Read, want)
 	}
 

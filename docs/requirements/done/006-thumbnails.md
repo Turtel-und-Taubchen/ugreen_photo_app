@@ -1,7 +1,7 @@
 ---
 id: 006
 title: Thumbnails mit Cache für Fotos und Videos
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E1 Index & Ansicht
 estimate: 5
@@ -16,19 +16,19 @@ und ohne etwas in den Fotoordner zu schreiben. Details: [Tech Spec §4](../conce
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Für JPEG, PNG und HEIC entstehen ein Raster-Thumbnail (ca. 320 px) und eine
+- [x] **AC1** — Für JPEG, PNG und HEIC entstehen ein Raster-Thumbnail (ca. 320 px) und eine
   Detailvorschau (ca. 1600 px) als WebP, mit korrekt angewandter EXIF-Ausrichtung.
-- [ ] **AC2** — Für MP4 und MOV entsteht das Vorschaubild aus einem Frame (bei ca. 1 s, bei
+- [x] **AC2** — Für MP4 und MOV entsteht das Vorschaubild aus einem Frame (bei ca. 1 s, bei
   kürzeren Videos aus dem ersten Frame); im Raster tragen Videos ein Video-Symbol.
-- [ ] **AC3** — Ein zweiter Abruf desselben Thumbnails erzeugt es nicht neu; ändert sich die
+- [x] **AC3** — Ein zweiter Abruf desselben Thumbnails erzeugt es nicht neu; ändert sich die
   Datei (Größe/Änderungszeit), wird es neu erzeugt.
-- [ ] **AC4** — Die Erzeugung läuft im Hintergrund mit begrenzter Parallelität (Platzhalter: 1
+- [x] **AC4** — Die Erzeugung läuft im Hintergrund mit begrenzter Parallelität (Platzhalter: 1
   Worker, niedrige Prozesspriorität); ein noch fehlendes, gerade sichtbares Thumbnail wird
   vorgezogen und bis dahin durch einen Platzhalter ersetzt.
-- [ ] **AC5** — Thumbnail-Antworten tragen langlebige Cache-Header; der Browser lädt ein bereits
+- [x] **AC5** — Thumbnail-Antworten tragen langlebige Cache-Header; der Browser lädt ein bereits
   geladenes Thumbnail beim erneuten Scrollen nicht erneut vom Server.
-- [ ] **AC6** — Für eine defekte Datei erscheint ein Fehlerplatzhalter; die App läuft weiter.
-- [ ] **AC7** — Es wird nichts unter `/photos` angelegt oder verändert; der Cache liegt unter
+- [x] **AC6** — Für eine defekte Datei erscheint ein Fehlerplatzhalter; die App läuft weiter.
+- [x] **AC7** — Es wird nichts unter `/photos` angelegt oder verändert; der Cache liegt unter
   `/data`.
 
 ## Open Questions
@@ -107,7 +107,7 @@ Reihenfolge D1 → D2 → D3 → D4. Kein Systems-Doc betroffen (`docs/systems/`
 
 ## Deliverables
 
-- [ ] **D1 — Thumbnail-Erzeugung (Render) + Fixtures.** Neues Paket `internal/thumbs`:
+- [x] **D1 — Thumbnail-Erzeugung (Render) + Fixtures.** Neues Paket `internal/thumbs`:
   `key.go` — `Key(relPath string, size, mtimeNs int64) string` = hex `sha1("relPath|size|mtimeNs")`;
   `Path(cacheDir, key, size)` = `<cacheDir>/<key[0:2]>/<key>-<s|l>.webp`, Marker
   `…-<s|l>.failed`. `render.go` — `Renderer` mit `Render(ctx, absSrc, mediaType, size) error`:
@@ -131,9 +131,9 @@ Reihenfolge D1 → D2 → D3 → D4. Kein Systems-Doc betroffen (`docs/systems/`
   prüfbar); danach für alle Fixtures: Dateiliste, Größen, mtimes und SHA-256 unter der
   Bibliothekskopie unverändert, alle neuen Dateien liegen unter dem Cache-Verzeichnis.
 
-- [ ] **D2 — Queue und Service mit Priorität.** `internal/thumbs/service.go` (+ `queue.go` nach
+- [x] **D2 — Queue und Service mit Priorität.** `internal/thumbs/service.go` (+ `queue.go` nach
   Bedarf). `Entry{ID int64; RelPath, MediaType string; Size, MtimeNs int64}`;
-  `NewService(cacheDir, photosDir string, r renderer, workers int)` mit Interface
+  `NewService(cacheDir, photosDir string, r renderer, workers int)` mit Interface (umgesetzt als `RenderTo(ctx, absSrc, mediaType, size, dstWebp)`, siehe Done)
   `renderer interface{ Render(ctx, absSrc, mediaType, size string) error }` (D1s `Renderer` erfüllt
   es); `Start(ctx)`/`Stop()` (wartet auf laufenden Job, keine Goroutine bleibt hängen).
   `Status(e Entry, size string) State` → `Ready` (Datei existiert), `Failed` (Marker existiert),
@@ -146,7 +146,7 @@ Reihenfolge D1 → D2 → D3 → D4. Kein Systems-Doc betroffen (`docs/systems/`
   Tests `internal/thumbs/service_test.go` mit Fake-Renderer (zählt Aufrufe, misst gleichzeitige
   Aufrufe, kann blockieren/scheitern), reine Unit-Tests ohne native Tools.
 
-- [ ] **D3 — API-Endpunkt und Verdrahtung.** `internal/api/thumbs.go`:
+- [x] **D3 — API-Endpunkt und Verdrahtung.** `internal/api/thumbs.go`:
   `GET /api/thumbs/{id}/{size}` (size ∈ `s`,`l`, sonst 404), Eintrag per ID aus dem Index von 005
   (`internal/library`; fehlt dort eine Abfrage per ID, dort ergänzen), `thumbs.Status`:
   `Ready` → 200 `image/webp` (über `http.ServeFile`/`ServeContent`), `Cache-Control: private,
@@ -164,7 +164,7 @@ Reihenfolge D1 → D2 → D3 → D4. Kein Systems-Doc betroffen (`docs/systems/`
   alle Statuscodes und Header oben; derselbe Abruf zweimal → genau ein Render; geänderte
   Größe/mtime im Fake-Index → neuer `thumbKey`, erneuter Render.
 
-- [ ] **D4 — Kachel im Frontend + E2E-Flow.** `web/src/lib/thumbLoader.ts`:
+- [x] **D4 — Kachel im Frontend + E2E-Flow.** `web/src/lib/thumbLoader.ts`:
   `loadThumb(url, {fetchFn, signal, sleep})` → Zustände `pending | loaded(blobUrl) | failed`;
   200 → `URL.createObjectURL(blob)`; 202 → erneut nach `Retry-After` (Backoff bis 5 s, bis Abbruch
   per `signal`); 422/sonstige → `failed`; 401 → wie `api.ts` nach `/login`.
@@ -222,3 +222,18 @@ Reihenfolge D1 → D2 → D3 → D4. Kein Systems-Doc betroffen (`docs/systems/`
 - AC7 → integration `internal/thumbs/render_test.go` › "rendering leaves the library untouched and writes only into the cache"
 
 ## Done
+
+Neues Paket `internal/thumbs` (Key/Render, Prioritäts-Queue mit 1 Worker), `GET /api/thumbs/{id}/{s|l}` mit den Cache-Header-Regeln, `GET /api/photos` (Keyset, neu angelegt), Hintergrund-Erzeugung nach jedem Scan, Kachel + flache Vorschauliste im Frontend, ein E2E-Flow.
+
+Commit message: `006: thumbnails — vips/ffmpeg render, priority queue, /api/thumbs with immutable cache, preview tiles + E2E`
+
+Verification (narrow gate, test-story none → full `test`): build, lint, typecheck, `docker build --target test .` + vitest (14) und `e2e-story` `npx playwright test tests/e2e/thumbnails.spec.ts` grün (nach Review-Fix erneut e2e + test/lint/check). Review: 1 Zyklus, PASS, 4 Findings behoben. AC → Test wie oben unter Acceptance Tests, alle gelaufen und grün; kein manual residue.
+
+Decisions:
+- Renderer-API: `Renderer{CacheDir, Root}.RenderTo(ctx, src, mediaType, size, dst)` statt `Render(...)`; das Service-Interface verlangt `RenderTo` (Ziel = `thumbs.Path`), so kennt der Fake dasselbe Ziel.
+- Fixtures: vorhandene `screenshot.png`/`defekt.jpg` wiederverwendet; `clip.mp4` neu erzeugt (2 s rot/blau), `short.mov` neu → Fixture-Bibliothek 10 statt 9 Medien (005-Tests/E2E angepasst, 259→260).
+- 005 hatte kein `GET /api/photos`: hier angelegt (opaker base64-Cursor, limit ≤ 200), mit DB-Test in `internal/library/photos_test.go`.
+- Service merkt Fehlschläge zusätzlich im Speicher (bis Neustart); `.failed`-Marker eines durch `Stop()` abgebrochenen Renders wird entfernt.
+- Bewusst offen: nice-Test prüft nur die Befehlsbau-Funktionen; `COALESCE(taken_at,'')` nutzt den Index nicht (Perf, bei 007/021 messen); Queue-Slots wachsen pro Poll während langem Render (begrenzt); Symlinks nicht geprüft; Cache-Aufräumen bleibt Follow-up.
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 8

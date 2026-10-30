@@ -30,6 +30,12 @@ func NewHandler(static fs.FS, deps AuthDeps, lib LibraryDeps) http.Handler {
 	if lib.Scan != nil {
 		registerScan(mux, lib.Scan)
 	}
+	if lib.Thumbs != nil {
+		registerThumbs(mux, lib.Thumbs)
+	}
+	if lib.Photos != nil {
+		registerPhotos(mux, lib.Photos)
+	}
 	// Unknown API paths must never fall through to the SPA's index.html.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})

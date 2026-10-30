@@ -24,3 +24,21 @@
 - 2026-10-30 09:55:10 · 005 · verify 2 · started
 - 2026-10-30 10:00:01 · 005 · verify 2 · done
 - 2026-10-30 10:00:01 · 005 · story · done
+- 2026-10-30 10:00:18 · 006 · build · started
+- 2026-10-30 10:00:39 · 006 · D1 render · started
+- 2026-10-30 10:14:47 · 006 · D1 render · done
+- 2026-10-30 10:14:47 · 006 · D2 queue/service (hard) · started
+- 2026-10-30 10:23:26 · 006 · D2 queue/service (hard) · done
+- 2026-10-30 10:23:26 · 006 · D3 api+wiring · started
+- 2026-10-30 10:29:54 · 006 · D3 api+wiring · done
+- 2026-10-30 10:29:54 · 006 · D4 frontend+e2e · started
+- 2026-10-30 10:32:51 · 006 · D4 frontend+e2e · done
+- 2026-10-30 10:32:51 · 006 · verify · started
+- 2026-10-30 10:40:53 · 006 · verify · done
+- 2026-10-30 10:40:53 · 006 · review 1 · started
+- 2026-10-30 10:42:46 · 006 · review 1 · done
+- 2026-10-30 10:42:46 · 006 · fix 1 · started
+- 2026-10-30 10:47:55 · 006 · fix 1 · done
+- 2026-10-30 10:47:55 · 006 · verify 2 · started
+- 2026-10-30 10:48:40 · 006 · verify 2 · done
+- 2026-10-30 10:48:40 · 006 · story · done

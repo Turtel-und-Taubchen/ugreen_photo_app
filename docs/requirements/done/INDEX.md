@@ -10,3 +10,4 @@ second roadmap.
 - 003 — Deployment als Docker-Compose-Projekt auf UGOS Pro · S01 · Compose/.env/README, Pfad-Startprüfung, healthcheck und E2E gegen Deploy-Compose laufen; NAS-Installation (AC7) manuell
 - 004 — Einfache Anmeldung für zwei Nutzer · S01 · Argon2id-Login mit Sessions, Limiter, Default-deny und CSRF-Schutz, Login-UI und E2E-Flow
 - 005 — Bibliotheks-Index aus den Dateien in Sortiert · S02 · Scanner + index.db aus den Dateien, Scheduler, /api/scan, Scan-Anzeige mit E2E
+- 006 — Thumbnails mit Cache für Fotos und Videos · S02 · WebP-Thumbnails per vips/ffmpeg mit Prioritäts-Queue, immutable Cache-Header und Vorschaukacheln.

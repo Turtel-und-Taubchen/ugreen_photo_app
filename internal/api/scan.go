@@ -21,7 +21,9 @@ type ScanControl interface {
 
 // LibraryDeps are the library services behind the API; a nil field leaves its routes unregistered.
 type LibraryDeps struct {
-	Scan ScanControl
+	Scan   ScanControl
+	Thumbs *ThumbDeps
+	Photos PhotoLister
 }
 
 type unreadableJSON struct {

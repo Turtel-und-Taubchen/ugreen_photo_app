@@ -20,7 +20,7 @@ Nominatim.
 <!-- Order = the order the build phase works through. Dependent stories go last. -->
 
 - [x] 005 — Bibliotheks-Index aus den Dateien in Sortiert
-- [ ] 006 — Thumbnails mit Cache für Fotos und Videos
+- [x] 006 — Thumbnails mit Cache für Fotos und Videos
 - [ ] 007 — Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht
 - [ ] 008 — Mehrfach-, Bereichs- und Gruppenauswahl
 - [ ] 011 — Hierarchische Kategorien definieren und als Baum anzeigen

@@ -12,7 +12,8 @@ Originalen, sondern immer auf einer Kopie (`testsupport.CopyFixture`).
 | `library/2024/08/screenshot.png` | `sample.jpg` als PNG; nur dc:Subject Notizen, kein Datum (Quelle: mtime) | libvips + ExifTool |
 | `library/2024/08/IMG-20240812-WA0001.jpg` | Kopie von `sample.jpg`, ohne Metadaten (Datum nur aus dem Namen) | Kopie |
 | `library/2024/08/20240815_143005.jpg` | Kopie von `sample.jpg`, ohne Metadaten (Datum und Zeit nur aus dem Namen) | Kopie |
-| `library/2024/08/clip.mp4` | 1 s, 64×64, H.264 ohne Ton, `moov` hinter `mdat` (kein faststart); QuickTime:CreateDate 2024:08:20 08:00:00 (UTC), dc:Subject Video, Keys:GPSCoordinates 48.2082 16.3738 | ffmpeg 7.1 + ExifTool, danach `moov` ans Ende verschoben |
+| `library/2024/08/clip.mp4` | 2 s, 320×240, 10 fps, H.264 ohne Ton, 0–1 s rot, 1–2 s blau (Vorschaubild bei 1 s ist blau); `moov` hinter `mdat` (kein faststart); QuickTime:CreateDate 2024:08:20 08:00:00 (UTC), dc:Subject Video, Keys:GPSCoordinates 48.2082 16.3738 | ffmpeg 7.1 + ExifTool, danach `moov` ans Ende verschoben |
+| `library/2024/08/short.mov` | 0,5 s, 320×240, H.264 ohne Ton, rot, ohne Metadaten (kürzer als 1 s: Vorschaubild aus dem ersten Frame) | ffmpeg 7.1 |
 | `library/2024/08/defekt.jpg` | 1 KB Zufallsbytes; `exiftool -j` liefert `Error` („File format error“) | `head -c 1024 /dev/urandom` |
 | `library/2024/08/notizen.txt` | kurzer Text, kein Medium (muss ignoriert werden) | von Hand |
 
@@ -86,9 +87,10 @@ vips copy $L/07/sample.jpg $L/08/screenshot.png
 $C -XMP-dc:Subject=Notizen $L/08/screenshot.png
 cp $L/07/sample.jpg $L/08/IMG-20240812-WA0001.jpg
 cp $L/07/sample.jpg $L/08/20240815_143005.jpg
-ffmpeg -loglevel error -y -f lavfi -i color=c=blue:s=64x64:d=1:r=10 -c:v libx264 -pix_fmt yuv420p -an $L/08/clip.mp4
+ffmpeg -loglevel error -y -f lavfi -i color=c=red:s=320x240:d=1:r=10 -f lavfi -i color=c=blue:s=320x240:d=1:r=10 \n  -filter_complex "[0:v][1:v]concat=n=2:v=1:a=0,format=yuv420p" -c:v libx264 -map_metadata -1 -an $L/08/clip.mp4
 $C -QuickTime:CreateDate="2024:08:20 08:00:00" -XMP-dc:Subject=Video -Keys:GPSCoordinates="48.2082 16.3738" $L/08/clip.mp4
 perl /rp/reorder.pl $L/08/clip.mp4
+ffmpeg -loglevel error -y -f lavfi -i color=c=red:s=320x240:d=0.5:r=10 -c:v libx264 -pix_fmt yuv420p -map_metadata -1 -an $L/08/short.mov
 head -c 1024 /dev/urandom > $L/08/defekt.jpg
 printf "Einkaufsliste: Brot, Milch\n" > $L/08/notizen.txt
 exiftool -j $L/08/defekt.jpg | grep Error'

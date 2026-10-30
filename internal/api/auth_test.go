@@ -57,6 +57,10 @@ func newTestServer(t *testing.T) *testServer { return newTestServerWith(t, nil) 
 
 // newTestServerWith wires scan into the library deps; nil leaves the scan routes unregistered.
 func newTestServerWith(t *testing.T, scan api.ScanControl) *testServer {
+	return newTestServerDeps(t, api.LibraryDeps{Scan: scan})
+}
+
+func newTestServerDeps(t *testing.T, lib api.LibraryDeps) *testServer {
 	t.Helper()
 	db, err := store.OpenAppDB(t.TempDir())
 	if err != nil {
@@ -80,7 +84,7 @@ func newTestServerWith(t *testing.T, scan api.ScanControl) *testServer {
 			}
 			return ok, err
 		},
-	}, api.LibraryDeps{Scan: scan})
+	}, lib)
 	return s
 }
 

@@ -11,7 +11,7 @@ interface Scan {
 test('the library is read at start and on demand, unreadable files are flagged', async ({ page }) => {
   await login(page, users.anna);
   const status = page.getByRole('status');
-  await expect(status).toContainText('9 Dateien');
+  await expect(status).toContainText('10 Dateien');
 
   const unreadable = page.getByRole('listitem').filter({ hasText: '2024/08/defekt.jpg' });
   await expect(unreadable).toContainText('nicht lesbar');
@@ -19,7 +19,7 @@ test('the library is read at start and on demand, unreadable files are flagged',
 
   const read = async () => (await (await page.request.get('/api/scan')).json()) as Scan;
   const before = await read();
-  expect(before.files).toBe(9);
+  expect(before.files).toBe(10);
   expect(before.finished_at).not.toBeNull();
 
   await page.getByRole('button', { name: 'Neu einlesen' }).click();
@@ -32,6 +32,6 @@ test('the library is read at start and on demand, unreadable files are flagged',
     })
     .not.toBe(before.finished_at);
   await expect(page.getByRole('button', { name: 'Neu einlesen' })).toBeEnabled();
-  await expect(status).toContainText('9 Dateien');
+  await expect(status).toContainText('10 Dateien');
   await expect(unreadable).toContainText('nicht lesbar');
 });
