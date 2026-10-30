@@ -1,6 +1,6 @@
 ---
 sprint: S03
-status: in-progress # planned | in-progress | done
+status: done # planned | in-progress | done
 branch: main
 milestone: M3, M4
 ---
@@ -39,4 +39,7 @@ oder Lieblingsort; Taggen wird durch zuletzt verwendete Tags und Autovervollstä
 
 ## Regression gate
 
-<!-- Filled by `/sprint` phase 2b: the commands run, minutes taken, result, commit, and a verdict per failure. -->
+- Läufe auf `2f4c8a9`: `build` grün (<1 min, gecacht), `test` (Go-Docker-Stage + vitest 55) grün (<1 min, gecacht), `e2e` **rot** nach 6,9 min (16 grün, 3 rot). `e2e-all`: none.
+- Attribution (3 min): `places.spec.ts:25` → **flaky** (allein grün; kein Quarantäne-Eintrag, da `e2e-quarantine: none` — Follow-up-Zeile in der Roadmap). `smoke.spec.ts:13` (Container nicht als non-root) → **Story 009**, Commit 73ba9c2, **fixed in 024e351**: e2e-Compose nutzt Named Volumes + Seed-Service, Container läuft als uid 1000. `write-jobs.spec.ts:7` → **Story 012**, Commit 465f5cc (Skip vor Backup macht den Schreibvorgang auf die bereits getaggte `tagged.jpg` zum Skip), **fixed in 79f3744**: Spec schreibt ein Tag, das keine Fixture hat; Skip-Fall zusätzlich abgedeckt.
+- Fixes bestätigt durch Wiederlauf der betroffenen Specs (smoke, write-jobs, jobs, batch-tagging); kein zweiter Voll-Lauf (Budgetregel).
+- Quarantäne: kein Eintrag geschrieben (`e2e-quarantine: none`). Kein unerwarteter Pass.

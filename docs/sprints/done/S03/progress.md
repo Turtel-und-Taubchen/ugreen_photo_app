@@ -123,3 +123,5 @@
 - 2026-10-31 00:02:06 · gate · fix 009 smoke · started
 - 2026-10-31 00:04:08 · gate · fix 009 smoke · done
 - 2026-10-31 00:04:08 · gate · fix 012 write-jobs · started
+- 2026-10-31 00:06:35 · gate · fix 012 write-jobs · done
+- 2026-10-31 00:08:20 · sprint · review written, archived

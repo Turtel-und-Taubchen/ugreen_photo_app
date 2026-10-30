@@ -1,21 +1,21 @@
 # Roadmap
 
-As of: 2026-10-30. One screen: where the project stands, what was done recently, what comes
+As of: 2026-10-31. One screen: where the project stands, what was done recently, what comes
 next. Detail lives where it is produced — sprint reviews, story files, concepts — and this file
 links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are in
 `.claude/commands/roadmap.md`.
 
 ## Where we stand
 
-- S02 fertig (2026-10-30): M2 komplett (Index, Thumbnails, Raster, Auswahl), dazu Kategorienbaum (011) und Ortssuche (014); Regression-Gate grün.
-- Nächster Schritt: S03 (Metadaten-Writer, Backup, Batch-Tagging) — startet mit dem Spike-Ergebnis.
-- Wartet auf den Nutzer: Spike-Protokoll vom NAS, NAS-Lauf der Compose-Anleitung, Push.
+- S03 fertig (2026-10-31): M3 komplett (Writer, Backup/Rückgängig, Batch-Tagging); dazu Tag-Schnellauswahl (013), Batch-Standort mit Karte (015) und Lieblingsorte (016); Regression-Gate grün nach zwei Fixes.
+- Nächster Schritt: S04 (Ortsvorschlag 017, Arbeitslisten, Härtung) — M4 und M5.
+- Wartet auf den Nutzer: Merge/Push (Commits liegen auf `main`), manueller Check AC9 in UGREEN Fotos ([Testplan](sprints/done/S03/testplan.md)), NAS-Lauf der Compose-Anleitung.
 
 ## Phase overview
 
 | Phase | Goal | Milestones | Status |
 | --- | --- | --- | --- |
-| 1 — MVP | Batch-Tags, Batch-Orte und Arbeitslisten schreiben UGREEN-taugliche Metadaten sicher in die Dateien | 2/5 | ▶ **in progress** |
+| 1 — MVP | Batch-Tags, Batch-Orte und Arbeitslisten schreiben UGREEN-taugliche Metadaten sicher in die Dateien | 3/5 | ▶ **in progress** |
 | 2 — Nach dem MVP | Komfort und Erweiterungen laut [Backlog](BACKLOG.md#nach-dem-mvp-vorgemerkt-noch-nicht-geschnitten) | 0/? | planned |
 
 ## Current phase: 1 — MVP
@@ -26,8 +26,8 @@ Concept: [concepts/photocurator.md](concepts/photocurator.md).
 | --- | --- | --- | --- | --- |
 | M1 | Fundament & Spike-Werkzeug | done 2026-10-29 | [S01](sprints/S01/review.md) | Danach Spike-Durchführung auf dem NAS durch den Nutzer |
 | M2 | Bibliothek sehen und auswählen | done 2026-10-30 | [S02](sprints/S02/review.md) | |
-| M3 | Sicher schreiben und taggen | planned | [S02](sprints/S02/review.md), [S03](sprints/S03/sprint.md) | 011 fertig in S02; Rest startet erst mit Spike-Ergebnis |
-| M4 | Orte setzen, schneller taggen | planned | [S02](sprints/S02/review.md), [S03](sprints/S03/sprint.md), [S04](sprints/S04/sprint.md) | 014 fertig in S02; Ortsvorschlag (017) in S04 |
+| M3 | Sicher schreiben und taggen | done 2026-10-31 | [S02](sprints/S02/review.md), [S03](sprints/done/S03/review.md) | |
+| M4 | Orte setzen, schneller taggen | in progress | [S02](sprints/S02/review.md), [S03](sprints/done/S03/review.md), [S04](sprints/S04/sprint.md) | 013–016 fertig; Ortsvorschlag (017) in S04 |
 | M5 | Arbeitslisten und MVP-Abschluss | planned | [S04](sprints/S04/sprint.md) | |
 
 ## Open / unprioritised
@@ -57,7 +57,9 @@ by `/roadmap check`.
 - Tech Spec: Endpunkttabelle um `POST /api/selection/count` ergänzen, §5 ExifTool-Leseweise prüfen; Quelle: [S02 review](sprints/S02/review.md)
 - Verwaiste Thumbnail-Dateien in `/data/thumbs` aufräumen; Quelle: [S02 review](sprints/S02/review.md)
 - `COALESCE(taken_at,'')` in Listen-/Nachbar-SQL nutzt keinen Index — in 021 mit großer Bibliothek messen; Quelle: [S02 review](sprints/S02/review.md)
-- `message()`-Fehlerhelfer im Web dreifach kopiert (Login, Tags, PlacePicker) — zusammenführen; Quelle: [S02 review](sprints/S02/review.md)
+- Go-Testnamen erscheinen im Docker-`test`-Stage nicht (kein `-v`) — AC→Test-Nachweis nur auf Paketebene; `-v`/JSON-Ausgabe prüfen; Quelle: [S03 review](sprints/done/S03/review.md)
+- Flaky `places.spec.ts` „place search finds a POI…" im vollen E2E-Lauf; Projekt hat noch keine Quarantäne (`e2e-quarantine`); Quelle: [S03 review](sprints/done/S03/review.md)
+- Robustheits-/Testlücken aus S03 als Entwurf [023](requirements/023-robustheit-aus-s03-review.md) — bei nächster Planung einplanen; Quelle: [S03 review](sprints/done/S03/review.md)
 - Robustheits-/Testlücken aus S02 als Entwurf [022](requirements/022-robustheit-aus-s02-review.md) — bei nächster Planung einplanen; Quelle: [S02 review](sprints/S02/review.md)
 
 ## History
