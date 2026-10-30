@@ -28,11 +28,13 @@ step does not exist in this project.
   ExifTool, libvips and ffmpeg are not installed on the dev machine — and the tests must
   run against the same native tools as the NAS container anyway.
 -->
+
 build: npm --prefix web run build && docker build --target runtime -t photocurator:dev .
 test: docker build --target test . && npm --prefix web run test
 lint: docker build --target lint . && npm --prefix web run lint
 typecheck: npm --prefix web run check
 e2e: npm --prefix web run test:e2e
+
 <!--
   `e2e` is the acceptance gate for user-facing stories: an acceptance criterion that
   describes something the user does is proven here, through the real surface. It is a
@@ -47,6 +49,7 @@ e2e-story-slices: 1 <!-- 1 = one call; n > 1 only when e2e-story carries {shard}
 e2e-all: none <!-- e.g. npm run ui:flows | npx playwright test --project=flows | none -->
 e2e-cleanup: docker compose -p photocurator-e2e down -v <!-- stops the e2e app container + fixture library a killed run leaves behind; does not touch a dev instance under another project name -->
 release-verify: none <!-- e.g. npm run verify:release | make release-check | none — /sprint's last step (phase 4): "will a PR and a release of this commit pass?", on the final commit; nothing is committed after a green run -->
+
 <!--
   release-verify = the project's own releasable check: a command that runs what the PR and
                release pipelines block on, against the commit at hand (ideally merged into the
@@ -102,6 +105,7 @@ story-id-format: NNN <!-- three digits + slug, e.g. 042-npc-haggling.md -->
 sprint-id-format: SNN <!-- e.g. S07 -->
 
 changelog-path: none
+
 <!--
   Optional. Path to a USER-FACING changelog (e.g. version.md, CHANGELOG.md) — not the
   git history. When set, /build and /sprint require an entry for every user-facing
@@ -115,14 +119,13 @@ changelog-path: none
     - the language is `doc-language`
 -->
 
-
 ## Branching
 
 branch-base: main <!-- the branch a sprint starts from: cut from with sprint-branch: true, committed on with false -->
 sprint-branch: false <!-- true = cut a sprint branch, commit there, you merge it; false = commit every story directly on branch-base -->
 sprint-branch-pattern: sprint/{id}
 auto-commit-per-story: true <!-- /sprint commits once per story, on the sprint branch (or on branch-base with sprint-branch: false) -->
-protected-branches: main <!-- never commit here, never push, never merge — except the one `SNN: sprint started` commit /sprint makes on branch-base -->
+protected-branches: <!-- never commit here, never push, never merge — except the one `SNN: sprint started` commit /sprint makes on branch-base -->
 
 ## Acceptance
 
@@ -133,6 +136,7 @@ there is no separate manual gate, no "built, acceptance pending", no user tick.
 What a walk-through afterwards finds becomes a new story.
 
 ac-tests-required: true
+
 <!--
   true  = P1 applies: every acceptance criterion needs a named automated test before
           `status: ready` (`/refine` writes the AC → test mapping) and a passing one
@@ -144,6 +148,7 @@ ac-tests-required: true
 -->
 
 ui-acceptance-required: true
+
 <!--
   true  = a criterion that describes something the USER does is proven through the
           real surface — the `e2e` command from `## Verify`. A console command, a
@@ -158,6 +163,7 @@ ui-acceptance-required: true
 -->
 
 manual-residue-allowed: true
+
 <!--
   true  = a criterion that cannot be automated for a real reason (an OS signature
           dialog, a specific piece of hardware, an external paid service) is marked
@@ -169,6 +175,7 @@ manual-residue-allowed: true
 -->
 
 testplan: optional
+
 <!--
   optional = `/sprint` writes `testplan.md` only for the criteria marked
              `manual residue`, and skips the file entirely when there are none.

@@ -23,19 +23,19 @@ Bereich (Backend oder UI), wenige Tests; 8 = mehrere Komponenten, echte Datei-I/
 | | [008](requirements/008-auswahl.md) | Mehrfach-, Bereichs-, Gruppenauswahl | 3 | S02 |
 | E2 Sicheres Schreiben | [009](requirements/009-metadaten-writer.md) | Sicherer Metadaten-Writer mit Batch-Jobs | 8 | S03 |
 | | [010](requirements/010-backup-und-rueckgaengig.md) | Backup, Journal, Rückgängig | 5 | S03 |
-| E3 Tags & Kategorien | [011](requirements/011-kategorienbaum.md) | Hierarchische Kategorien | 3 | S03 |
+| E3 Tags & Kategorien | [011](requirements/011-kategorienbaum.md) | Hierarchische Kategorien | 3 | S02 |
 | | [012](requirements/012-batch-tagging.md) | Tags im Batch zuweisen/entfernen | 5 | S03 |
-| | [013](requirements/013-tag-schnellauswahl-autocomplete.md) | Zuletzt verwendet + Autovervollständigung | 3 | S04 |
-| E4 Standorte | [014](requirements/014-ortssuche-nominatim.md) | Ortssuche/Reverse-Geocoding (Nominatim) | 5 | S04 |
-| | [015](requirements/015-karte-und-batch-standort.md) | Standort im Batch per Suche/Karte | 5 | S04 |
-| | [016](requirements/016-lieblingsorte.md) | Lieblingsorte | 2 | S04 |
+| | [013](requirements/013-tag-schnellauswahl-autocomplete.md) | Zuletzt verwendet + Autovervollständigung | 3 | S03 |
+| E4 Standorte | [014](requirements/014-ortssuche-nominatim.md) | Ortssuche/Reverse-Geocoding (Nominatim) | 5 | S02 |
+| | [015](requirements/015-karte-und-batch-standort.md) | Standort im Batch per Suche/Karte | 5 | S03 |
+| | [016](requirements/016-lieblingsorte.md) | Lieblingsorte | 2 | S03 |
 | | [017](requirements/017-ortsvorschlag-zeitnachbarn.md) | Ortsvorschlag aus Zeitnachbarn | 5 | S04 |
-| E5 Arbeitsliste | [018](requirements/018-arbeitslisten-filter.md) | Arbeitslisten-Filter | 5 | S05 |
-| | [019](requirements/019-erledigt-markierung.md) | „Erledigt" / „nicht relevant" | 3 | S05 |
-| | [020](requirements/020-fortschrittsanzeige.md) | Fortschrittsanzeige | 2 | S05 |
-| E6 Betrieb | [021](requirements/021-mvp-haertung.md) | MVP-Härtung: Last, Ressourcen, Betriebshandbuch | 5 | S05 |
+| E5 Arbeitsliste | [018](requirements/018-arbeitslisten-filter.md) | Arbeitslisten-Filter | 5 | S04 |
+| | [019](requirements/019-erledigt-markierung.md) | „Erledigt" / „nicht relevant" | 3 | S04 |
+| | [020](requirements/020-fortschrittsanzeige.md) | Fortschrittsanzeige | 2 | S04 |
+| E6 Betrieb | [021](requirements/021-mvp-haertung.md) | MVP-Härtung: Last, Ressourcen, Betriebshandbuch | 5 | S04 |
 
-**Summe MVP: 91 SP** in 5 Sprints (S01 14 · S02 21 · S03 21 · S04 20 · S05 15).
+**Summe MVP: 91 SP** in 4 Sprints (S01 14 · S02 29 · S03 28 · S04 20).
 
 ### Abhängigkeiten
 
@@ -92,7 +92,7 @@ der der Spike auf dem NAS durchgeführt und ausgewertet wird.
 
 ### MVP (Release)
 
-1. S01–S05 abgeschlossen, Spike-Ergebnis eingearbeitet.
+1. S01–S04 abgeschlossen, Spike-Ergebnis eingearbeitet.
 2. Auf dem DXP4800 Plus installiert, echte Bibliothek eingelesen.
 3. Mindestens ein im Batch gesetzter Tag und Ort ist in UGREEN Fotos in Suche und einem
    bedingten Album sichtbar (Story 021, AC5).

@@ -1,6 +1,6 @@
 # Roadmap
 
-As of: 2026-10-29. One screen: where the project stands, what was done recently, what comes
+As of: 2026-10-30. One screen: where the project stands, what was done recently, what comes
 next. Detail lives where it is produced — sprint reviews, story files, concepts — and this file
 links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are in
 `.claude/commands/roadmap.md`.
@@ -8,7 +8,8 @@ links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are i
 ## Where we stand
 
 - S01 (M1) ist gebaut: Projektgerüst, Spike-Werkzeug, Compose-Deployment, Anmeldung; Regression-Gate grün.
-- Nächster Schritt: Spike auf dem NAS durchführen (vor dem Refinement von S03), dann `/sprint S02`.
+- S02 läuft (Refinement gestartet); am 2026-10-30 neu geschnitten: 011 + 014 vorgezogen, alter S05 in S04 aufgegangen — MVP in S02–S04.
+- Nächster Schritt: S02 fertig bauen; parallel Spike auf dem NAS durchführen (Eingangsbedingung für S03).
 - Wartet auf den Nutzer: Spike-Protokoll, NAS-Lauf der Compose-Anleitung, Push/Merge.
 
 ## Phase overview
@@ -25,10 +26,10 @@ Concept: [concepts/photocurator.md](concepts/photocurator.md).
 | M | Milestone | Status | Sprints | Note |
 | --- | --- | --- | --- | --- |
 | M1 | Fundament & Spike-Werkzeug | done 2026-10-29 | [S01](sprints/S01/review.md) | Danach Spike-Durchführung auf dem NAS durch den Nutzer |
-| M2 | Bibliothek sehen und auswählen | planned | [S02](sprints/S02/sprint.md) | Rein lesend, unabhängig vom Spike |
-| M3 | Sicher schreiben und taggen | planned | [S03](sprints/S03/sprint.md) | Startet erst mit Spike-Ergebnis |
-| M4 | Orte setzen, schneller taggen | planned | [S04](sprints/S04/sprint.md) | |
-| M5 | Arbeitslisten und MVP-Abschluss | planned | [S05](sprints/S05/sprint.md) | |
+| M2 | Bibliothek sehen und auswählen | in progress | [S02](sprints/S02/sprint.md) | Rein lesend, unabhängig vom Spike |
+| M3 | Sicher schreiben und taggen | planned | [S02](sprints/S02/sprint.md), [S03](sprints/S03/sprint.md) | Kategorienbaum (011) in S02; Rest startet erst mit Spike-Ergebnis |
+| M4 | Orte setzen, schneller taggen | planned | [S02](sprints/S02/sprint.md), [S03](sprints/S03/sprint.md), [S04](sprints/S04/sprint.md) | Ortssuche (014) in S02, Ortsvorschlag (017) in S04 |
+| M5 | Arbeitslisten und MVP-Abschluss | planned | [S04](sprints/S04/sprint.md) | |
 
 ## Open / unprioritised
 

@@ -5,7 +5,7 @@ status: draft # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E3 Tags & Kategorien
 estimate: 3
-sprint: S04
+sprint: S03
 ---
 
 ## Requirement

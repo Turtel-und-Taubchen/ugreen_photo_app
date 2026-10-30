@@ -5,7 +5,7 @@ status: draft # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E6 Betrieb
 estimate: 5
-sprint: S05
+sprint: S04
 ---
 
 ## Requirement
