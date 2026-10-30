@@ -1,7 +1,7 @@
 ---
 id: 016
 title: Lieblingsorte speichern und wiederverwenden
-status: draft # draft -> ready -> in-progress -> done
+status: ready # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E4 Standorte
 estimate: 2
@@ -25,26 +25,24 @@ sondern mit einem Tipp übernehmen.
 ## Open Questions
 
 - ~~Lieblingsorte gemeinsam für beide Personen oder pro Person?~~ answered → Decisions (Sprint)
-- **Refinement S03 (2026-10-30) — BLOCKIERT durch die offene Frage in
-  [015 › Open Questions](015-karte-und-batch-standort.md).** 016 selbst schreibt nichts in Dateien
-  und ist vom Spike unabhängig; Plan und Deliverables unten sind fertig. Aber AC2 („setzt den
-  Marker") braucht die Karte aus 015, und AC1/AC2 sprechen vom Dialog „Ort setzen", den es je nach
-  Antwort zu 015 in S03 nicht gibt. **Frage an den Nutzer:** Was gilt für 016?
-  - **(B) aus 015** — 015 wird mit vorläufiger Schreibstrategie komplett gebaut (Dialog + Karte im
-    `PlacePicker`): 016 gilt wie geplant, der E2E-Flow läuft durch den Dialog „Ort setzen".
-    → Status direkt auf `ready`, kein neues Refinement.
-  - **(D) aus 015** — nur der schreibfreie Teil von 015 (Karte im `PlacePicker`, Seite `/orte`)
-    läuft in S03, der Dialog kommt als neue Story nach dem Spike: 016 wird in S03 auf der Seite
-    `/orte` gebaut und geprüft; AC1/AC2 lauten dann „im Ort-Picker (Seite `/orte`, später im Dialog
-    „Ort setzen")" — der Dialog erbt die Liste, weil er denselben `PlacePicker` einbettet.
-    → Status `ready`, im E2E-Flow gilt die `/orte`-Variante (in D3 beschrieben).
-  - **(A)/(C) aus 015** — 015 wandert komplett in den nächsten Sprint: 016 wandert mit (ohne Karte
-    kein Marker, AC2 wäre nicht erfüllbar). Alternativ 016 ohne Marker-Teil in S03 — dann AC2 ohne
-    „und setzt den Marker" und der Marker als Nachzug in 015.
+- ~~Refinement S03 (2026-10-30) — blockiert durch die offene Frage in
+  [015 › Open Questions](015-karte-und-batch-standort.md): gilt für 016 (B) Dialog „Ort setzen"
+  wie geplant, (D) Seite `/orte` oder (A)/(C) Verschiebung mit 015?~~ answered → Decisions (Sprint)
 
 ## Decisions (Sprint)
 
 - **(User)** Lieblingsorte gemeinsam oder pro Person: **gemeinsam** — eine Liste für beide Nutzer, beide können sie pflegen.
+- **(User)** Spike abwarten: Ergebnis liegt vor; 015 komplett in S03, 016 wie geplant über den Dialog „Ort setzen"
+- **E2E-Flow nur durch den Dialog „Ort setzen"** (Variante B), die `/orte`-Variante entfällt — AC1/AC2
+  sprechen vom Dialog, und 015 liefert ihn samt Karte in S03 (Spike-Ergebnis in
+  `docs/concepts/photocurator-metadaten-strategie.md`, Commit 0c8c0f1).
+- **016 bleibt spike-unabhängig:** es schreibt nichts in Dateien, die Profil-Regel „Metadaten-Stories
+  erst nach dem Spike" betrifft es nicht — die Ortsteile landen erst über „Übernehmen" aus 015 in Dateien.
+- **015-Schnittstellen werden im Build nachgeprüft:** 015 wird parallel refined und vor 016 gebaut;
+  Dateiname der Dialog-Komponente, Marker-Anbindung und E2E-Helfer zum Öffnen des Dialogs nimmt D3
+  aus 015s fertigem Plan bzw. Code — 016 legt sie nicht fest, damit keine zweite, abweichende Annahme entsteht.
+- **Kein `CLAUDE.md` im Repo** (geprüft 2026-10-30) — Leitplanken kommen aus Tech Spec und Profil;
+  kein eigener Lane-Eintrag für den neuen Flow, er läuft im Story- und Sprint-Gate.
 - **Ort der Oberfläche:** Lieblingsorte leben als Abschnitt „Lieblingsorte" in `PlacePicker.svelte` —
   der Dialog „Ort setzen" bettet genau diesen Picker ein (Entscheidung aus 014) und 015 legt auch die
   Karte in den Picker, so erscheinen sie im Dialog ohne Kopplung an Dialog-Dateien (Nebeneffekt:
@@ -96,8 +94,7 @@ Kleine CRUD-Funktion in drei Schichten; keine Dateischreibzugriffe, kein Nominat
    httptest mit `anna` und `ben`.
 3. **D3 — Oberfläche + E2E:** `web/src/lib/places.ts`, Abschnitt „Lieblingsorte" und
    „Als Lieblingsort speichern" in `PlacePicker.svelte` (gemeinsames `apply()` mit Suchtreffern),
-   ein Playwright-Flow gegen den Nominatim-Mock (Dialog „Ort setzen" bzw. `/orte`, siehe
-   Open Questions).
+   ein Playwright-Flow gegen den Nominatim-Mock durch den Dialog „Ort setzen" aus 015.
 
 Reihenfolge = Abhängigkeit (D1 → D2 → D3). D1/D2 hängen an nichts außer 014; D3 setzt die Karte im
 `PlacePicker` aus 015 voraus (Marker).
@@ -212,11 +209,12 @@ Schreiben in Dateien (bleibt „Übernehmen" aus 015).
   Zu Beginn alle vorhandenen Lieblingsorte über `page.request` löschen (`GET /api/places`, dann
   `DELETE /api/places/{id}` mit Header `X-Requested-With: fetch`). OSM-Kacheln wie in 015: per
   `page.route` auf `tile.openstreetmap.org` mit festem leerem PNG beantworten (nie echte Kacheln).
-  „Picker öffnen" heißt — je nach Antwort in Open Questions —
-  **(B)** ein Foto im Raster auswählen und den Dialog „Ort setzen" öffnen, genau wie im E2E-Flow von
-  015 (Helfer aus `helpers/grid.ts`/`helpers/library.ts`), „schließen" = Dialog ohne Übernehmen
-  schließen; **(D)** `page.goto('/orte')`, „schließen" = Seite neu laden. Marker-Prüfung wie im
-  E2E-Flow von 015 (Leaflet-Marker in der Karte des Pickers sichtbar). Schritte:
+  „Picker öffnen" heißt: ein Foto im Raster auswählen und den Dialog „Ort setzen" öffnen, genau wie
+  im E2E-Flow von 015 (dessen Helfer wiederverwenden, sonst `helpers/grid.ts`/`helpers/library.ts`);
+  „schließen" = Dialog ohne Übernehmen schließen (nichts wird in Dateien geschrieben). Marker-Prüfung
+  wie im E2E-Flow von 015 (Leaflet-Marker in der Karte des Pickers sichtbar). 015 ist vor 016 gebaut:
+  Dateiname der Dialog-Komponente, Marker-Anbindung und Öffnen-Helfer aus dem Code von 015 nehmen,
+  nicht neu erfinden. Schritte:
   1. Picker öffnen, „Ritzenhofer Saalfelden" + Enter, ersten Treffer wählen; „Als Lieblingsort
      speichern" → Feld „Name des Lieblingsorts" hat „Ritzenhofer, Saalfelden"; auf „Stammhotel"
      ändern, „Speichern" → Liste „Lieblingsorte" enthält „Stammhotel".

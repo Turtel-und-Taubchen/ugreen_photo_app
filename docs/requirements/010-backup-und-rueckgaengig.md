@@ -1,7 +1,7 @@
 ---
 id: 010
 title: Backup der Originale, Änderungsjournal und Rückgängig pro Job
-status: draft # draft -> ready -> in-progress -> done
+status: ready # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E2 Sicheres Schreiben
 estimate: 5
@@ -37,7 +37,7 @@ Entschieden: Journal + einmalige Original-Kopie mit Aufbewahrungsfrist.
 
 ## Open Questions
 
-- **Freigabe hängt an 009 (Spike-Ergebnis fehlt).** 010 baut auf Writer, Job-Queue und
+- ~~**Freigabe hängt an 009 (Spike-Ergebnis fehlt).** 010 baut auf Writer, Job-Queue und
   Read-back aus 009; 009 ist im Refinement S03 blockiert, weil
   `docs/concepts/photocurator-metadaten-strategie.md` kein Spike-Ergebnis enthält. Die
   Profilregel („Stories, die Metadaten schreiben (009 ff.), nicht vor dem Ergebnisdokument
@@ -45,13 +45,36 @@ Entschieden: Journal + einmalige Original-Kopie mit Aufbewahrungsfrist.
   bewusst **feldunabhängig** geschrieben (Journal und Rückgängig arbeiten auf Domänenebene über
   das Mapping aus 009, keine ExifTool-Feldnamen in 010) und bleibt bei jeder Antwort gültig.
   Entscheidung folgt der Frage in [[009-metadaten-writer]]:
-  - **(A) Warten auf den Spike** → 010 bleibt `draft`, bis 009 `ready` ist; dann nur Abgleich
-    der Pfade aus dem 009-Plan, kein Neuschnitt.
-  - **(B) Vorbedingung für 009 aufgehoben** → 010 kann mit diesem Plan direkt auf `ready`.
-  - **(C) 009 aus S03** → 010 wandert mit 009 in den nächsten Sprint; Plan bleibt stehen.
+  (A) Warten auf den Spike · (B) Vorbedingung für 009 aufgehoben · (C) 009 aus S03.~~
+  answered → Decisions (Sprint)
 
 ## Decisions (Sprint)
 
+- **(User)** Spike abwarten: Ergebnis liegt vor (`photocurator-metadaten-strategie.md`, Commit
+  0c8c0f1) — damit ist die Profil-Vorbedingung für Schreib-Stories erfüllt und 010 kann `ready`
+  werden.
+- Der feldunabhängige Plan bleibt nach dem Spike unverändert gültig — das Spike-Ergebnis betrifft
+  nur das Mapping in `internal/metadata` (009), nicht Journal, Backup oder Rückgängig auf
+  Domänenebene.
+- Das Journal behält das volle `location`-Objekt (inkl. Ortstexte), obwohl UGREEN nur GPS liest —
+  laut Spike werden die Ortstexte weiterhin geschrieben, also muss Rückgängig sie auch
+  zurückdrehen.
+- Gesichert wird nur die Mediendatei selbst, keine `.xmp`-Sidecars — der Spike legt fest, dass
+  keine Sidecars geschrieben werden.
+- `PC_PRESERVE_MTIME` (Standard laut Spike `true`) gehört zu 009; Rückgängig erbt die Behandlung,
+  weil es durch dieselbe Pipeline schreibt — keine eigene mtime-Logik in 010.
+- D7 betont `cp --preserve=timestamps` ausdrücklich — laut Spike verschwindet eine Datei mit
+  neuem Änderungsdatum aus UGREEN Fotos.
+- Die Konfliktprüfung bleibt nötig, obwohl UGREEN laut Spike nichts in Dateien schreibt —
+  Fremdänderungen durch andere Werkzeuge sind weiterhin möglich.
+- 009 wird parallel refined und hat noch keinen Plan; Pfade und Schnittstellen in 010 folgen der
+  Tech Spec (§2 Module, §4 Tabellen `jobs`/`job_items`/`backups`, §6 API) und dem aktuellen
+  009-Text — **`/build` gleicht die genauen Pfade (Pipeline-Datei, Job-Handler, `web/src/lib/jobs.ts`,
+  Read-back-Test-Hook, E2E-Flow) gegen den finalen 009-Plan ab**, weil 010 erst nach 009 gebaut
+  wird.
+- Die Fehlertext-Funktion `message()` existiert schon zweimal (`web/src/routes/Tags.svelte`,
+  `web/src/lib/PlacePicker.svelte`); D6 extrahiert sie nach `web/src/lib/api.ts` als
+  `errorMessage`, falls 009 das nicht schon getan hat — eine dritte Kopie wäre ein Refine-Fehler.
 - Journal und Rückgängig arbeiten auf Domänenebene (`tags`, `location`, `reviewState`) über das
   Mapping aus 009 — so hängt 010 nicht davon ab, welche Felder der Spike je Format festlegt.
 - Betroffene Felder sind nur die Domänenfelder, die die Aktion des Jobs ändert — ein Ort-Job
@@ -113,7 +136,8 @@ Baut auf 009 (`internal/writer`: Job-Queue, Pipeline Tech Spec §3.3, Read-back,
    gegen Datei, Rückschreiben über die normale Pipeline; Löschen von Ort/Prüfstatus im Mapping
    (`internal/metadata`), falls 009 es nicht kann.
 5. **API (D5):** `POST /api/jobs/{id}/undo`, Jobliste mit Nutzer, Zeit, Aktion, Anzahl, Ergebnis.
-6. **Oberfläche (D6):** Seite `/jobs` mit Liste, Ergebnis pro Datei, Rückgängig; E2E-Flow.
+6. **Oberfläche (D6):** Fehlertext-Helfer nach `web/src/lib/api.ts` extrahieren; Seite `/jobs`
+   mit Liste, Ergebnis pro Datei, Rückgängig; E2E-Flow.
 7. **Betriebshandbuch (D7):** `deploy/README.md` — Datei aus `/backup` wiederherstellen,
    `app.db` sichern, `PC_BACKUP_RETENTION_DAYS`.
 
@@ -191,8 +215,12 @@ Kein Systems-Dokument betroffen (`docs/systems` existiert nicht).
   `TestUndoEndpointRejectsActiveOrAlreadyUndoneJob`, `TestJobListShowsUserTimeActionCountAndResult`.
 - **D6 — Seite „Jobs" mit Rückgängig.** Neu `web/src/routes/Jobs.svelte`, Route `/jobs` in
   `web/src/App.svelte` (wie `/tags`, `/orte`), Link „Jobs" in `web/src/lib/AppHeader.svelte`,
-  API-Aufrufe in `web/src/lib/jobs.ts` (erweitern, falls 009 sie angelegt hat; Fehlertexte
-  über den vorhandenen Helfer, keine vierte Kopie von `message()`). Liste: Nutzer, Zeitpunkt,
+  API-Aufrufe in `web/src/lib/jobs.ts` (erweitern, falls 009 sie angelegt hat). Fehlertexte:
+  die Funktion `message(e)` steht heute doppelt in `web/src/routes/Tags.svelte` und
+  `web/src/lib/PlacePicker.svelte` (`ApiError` mit `body.error`, sonst „Anfrage
+  fehlgeschlagen") — zuerst als `export function errorMessage(e: unknown): string` nach
+  `web/src/lib/api.ts` ziehen und beide Stellen darauf umstellen (entfällt, falls 009 das schon
+  getan hat), dann in `Jobs.svelte` verwenden. Liste: Nutzer, Zeitpunkt,
   Aktion (deutsche Bezeichnung, Undo-Jobs als „Rückgängig: <Aktion>"), Anzahl Dateien,
   Ergebnis „n erfolgreich · m übersprungen · k fehlgeschlagen"; aufklappbar Ergebnis pro Datei
   mit Grund; Knopf „Rückgängig" (≥ 44 px) mit Bestätigung auf der Seite, ausgeblendet bei
@@ -205,8 +233,9 @@ Kein Systems-Dokument betroffen (`docs/systems` existiert nicht).
 - **D7 — Betriebshandbuch.** `deploy/README.md`: neue Abschnitte
   `## Datei aus dem Backup wiederherstellen` (Kopie unter
   `/volume1/docker/photocurator/backup/<JJJJ-MM-TT>/<relativer Pfad>` finden, mit
-  `cp --preserve=timestamps` über die Datei in `Sortiert` kopieren, danach in der App „Neu
-  einlesen"; Hinweis auf Frist `PC_BACKUP_RETENTION_DAYS`, Standard 30 Tage) und
+  `cp --preserve=timestamps` über die Datei in `Sortiert` kopieren — mit dem Hinweis, dass eine
+  Datei mit neuem Änderungsdatum aus UGREEN Fotos verschwindet (Spike-Ergebnis) —, danach in der
+  App „Neu einlesen"; Hinweis auf Frist `PC_BACKUP_RETENTION_DAYS`, Standard 30 Tage) und
   `## App-Datenbank sichern` (Container stoppen, `app.db`, `app.db-wal`, `app.db-shm` aus
   `/volume1/docker/photocurator/data` kopieren, starten; `index.db` und Thumbnails müssen nicht
   gesichert werden). `deploy/readme_test.go`: beide Überschriften in die Liste von
