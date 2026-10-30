@@ -17,11 +17,11 @@ var klagenfurt = &metadata.Location{Lat: 46.62471234567, Lon: 14.30531234567, Ci
 func writeDirect(t *testing.T, e *env, rel string, c metadata.Change) {
 	t.Helper()
 	ctx := context.Background()
-	old, err := e.p.readMeta(ctx, e.abs(rel))
+	_, fields, err := e.p.readMetaFields(ctx, e.abs(rel))
 	if err != nil {
 		t.Fatal(err)
 	}
-	args, err := metadata.Args("jpeg", old, c)
+	args, err := metadata.Args("jpeg", fields, c)
 	if err != nil {
 		t.Fatal(err)
 	}

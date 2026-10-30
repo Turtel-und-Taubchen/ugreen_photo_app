@@ -1,7 +1,7 @@
 ---
 id: 012
 title: Tags im Batch zuweisen und entfernen
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E3 Tags & Kategorien
 estimate: 5
@@ -16,20 +16,20 @@ PhotoCurator-eigener Index; laut Spike nutzt UGREEN Fotos Tags aus Dateien nicht
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Für eine Auswahl fügt „Tags zuweisen" einen oder mehrere Tags hinzu; nach
+- [x] **AC1** — Für eine Auswahl fügt „Tags zuweisen" einen oder mehrere Tags hinzu; nach
   Abschluss des Jobs zeigen alle ausgewählten Fotos die Tags in der Oberfläche, und ein
   Read-back der Dateien bestätigt sie.
-- [ ] **AC2** — „Tags entfernen" listet die Tags der Auswahl mit der Anzahl betroffener Fotos;
+- [x] **AC2** — „Tags entfernen" listet die Tags der Auswahl mit der Anzahl betroffener Fotos;
   gewählte Tags werden aus allen ausgewählten Dateien und aus allen Feldern der
   Mapping-Tabelle aus 009 (sowie allen Keyword-Feldern, die PhotoCurator als Tag-Quelle liest)
   entfernt.
-- [ ] **AC3** — Zuweisen von `Anlass/Geburtstag` schreibt Pfad und Begriffe gemäß der
+- [x] **AC3** — Zuweisen von `Anlass/Geburtstag` schreibt Pfad und Begriffe gemäß der
   Mapping-Tabelle aus 009; beim Entfernen bleibt ein Elternbegriff (`Anlass`) erhalten, solange ein
   anderer Pfad der Datei ihn noch braucht (z. B. `Anlass/Hochzeit`).
-- [ ] **AC4** — Fotos, die einen zuzuweisenden Tag schon tragen bzw. einen zu entfernenden nicht
+- [x] **AC4** — Fotos, die einen zuzuweisenden Tag schon tragen bzw. einen zu entfernenden nicht
   tragen, werden nicht neu geschrieben (Änderungszeit und Inhalt unverändert).
-- [ ] **AC5** — Ein neu eingegebener Tag, den es noch nicht gibt, wird beim Zuweisen angelegt.
-- [ ] **AC6** — Die Aktion funktioniert für Einzel-, Bereichs-, Tages- und Monatsauswahl
+- [x] **AC5** — Ein neu eingegebener Tag, den es noch nicht gibt, wird beim Zuweisen angelegt.
+- [x] **AC6** — Die Aktion funktioniert für Einzel-, Bereichs-, Tages- und Monatsauswahl
   (inkl. noch nicht geladener Fotos) sowie für Fotos und Videos.
 
 ## Open Questions
@@ -90,7 +90,7 @@ Reihenfolge D1 → D2 → D3 → D4; D3 kann nach D1 parallel zu D2 laufen.
 
 ## Deliverables
 
-- [ ] **D1 — Tag-Änderungsmenge je Datei (rein).** Dateien: `internal/metadata/tagwrite.go`
+- [x] **D1 — Tag-Änderungsmenge je Datei (rein).** Dateien: `internal/metadata/tagwrite.go`
   (neu), `internal/metadata/tagwrite_test.go` (neu), `internal/metadata/read.go` (Keyword-Liste
   exportieren). Wiederverwenden: die Mapping-Tabelle aus Story 009 (in `internal/metadata`;
   welche Felder je Format Tags tragen — **nie eigene Feldnamen fest einbauen**) und
@@ -120,7 +120,7 @@ Reihenfolge D1 → D2 → D3 → D4; D3 kann nach D1 parallel zu D2 laufen.
     every keyword field Parse reads", „removing from XPKeywords keeps foreign entries",
     „removing a tag the file does not carry yields no change".
 
-- [ ] **D2 — Job-Aktionen `tags.add` / `tags.remove`.** Dateien: `internal/writer/tags.go` (neu),
+- [x] **D2 — Job-Aktionen `tags.add` / `tags.remove`.** Dateien: `internal/writer/tags.go` (neu),
   `internal/writer/tags_test.go` (neu), die Aktions-Registrierung des 009-Writers (Datei laut
   009-Plan, vermutlich `internal/writer/actions.go` oder `job.go`). Spiegeln: die Beispiel-/
   Test-Aktion aus 009 und deren Integrationstest-Gerüst (Fixture-Kopie in `t.TempDir()`,
@@ -139,7 +139,7 @@ Reihenfolge D1 → D2 → D3 → D4; D3 kann nach D1 parallel zu D2 laufen.
     Entfernen eines nicht getragenen Tags),
     „a tag job resolves single, range, day and month selections including files never listed".
 
-- [ ] **D3 — API: Tag-Jobs annehmen und Tags der Auswahl zählen.** Dateien: `internal/api/jobs.go`
+- [x] **D3 — API: Tag-Jobs annehmen und Tags der Auswahl zählen.** Dateien: `internal/api/jobs.go`
   (aus 009), `internal/api/jobs_test.go`, `internal/api/selection.go`,
   `internal/api/selection_test.go`, `internal/library/tagquery.go` (+ Test in
   `internal/library/tagquery_test.go` falls vorhanden, sonst im API-Test). Spiegeln:
@@ -155,7 +155,7 @@ Reihenfolge D1 → D2 → D3 → D4; D3 kann nach D1 parallel zu D2 laufen.
     „an invalid tag path is rejected with its reason and creates no job",
     „selection tags lists each tag of the selection with its photo count" (inkl. 401 ohne Session).
 
-- [ ] **D4 — Oberfläche „Tags zuweisen" / „Tags entfernen" + E2E-Flow.** Dateien:
+- [x] **D4 — Oberfläche „Tags zuweisen" / „Tags entfernen" + E2E-Flow.** Dateien:
   `web/src/lib/SelectionBar.svelte`, `web/src/lib/TagAssignDialog.svelte` (neu),
   `web/src/lib/TagRemoveDialog.svelte` (neu), `web/src/lib/api.ts` (nur falls ein Helfer fehlt),
   `web/tests/e2e/batch-tagging.spec.ts` (neu). Die Fixture-mtimes sind bereits gealtert
@@ -192,3 +192,22 @@ Reihenfolge D1 → D2 → D3 → D4; D3 kann nach D1 parallel zu D2 laufen.
 - AC6 → unit `internal/writer/tags_test.go` › "a tag job resolves single, range, day and month selections including files never listed", "tagging a selection writes and reads back the tags on jpeg, heic, png, mp4 and mov"; Auswahl-Serialisierung im UI ist durch `web/tests/e2e/selection.spec.ts` › "selecting photos one by one, as a range and as a whole month survives scrolling and the detail view" bewiesen; der E2E-Flow oben nutzt die Einzelauswahl über die echte Oberfläche.
 
 ## Done
+
+**Zusammenfassung:** Tags lassen sich für eine Auswahl über die Auswahlleiste zuweisen und entfernen (`tags.add` / `tags.remove` über `POST /api/jobs`). Die Tag-Logik (`metadata.TagArgs`, aus `Args`) rechnet je Datei aus den frisch gelesenen Feldern nur die fehlenden bzw. vorhandenen Werte aus; ein Entfernen räumt alle Keyword-Felder (auch `XPKeywords` als Rest-String) und erhält benötigte Elternbegriffe. Die Pipeline überspringt bereits aktuelle Dateien vor Backup und ExifTool („bereits aktuell"). Neu: `POST /api/selection/tags`, Dialoge „Tags zuweisen"/„Tags entfernen".
+
+Change type: feat
+
+Commit: `012: batch tag assign/remove — fresh-read tag args, skip-before-backup, selection tag counts, assign/remove dialogs + e2e`
+
+**Decisions (Build, Abweichungen vom Plantext, der 009/010 nicht kannte):**
+- Statt `TagChange`/`internal/writer/tags.go`: `metadata.TagTerms`/`TagArgs` in `internal/metadata/tagwrite.go`; `Args(format, fields, c)` (ohne `old Meta`) delegiert den Tag-Teil dorthin — eine Tag-Implementierung. Keine neue Aktions-Registrierung nötig: die Aktion ist ein Label, `Change.AddTags/RemoveTags` trägt sie.
+- Mapping-Tabelle: Remove-Regel nur noch `HierarchicalSubject`; Begriffe werden aus jedem `KeywordTags`-Feld entfernt (kein jpeg-Sonderfall).
+- Pipeline: lesen + Args vor Backup/Vorab-Kopie; leere Args → `StateSkipped` „bereits aktuell" (gilt auch für Ort/Review-Änderungen und Undo ohne Rest).
+- `registerJobs` bekommt `*TagDeps` (für `tags.Create`); Jobs-Routen nur mit `lib.Tags != nil` (in `main.go` immer gesetzt).
+- UI: `createJob` feuert `JOB_CREATED_EVENT`, `JobStatus` pollt sofort (sonst bis zu 30 s Verzögerung); Eingabeliste als `TagListInput.svelte` für 013.
+- Hinweis: der E2E-Lauf nutzt `photocurator:dev` (`--pull never`, Frontend per go:embed) — nach Web-Änderungen erst Image neu bauen.
+
+**Verifikation (enger Gate):** `test-story` none → volles `docker build --target test .` + `npm --prefix web run test` (51 Tests), `lint`, `check`, `build` grün; `e2e-story`: `npx playwright test tests/e2e/batch-tagging.spec.ts` grün. Review 1 (default): PASS mit Findings; behoben: e2e-Read-back nach Entfernen jetzt beide Tags in allen Keyword-Feldern, Format-Test prüft Erhalt fremder Keywords, Duplikat-Test gelöscht, Flat-Tag-Fall ergänzt, Tech-Spec/Strategie-Doc angepasst; danach Gate erneut grün. Bewusst offen: Groß-/Kleinschreibungs-Varianten von Keywords werden beim Entfernen nicht erfasst (Edge Case); `/api/selection/tags` wiederholt den Decode/Validate-Block von `/count`; Dialog-CSS in drei Dateien. Volle Regression: Sprint-Gate.
+AC → Test (alle gelaufen und grün; die `tagwrite_test`-Namen sind Subtests von `TestTagArgs`): AC1 e2e batch-tagging + writer „tagging a selection…"; AC2 e2e + api „selection tags lists…" + metadata „removing a tag clears it…"; AC3 writer „removing Anlass/Geburtstag…" + metadata „assigning a hierarchical…", „removing a path keeps a parent…"; AC4 writer „a file that already carries the tag is skipped…"; AC5 api „assigning a new tag creates it…" + e2e; AC6 writer „a tag job resolves single, range, day and month…" + Fünf-Formate-Test. Manual residue: keine.
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 7

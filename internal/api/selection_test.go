@@ -66,3 +66,40 @@ func TestAnInvalidSelectionAnswers400(t *testing.T) {
 		}
 	}
 }
+
+func TestSelectionTagsListsEachTagOfTheSelectionWithItsPhotoCount(t *testing.T) {
+	idx := selectionIndex(t)
+	for _, tg := range []struct {
+		id   int
+		path string
+	}{
+		{1, "Urlaub"}, {1, "Anlass/Geburtstag"},
+		{2, "Urlaub"},
+		{3, "Anlass/Geburtstag"}, {3, "Urlaub"},
+		{5, "Nur/Draussen"}, // outside the July selection
+	} {
+		if _, err := idx.Exec(`INSERT INTO photo_tags (photo_id, tag_path) VALUES (?, ?)`, tg.id, tg.path); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s := newTestServerDeps(t, api.LibraryDeps{Index: idx})
+	sess := s.signedIn(t, "anna")
+	body := `{"filter":{"groups":["2024-07"]},"exclude_ids":[2]}`
+
+	wantJSONStatus(t, "no session", s.do(http.MethodPost, "/api/selection/tags", body, withXRW), http.StatusUnauthorized)
+
+	rec := s.do(http.MethodPost, "/api/selection/tags", body, sess, withXRW)
+	wantJSONStatus(t, "tags", rec, http.StatusOK)
+	want := `[{"path":"Anlass/Geburtstag","count":2},{"path":"Urlaub","count":2}]`
+	if strings.TrimSpace(rec.Body.String()) != want {
+		t.Errorf("body = %s, want %s", rec.Body.String(), want)
+	}
+
+	rec = s.do(http.MethodPost, "/api/selection/tags", `{"include_ids":[4]}`, sess, withXRW)
+	wantJSONStatus(t, "untagged", rec, http.StatusOK)
+	if strings.TrimSpace(rec.Body.String()) != "[]" {
+		t.Errorf("body = %s, want []", rec.Body.String())
+	}
+	rec = s.do(http.MethodPost, "/api/selection/tags", `{"filter":{"groups":["2024-13"]}}`, sess, withXRW)
+	wantJSONStatus(t, "invalid", rec, http.StatusBadRequest)
+}

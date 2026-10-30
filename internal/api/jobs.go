@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	actionTagsAdd = "tags.add"
-	jobListLimit  = 50
+	actionTagsAdd    = "tags.add"
+	actionTagsRemove = "tags.remove"
+	jobListLimit     = 50
 )
 
 type jobRequest struct {
@@ -76,7 +77,7 @@ func logInternal(w http.ResponseWriter, what string, err error) {
 }
 
 // registerJobs serves the write-job endpoints; idx resolves a selection to files.
-func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB) {
+func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB, td *TagDeps) {
 	mux.HandleFunc("POST /api/jobs", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxSelectionBody)
 		var req jobRequest
@@ -84,7 +85,7 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB) {
 			badRequest(w, "invalid job body")
 			return
 		}
-		if req.Action != actionTagsAdd {
+		if req.Action != actionTagsAdd && req.Action != actionTagsRemove {
 			badRequest(w, "unknown action")
 			return
 		}
@@ -93,14 +94,20 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB) {
 			return
 		}
 		// The canonical path is what the metadata mapping splits into terms and hierarchy.
-		change := metadata.Change{}
+		paths := make([]string, 0, len(req.Payload.Tags))
 		for _, t := range req.Payload.Tags {
 			p, err := tags.ParsePath(t)
 			if err != nil {
 				badRequest(w, err.Error())
 				return
 			}
-			change.AddTags = append(change.AddTags, p)
+			paths = append(paths, p)
+		}
+		change := metadata.Change{}
+		if req.Action == actionTagsRemove {
+			change.RemoveTags = paths
+		} else {
+			change.AddTags = paths
 		}
 		if err := req.Selection.Validate(); err != nil {
 			badRequest(w, err.Error())
@@ -122,6 +129,16 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB) {
 		rels := make([]string, len(files))
 		for i, f := range files {
 			rels[i] = f.RelPath
+		}
+		// Created only once the request is known to be good and before enqueuing: the tag must
+		// exist in the tree even if every single file later fails. Create is idempotent.
+		if req.Action == actionTagsAdd {
+			for _, p := range paths {
+				if _, err := tags.Create(r.Context(), td.App, p); err != nil {
+					logInternal(w, "create tag", err)
+					return
+				}
+			}
 		}
 		user, _ := UserFromContext(r.Context())
 		id, err := q.Create(r.Context(), user, req.Action, change, rels)

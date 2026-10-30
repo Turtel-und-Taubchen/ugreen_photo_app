@@ -33,6 +33,38 @@ func TagPairs(ctx context.Context, db *sql.DB) (func(yield func(int64, string) b
 	return seq, func() error { return firstErr }
 }
 
+// TagCount is one tag path and the number of selected photos carrying exactly that path.
+type TagCount struct {
+	Path  string `json:"path"`
+	Count int    `json:"count"`
+}
+
+// SelectionTagCounts lists the tags of the selected photos with their photo counts, sorted by
+// path. The selection stays in SQL; the result is never nil.
+func SelectionTagCounts(ctx context.Context, db *sql.DB, s Selection) ([]TagCount, error) {
+	out := []TagCount{}
+	where, args, ok, err := selectionWhere(ctx, db, s)
+	if err != nil || !ok {
+		return out, err
+	}
+	rows, err := db.QueryContext(ctx,
+		`SELECT tag_path, COUNT(DISTINCT photo_id) FROM photo_tags
+		 WHERE photo_id IN (SELECT id FROM photos WHERE `+where+`)
+		 GROUP BY tag_path ORDER BY tag_path`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var c TagCount
+		if err := rows.Scan(&c.Path, &c.Count); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 // TagSubtreeCount counts distinct photos tagged with path or any tag below it. Prefix matching
 // is literal (no LIKE): "_" and "%" are valid tag characters.
 func TagSubtreeCount(ctx context.Context, db *sql.DB, path string) (int, error) {

@@ -131,13 +131,12 @@ Passwort-Hashes) — keine Nutzerverwaltung nötig.
 
 „Im Zweifel mehrfach schreiben":
 
-- **Tags, Bilder:** `XMP-dc:Subject` = alle Blätter **und** Elternbegriffe (Lightroom-Konvention:
-  `Anlass`, `Geburtstag`); `XMP-lr:HierarchicalSubject` = vollständige Pfade
-  (`Anlass|Geburtstag`); `IPTC:Keywords` = wie `dc:Subject` (nur JPEG; mit
-  `IPTC:CodedCharacterSet=UTF8`, max. 64 Byte je Eintrag); `EXIF:XPKeywords` = wie
-  `dc:Subject`, `;`-getrennt (nur JPEG).
-- **Tags, Videos:** `XMP-dc:Subject` + `XMP-lr:HierarchicalSubject` eingebettet;
-  QuickTime-Keywords nur, falls der Spike zeigt, dass UGREEN sie liest.
+- **Tags, Bilder und Videos (Ist-Stand):** Hinzufügen schreibt nur `XMP-dc:Subject` (Blätter
+  und Elternbegriffe, Lightroom-Konvention) und `XMP-lr:HierarchicalSubject` (volle Pfade,
+  `Anlass|Geburtstag`), jeweils per `+=`; kein IPTC/XP beim Hinzufügen. Entfernen (`-=`) löscht
+  den Begriff aus jedem Keyword-Feld, das die App liest (auch `IPTC:Keywords`, `Keys:Keywords`,
+  `UserData:Keywords`; `EXIF:XPKeywords` wird als verbleibender `;`-String neu geschrieben),
+  außer Begriffen, die ein verbleibender Pfad noch braucht (Elternbegriff, gleichnamiger Flat-Tag).
 - **Ort:** GPS-Koordinaten (Bilder EXIF, Videos `Keys:GPSCoordinates` + `UserData:GPSCoordinates`)
   + Textfelder in XMP-photoshop/iptcCore und (JPEG) IPTC. `loc_label` wird zusätzlich als
   `XMP-iptcExt:LocationShownLocationName` geschrieben.
@@ -161,7 +160,9 @@ Ablauf pro Datei in einem Job:
 2. **Backup**, falls in der Aufbewahrungsfrist noch keine Kopie existiert:
    `/backup/<JJJJ-MM-TT>/<rel_path>` (Kopie, dann `fsync`). Schlägt das fehl → Datei `failed`,
    keine Änderung.
-3. Alte Werte der betroffenen Felder lesen (nur für den Soll-Ist-Vergleich; kein Journal — die
+3. Alte Werte der betroffenen Felder frisch lesen. Zeigt der Soll-Ist-Vergleich nichts zu ändern,
+   wird die Datei als „bereits aktuell" übersprungen (`skipped`) — vor Backup und ExifTool-Schreiben
+   (Reihenfolge Schritt 2/3 entsprechend: Backup erst nach diesem Vergleich). (Alte Werte nur für den Vergleich; kein Journal — die
    Vorab-Kopie unter `BackupDir/.inflight` trägt die Wiederherstellung).
 4. **Bilddaten-Prüfsumme** vorher: ExifTool `ImageDataHash` (SHA-256).
 5. Schreiben mit ExifTool: `-overwrite_original_in_place` (Inode, Besitzer und Rechte bleiben;

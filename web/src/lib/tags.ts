@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { SelectionRequest } from './selection';
 
 export interface TagNode {
   name: string;
@@ -27,4 +28,14 @@ export async function createTag(path: string): Promise<void> {
 
 export async function deleteTag(path: string): Promise<void> {
   await api(`/api/tags?path=${encodeURIComponent(path)}`, { method: 'DELETE' });
+}
+
+export interface SelectionTag {
+  path: string;
+  count: number;
+}
+
+/** Tags carried by the selected photos, each with the number of selected photos that have it. */
+export async function fetchSelectionTags(selection: SelectionRequest): Promise<SelectionTag[]> {
+  return (await api<SelectionTag[] | null>('/api/selection/tags', { method: 'POST', body: selection })) ?? [];
 }

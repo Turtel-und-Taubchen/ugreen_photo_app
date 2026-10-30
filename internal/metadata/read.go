@@ -105,6 +105,34 @@ func coord(fields map[string]any, latKey, lonKey string) (lat, lon *float64) {
 	return &a, &b
 }
 
+// KeywordTags are the flat keyword fields Parse reads tags from. A removed tag must vanish
+// from every one of them, or the next read brings it back.
+var KeywordTags = []string{"XMP-dc:Subject", "IPTC:Keywords", "EXIF:XPKeywords", "Keys:Keywords", "UserData:Keywords"}
+
+// xpKeywords is the one keyword field that holds all entries in a single ";"-separated string.
+const xpKeywords = "EXIF:XPKeywords"
+
+// keywords is the trimmed, non-empty entries of keyword field k, in file order.
+func keywords(fields map[string]any, k string) []string {
+	v, ok := lookup(fields, k)
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, s := range values(v) {
+		items := []string{s}
+		if k == xpKeywords {
+			items = strings.Split(s, ";")
+		}
+		for _, it := range items {
+			if it = strings.TrimSpace(it); it != "" {
+				out = append(out, it)
+			}
+		}
+	}
+	return out
+}
+
 // Parse maps ExifTool fields (keys "Group:Tag", -n values) to Meta.
 func Parse(fields map[string]any) Meta {
 	var m Meta
@@ -125,20 +153,10 @@ func Parse(fields map[string]any) Meta {
 			}
 		}
 	}
-	for _, k := range []string{"XMP-dc:Subject", "IPTC:Keywords", "EXIF:XPKeywords", "Keys:Keywords", "UserData:Keywords"} {
-		v, ok := lookup(fields, k)
-		if !ok {
-			continue
-		}
-		for _, s := range values(v) {
-			items := []string{s}
-			if k == "EXIF:XPKeywords" {
-				items = strings.Split(s, ";")
-			}
-			for _, it := range items {
-				if it = strings.TrimSpace(it); it != "" && !segments[it] {
-					set[it] = true
-				}
+	for _, k := range KeywordTags {
+		for _, it := range keywords(fields, k) {
+			if !segments[it] {
+				set[it] = true
 			}
 		}
 	}

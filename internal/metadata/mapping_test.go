@@ -30,7 +30,10 @@ func tableWrites(format string) []write {
 func TestListFieldsAreNeverAssignedWhole(t *testing.T) {
 	c := Change{AddTags: []string{"Anlass/Geburtstag"}, RemoveTags: []string{"Reise/Italien"}}
 	for _, f := range formats {
-		args, err := Args(f, Meta{Tags: []string{"Reise/Italien"}}, c)
+		args, err := Args(f, map[string]any{
+			"XMP-dc:Subject":             []any{"Reise", "Italien"},
+			"XMP-lr:HierarchicalSubject": "Reise|Italien",
+		}, c)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -69,29 +72,8 @@ func TestEveryWrittenTagIsAlsoRead(t *testing.T) {
 	}
 }
 
-func TestRemovingATagKeepsAParentAnotherTagStillNeeds(t *testing.T) {
-	old := Meta{Tags: []string{"Anlass/Geburtstag", "Anlass/Hochzeit"}}
-	args, err := Args("jpeg", old, Change{RemoveTags: []string{"Anlass/Geburtstag"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []string{
-		"-XMP-dc:Subject-=Geburtstag",
-		"-XMP-lr:HierarchicalSubject-=Anlass|Geburtstag",
-		"-IPTC:Keywords-=Geburtstag",
-	}
-	if !slices.Equal(args, want) {
-		t.Errorf("args = %v, want %v", args, want)
-	}
-
-	args, _ = Args("jpeg", Meta{Tags: []string{"Anlass/Geburtstag"}}, Change{RemoveTags: []string{"Anlass/Geburtstag"}})
-	if !slices.Contains(args, "-XMP-dc:Subject-=Anlass") {
-		t.Errorf("parent nobody needs was kept: %v", args)
-	}
-}
-
 func TestUnknownFormatIsAnError(t *testing.T) {
-	if _, err := Args("gif", Meta{}, Change{}); err == nil {
+	if _, err := Args("gif", nil, Change{}); err == nil {
 		t.Error("unknown format accepted")
 	}
 }
@@ -153,12 +135,13 @@ func TestEveryFormatWritesAndReadsBackTagsPlaceAndReviewState(t *testing.T) {
 				}
 			}
 
-			old := Parse(readFields(t, path))
+			before := readFields(t, path)
+			old := Parse(before)
 			hashBefore, err := w.ImageHash(ctx, path)
 			if err != nil {
 				t.Fatal(err)
 			}
-			args, err := Args(c.format, old, change)
+			args, err := Args(c.format, before, change)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -212,8 +195,9 @@ func TestEveryFormatClearsPlaceAndReviewState(t *testing.T) {
 			w := newWriter(t)
 			ctx := context.Background()
 			apply := func(ch Change) Meta {
-				old := Parse(readFields(t, path))
-				args, err := Args(c.format, old, ch)
+				before := readFields(t, path)
+				old := Parse(before)
+				args, err := Args(c.format, before, ch)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -245,7 +229,7 @@ func TestClearThenSetLeavesOnlyTheNewPlace(t *testing.T) {
 	if got.City != "Neu" || got.Country != "" || got.Lat == nil {
 		t.Errorf("Expect = %+v", got)
 	}
-	if _, err := Args("jpeg", old, Change{ReviewState: "done", ClearReviewState: true}); err == nil {
+	if _, err := Args("jpeg", nil, Change{ReviewState: "done", ClearReviewState: true}); err == nil {
 		t.Error("set and clear of the review state accepted")
 	}
 }
@@ -256,8 +240,7 @@ func TestForeignKeywordsSurviveAddingATag(t *testing.T) {
 	keys := []string{"IPTC:Keywords", "EXIF:XPKeywords", "XMP-dc:Subject"}
 	before := readFields(t, path, keys...)
 
-	old := Parse(before)
-	args, err := Args("jpeg", old, Change{AddTags: []string{"Urlaub"}})
+	args, err := Args("jpeg", before, Change{AddTags: []string{"Urlaub"}})
 	if err != nil {
 		t.Fatal(err)
 	}

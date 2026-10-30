@@ -91,13 +91,11 @@ func buildTable() map[string]map[string]rule {
 				{"XMP-dc:Subject", opAdd, srcTerm},
 				{"XMP-lr:HierarchicalSubject", opAdd, srcPath},
 			},
+			// Terms are removed from every KeywordTags field that carries them, whatever the
+			// format, since Parse reads them all; only the hierarchy field is listed here.
 			Remove: []write{
-				{"XMP-dc:Subject", opRemove, srcTerm},
 				{"XMP-lr:HierarchicalSubject", opRemove, srcPath},
 			},
-		}
-		if f == "jpeg" {
-			tags.Remove = append(tags.Remove, write{"IPTC:Keywords", opRemove, srcTerm})
 		}
 
 		loc := rule{GPSTol: imageGPSTol}
@@ -156,59 +154,19 @@ func ref(v float64, pos, neg string) string {
 }
 
 // Args builds the ExifTool arguments (without file path) that apply c to a file of format.
-// old is the file's current state: it decides which parent terms are still needed.
-func Args(format string, old Meta, c Change) ([]string, error) {
+// fields is the file's freshly read ExifTool record; tags are written against it by TagArgs,
+// so a file that already carries them gets no tag arguments.
+func Args(format string, fields map[string]any, c Change) ([]string, error) {
 	rules, ok := table[format]
 	if !ok {
 		return nil, fmt.Errorf("unknown format %q", format)
 	}
-	var args []string
+	args, err := TagArgs(format, fields, c.AddTags, c.RemoveTags)
+	if err != nil {
+		return nil, err
+	}
 	emit := func(w write, value string) {
 		args = append(args, "-"+w.Tag+w.Op+value)
-	}
-
-	for _, tag := range append(slices.Clone(c.AddTags), c.RemoveTags...) {
-		if len(segments(tag)) == 0 {
-			return nil, fmt.Errorf("empty tag %q", tag)
-		}
-	}
-
-	for _, tag := range c.AddTags {
-		segs := segments(tag)
-		for _, w := range rules[fieldTags].Add {
-			switch w.Src {
-			case srcTerm:
-				for _, s := range segs {
-					emit(w, s)
-				}
-			case srcPath:
-				emit(w, strings.Join(segs, "|"))
-			}
-		}
-	}
-
-	if len(c.RemoveTags) > 0 {
-		needed := map[string]bool{}
-		for _, tag := range remainingTags(old, c) {
-			for _, s := range segments(tag) {
-				needed[s] = true
-			}
-		}
-		for _, tag := range c.RemoveTags {
-			segs := segments(tag)
-			for _, w := range rules[fieldTags].Remove {
-				switch w.Src {
-				case srcTerm:
-					for _, s := range segs {
-						if !needed[s] {
-							emit(w, s)
-						}
-					}
-				case srcPath:
-					emit(w, strings.Join(segs, "|"))
-				}
-			}
-		}
 	}
 
 	if c.ReviewState != "" && c.ClearReviewState {

@@ -38,8 +38,14 @@ export const fetchJobs = (): Promise<Job[]> => api<Job[]>('/api/jobs');
 
 export const fetchJob = (id: number): Promise<JobDetail> => api<JobDetail>(`/api/jobs/${id}`);
 
-export const createJob = (selection: JobSelection, action: string, payload: unknown): Promise<{ id: number }> =>
-  api<{ id: number }>('/api/jobs', { method: 'POST', body: { selection, action, payload } });
+/** Fired after a job was queued so the progress display polls now instead of at its idle interval. */
+export const JOB_CREATED_EVENT = 'photocurator:job-created';
+
+export async function createJob(selection: JobSelection, action: string, payload: unknown): Promise<{ id: number }> {
+  const created = await api<{ id: number }>('/api/jobs', { method: 'POST', body: { selection, action, payload } });
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(JOB_CREATED_EVENT));
+  return created;
+}
 
 export const isActive = (j: Job): boolean => j.status === 'queued' || j.status === 'running';
 
@@ -50,7 +56,10 @@ export function progressText(job: Job, waiting: number): string {
 
 export const undoJob = (id: number): Promise<{ id: number }> => api<{ id: number }>(`/api/jobs/${id}/undo`, { method: 'POST' });
 
-const ACTION_LABELS: Record<string, string> = { 'tags.add': 'Tags hinzufügen' };
+const ACTION_LABELS: Record<string, string> = {
+  'tags.add': 'Tags hinzufügen',
+  'tags.remove': 'Tags entfernen',
+};
 
 export function actionLabel(job: Job, all: Job[]): string {
   if (job.action !== 'undo') return ACTION_LABELS[job.action] ?? job.action;

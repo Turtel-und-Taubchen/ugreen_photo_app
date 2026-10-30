@@ -17,3 +17,4 @@ second roadmap.
 - 014 — Ortssuche und Reverse-Geocoding über Nominatim · S02 · Suche/Reverse über /api/geo/* mit 1-s-Limiter und 90-Tage-Cache, Seite /orte mit PlacePicker, E2E gegen Nominatim-Mock
 - 009 — Sicherer Metadaten-Writer mit Batch-Jobs · S03 · ExifTool-Writer, eine Mapping-Tabelle, Pipeline mit Vorab-Kopie/Read-back/Restore in place, FIFO-Jobs mit Fortschritt, /api/jobs (tags.add) und Job-Status im Header
 - 010 — Backup der Originale, Änderungsjournal und Rückgängig pro Job · S03 · Backup mit Frist, Journal (Read-back-Werte), Undo-Job mit Konfliktprüfung, Seite /jobs, Betriebshandbuch
+- 012 — Tags im Batch zuweisen und entfernen · S03 · Auswahlleiste weist Tags zu/entfernt sie dateiweise (Frisch-Lesen, Skip vor Backup, Eltern-Erhalt) mit Dialogen und e2e

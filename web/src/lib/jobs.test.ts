@@ -25,6 +25,7 @@ describe('job list helpers', () => {
 
   it('actions read as German labels, unknown ones stay raw', () => {
     expect(actionLabel(base, [base])).toBe('Tags hinzufügen');
+    expect(actionLabel({ ...base, action: 'tags.remove' }, [])).toBe('Tags entfernen');
     expect(actionLabel({ ...base, action: 'foo.bar' }, [])).toBe('foo.bar');
   });
 

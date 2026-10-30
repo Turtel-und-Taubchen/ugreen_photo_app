@@ -39,6 +39,7 @@ type Result struct {
 const (
 	reasonOutside  = "außerhalb von /photos"
 	reasonNotFound = "Datei nicht gefunden"
+	reasonCurrent  = "bereits aktuell"
 )
 
 // Pipeline writes metadata changes into files below Root, one file at a time.
@@ -127,6 +128,21 @@ func (p *Pipeline) WriteFile(ctx context.Context, rel string, c metadata.Change)
 	if err := ctx.Err(); err != nil {
 		return Result{State: StateSkipped, Reason: "abgebrochen"}
 	}
+	// Read and diff before any backup or pre-copy: a file that is already current must stay
+	// untouched, with no retention copy taken for a write that never happens.
+	work := context.WithoutCancel(ctx)
+	old, fields, err := p.readMetaFields(work, abs)
+	if err != nil {
+		return Result{State: StateFailed, Reason: "Metadaten nicht lesbar: " + err.Error()}
+	}
+	args, err := metadata.Args(format, fields, c)
+	if err != nil {
+		return Result{State: StateFailed, Reason: err.Error()}
+	}
+	if len(args) == 0 {
+		return Result{State: StateSkipped, Reason: reasonCurrent}
+	}
+
 	// After the pending-copy check: with a copy waiting, the original may be half-written and
 	// must not become the retention backup.
 	if p.Backups != nil {
@@ -140,7 +156,6 @@ func (p *Pipeline) WriteFile(ctx context.Context, rel string, c metadata.Change)
 		return Result{State: StateFailed, Reason: "Vorab-Kopie fehlgeschlagen: " + err.Error()}
 	}
 	// From here on a cancelled ctx must not leave the file between write and verification.
-	work := context.WithoutCancel(ctx)
 	unchanged := func(reason string) Result {
 		if err := p.dropCopy(copyPath); err != nil {
 			reason += "; Vorab-Kopie nicht gelöscht: " + err.Error()
@@ -159,24 +174,9 @@ func (p *Pipeline) WriteFile(ctx context.Context, rel string, c metadata.Change)
 		return unchanged(reason + "; Original wiederhergestellt")
 	}
 
-	old, err := p.readMeta(work, abs)
-	if err != nil {
-		return unchanged("Metadaten nicht lesbar: " + err.Error())
-	}
 	hash, err := p.Exif.ImageHash(work, abs)
 	if err != nil {
 		return unchanged("Bilddaten-Prüfsumme nicht ermittelbar: " + err.Error())
-	}
-	args, err := metadata.Args(format, old, c)
-	if err != nil {
-		return unchanged(err.Error())
-	}
-	if len(args) == 0 {
-		if err := p.dropCopy(copyPath); err != nil {
-			return Result{State: StateFailed, Reason: "Vorab-Kopie nicht gelöscht: " + err.Error()}
-		}
-		j := JournalOf(old, AffectedBy(c))
-		return Result{State: StateOK, Old: j, New: j}
 	}
 
 	if err := p.Exif.Write(work, abs, args); err != nil {
@@ -216,16 +216,22 @@ func (p *Pipeline) WriteFile(ctx context.Context, rel string, c metadata.Change)
 }
 
 func (p *Pipeline) readMeta(ctx context.Context, abs string) (metadata.Meta, error) {
+	m, _, err := p.readMetaFields(ctx, abs)
+	return m, err
+}
+
+// readMetaFields also returns the raw ExifTool record, which tag writing diffs per field.
+func (p *Pipeline) readMetaFields(ctx context.Context, abs string) (metadata.Meta, map[string]any, error) {
 	recs, err := p.Reader.Read(ctx, []string{abs})
 	if err != nil {
-		return metadata.Meta{}, err
+		return metadata.Meta{}, nil, err
 	}
 	rec, ok := recs[abs]
 	if !ok {
-		return metadata.Meta{}, errors.New("kein Ergebnis von ExifTool")
+		return metadata.Meta{}, nil, errors.New("kein Ergebnis von ExifTool")
 	}
 	if rec.Err != "" {
-		return metadata.Meta{}, errors.New(rec.Err)
+		return metadata.Meta{}, nil, errors.New(rec.Err)
 	}
-	return metadata.Parse(rec.Fields), nil
+	return metadata.Parse(rec.Fields), rec.Fields, nil
 }

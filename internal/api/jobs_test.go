@@ -24,7 +24,8 @@ func jobsServer(t *testing.T) (*testServer, *writer.Queue) {
 	}
 	t.Cleanup(func() { db.Close() })
 	q := &writer.Queue{DB: db}
-	return newTestServerDeps(t, api.LibraryDeps{Index: selectionIndex(t), Writes: q}), q
+	idx := selectionIndex(t)
+	return newTestServerDeps(t, api.LibraryDeps{Index: idx, Writes: q, Tags: &api.TagDeps{App: db, Index: idx}}), q
 }
 
 func TestCreateJobResolvesTheSelectionAndQueuesIt(t *testing.T) {
@@ -71,7 +72,7 @@ func TestCreateJobRejectsUnknownActionAndBadTags(t *testing.T) {
 	sess := s.signedIn(t, "anna")
 	sel := `"selection":{"include_ids":[1]}`
 	for name, body := range map[string]string{
-		"unknown action":  `{` + sel + `,"action":"tags.remove","payload":{"tags":["A"]}}`,
+		"unknown action":  `{` + sel + `,"action":"tags.rename","payload":{"tags":["A"]}}`,
 		"no tags":         `{` + sel + `,"action":"tags.add","payload":{"tags":[]}}`,
 		"empty segment":   `{` + sel + `,"action":"tags.add","payload":{"tags":["A//B"]}}`,
 		"separator":       `{` + sel + `,"action":"tags.add","payload":{"tags":["A|B"]}}`,
@@ -278,5 +279,82 @@ func TestJobListShowsUserTimeActionCountAndResult(t *testing.T) {
 	}
 	if strings.Contains(rec.Body.String(), "old") || strings.Contains(rec.Body.String(), "new_values") {
 		t.Errorf("journal values leak into the list: %s", rec.Body.String())
+	}
+}
+
+func tagPaths(t *testing.T, s *testServer, sess reqOpt) []string {
+	t.Helper()
+	out := []string{}
+	var walk func(nodes []tagNode)
+	walk = func(nodes []tagNode) {
+		for _, n := range nodes {
+			out = append(out, n.Path)
+			walk(n.Children)
+		}
+	}
+	walk(fetchTags(t, s, sess))
+	return out
+}
+
+func TestAssigningANewTagCreatesItInTheTagTreeEvenBeforeTheJobRuns(t *testing.T) {
+	s, q := jobsServer(t)
+	sess := s.signedIn(t, "anna")
+	rec := s.do(http.MethodPost, "/api/jobs",
+		`{"selection":{"include_ids":[1]},"action":"tags.add","payload":{"tags":[" Anlass / Geburtstag "]}}`, sess, withXRW)
+	wantJSONStatus(t, "create", rec, http.StatusAccepted)
+
+	jobs, err := q.List(context.Background(), 10)
+	if err != nil || len(jobs) != 1 || jobs[0].Status != writer.JobQueued {
+		t.Fatalf("jobs = %+v, %v; want one job that has not run", jobs, err)
+	}
+	if got := tagPaths(t, s, sess); !reflect.DeepEqual(got, []string{"Anlass", "Anlass/Geburtstag"}) {
+		t.Errorf("tree = %v, want the new tag and its parent", got)
+	}
+}
+
+func TestAnInvalidTagPathIsRejectedWithItsReasonAndCreatesNoJob(t *testing.T) {
+	s, q := jobsServer(t)
+	sess := s.signedIn(t, "anna")
+	for _, action := range []string{"tags.add", "tags.remove"} {
+		// The valid first path must not leak into the tree when a later one is bad.
+		body := `{"selection":{"include_ids":[1]},"action":"` + action + `","payload":{"tags":["Gut","A//B"]}}`
+		rec := s.do(http.MethodPost, "/api/jobs", body, sess, withXRW)
+		wantJSONStatus(t, action, rec, http.StatusBadRequest)
+		var e map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &e); err != nil || e["error"] == "" {
+			t.Errorf("%s: body %q lacks a reason", action, rec.Body.String())
+		}
+	}
+	if jobs, err := q.List(context.Background(), 10); err != nil || len(jobs) != 0 {
+		t.Errorf("jobs = %v, %v; want none", jobs, err)
+	}
+	if got := tagPaths(t, s, sess); len(got) != 0 {
+		t.Errorf("tree = %v, want unchanged (empty)", got)
+	}
+}
+
+func TestRemovingATagQueuesARemoveJobWithoutCreatingTheTag(t *testing.T) {
+	s, q := jobsServer(t)
+	sess := s.signedIn(t, "anna")
+	rec := s.do(http.MethodPost, "/api/jobs",
+		`{"selection":{"include_ids":[1,2]},"action":"tags.remove","payload":{"tags":["Anlass/Geburtstag"]}}`, sess, withXRW)
+	wantJSONStatus(t, "create", rec, http.StatusAccepted)
+	var created struct{ ID int64 }
+	if err := json.Unmarshal(rec.Body.Bytes(), &created); err != nil {
+		t.Fatal(err)
+	}
+	job, _, err := q.Get(context.Background(), created.ID)
+	if err != nil || job.Action != "tags.remove" || job.Total != 2 {
+		t.Fatalf("job = %+v, %v; want tags.remove over 2 files", job, err)
+	}
+	var payload string
+	if err := q.DB.QueryRow(`SELECT payload FROM jobs WHERE id = ?`, created.ID).Scan(&payload); err != nil {
+		t.Fatal(err)
+	}
+	if want := `{"AddTags":null,"RemoveTags":["Anlass/Geburtstag"],"Location":null,"ReviewState":""}`; payload != want {
+		t.Errorf("payload = %s, want %s", payload, want)
+	}
+	if got := tagPaths(t, s, sess); len(got) != 0 {
+		t.Errorf("tree = %v, remove must not create tags", got)
 	}
 }

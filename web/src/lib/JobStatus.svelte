@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fetchJob, fetchJobs, isActive, progressText, resultText, type Job, type JobDetail } from './jobs';
+  import { fetchJob, fetchJobs, isActive, JOB_CREATED_EVENT, progressText, resultText, type Job, type JobDetail } from './jobs';
 
   const POLL_RUNNING_MS = 2000;
   const POLL_IDLE_MS = 30000;
@@ -33,7 +33,9 @@
 
   onMount(() => {
     poll();
+    window.addEventListener(JOB_CREATED_EVENT, poll);
     return () => {
+      window.removeEventListener(JOB_CREATED_EVENT, poll);
       gone = true;
       clearTimeout(timer);
     };

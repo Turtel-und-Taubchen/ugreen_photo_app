@@ -95,12 +95,11 @@ Ergebnis des Erkennungstests. Statt `probe mutate` (Marker in Tags, in der App n
 
 Bis zum Spike-Ergebnis gilt Tech Spec §3.2 („Im Zweifel mehrfach schreiben"):
 
-- **Tags, Bilder:** `XMP-dc:Subject` mit allen Blättern und Elternbegriffen;
-  `XMP-lr:HierarchicalSubject` mit vollständigen Pfaden (`Anlass|Geburtstag`);
-  `IPTC:Keywords` wie `dc:Subject` (nur JPEG, mit `IPTC:CodedCharacterSet=UTF8`, höchstens
-  64 Byte je Eintrag); `EXIF:XPKeywords` wie `dc:Subject`, durch `;` getrennt (nur JPEG).
-- **Tags, Videos:** `XMP-dc:Subject` und `XMP-lr:HierarchicalSubject` eingebettet;
-  QuickTime-Keywords nur, falls UGREEN sie liest.
+- **Tags (Ist-Stand):** Hinzufügen schreibt `XMP-dc:Subject` und `XMP-lr:HierarchicalSubject`
+  per `+=` (kein IPTC/XP). Entfernen löscht den Begriff aus jedem gelesenen Keyword-Feld
+  (inkl. `IPTC:Keywords`, `EXIF:XPKeywords` als verbleibender `;`-String, `Keys`/`UserData:Keywords`),
+  außer Begriffe, die ein verbleibender Pfad noch braucht. Eine Datei ohne nötige Änderung wird
+  vor Backup und ExifTool-Schreiben als „bereits aktuell" übersprungen.
 - **Ort:** GPS-Koordinaten (Bilder EXIF; Videos `Keys:GPSCoordinates` und
   `UserData:GPSCoordinates`) plus Textfelder in XMP-photoshop/iptcCore und (JPEG) IPTC;
   `loc_label` zusätzlich als `XMP-iptcExt:LocationShownLocationName`.

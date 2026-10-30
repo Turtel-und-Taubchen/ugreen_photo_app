@@ -51,3 +51,20 @@
 - 2026-10-30 20:14:17 · 010 · verify (after review 1) · started
 - 2026-10-30 20:17:49 · 010 · verify (after review 1) · done
 - 2026-10-30 20:17:49 · 010 · story · done
+- 2026-10-30 20:18:01 · 012 · build · started
+- 2026-10-30 20:18:49 · 012 · D1 Tag-Änderungsmenge · started
+- 2026-10-30 20:26:57 · 012 · D1 Tag-Änderungsmenge · done
+- 2026-10-30 20:26:57 · 012 · D2 Pipeline skip + writer tests · started
+- 2026-10-30 20:26:58 · 012 · D3 API tags.remove + selection/tags · started
+- 2026-10-30 20:49:51 · 012 · D2 Pipeline skip + writer tests · done
+- 2026-10-30 20:49:51 · 012 · D3 API tags.remove + selection/tags · done
+- 2026-10-30 20:49:51 · 012 · D4 UI + e2e · started
+- 2026-10-30 21:04:23 · 012 · D4 UI + e2e · done
+- 2026-10-30 21:04:23 · 012 · verify · started
+- 2026-10-30 21:11:56 · 012 · verify · done
+- 2026-10-30 21:11:56 · 012 · review 1 · started
+- 2026-10-30 21:13:14 · 012 · review 1 · done
+- 2026-10-30 21:13:14 · 012 · fix 1 review findings · started
+- 2026-10-30 21:21:12 · 012 · fix 1 review findings · done
+- 2026-10-30 21:21:12 · 012 · verify (after review 1) · done (test, lint, build, e2e run by the fix agent)
+- 2026-10-30 21:21:12 · 012 · story · done
