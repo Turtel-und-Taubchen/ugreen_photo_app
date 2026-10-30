@@ -10,7 +10,13 @@ services:
       interval: 2s
       start_period: 5s
     # Outside /data so it never collides with the writable data bind mount.
+    # Named volumes instead of the base file's host bind mounts: a Windows host cannot map
+    # uids onto a bind mount, so files would be root-owned and unwritable for PUID. The
+    # `seed` service below hands the volumes to PUID:PGID, so the app runs non-root.
     volumes:
+      - photos:/photos
+      - data:/data
+      - backup:/backup
       - type: bind
         source: ${PC_E2E_USERS_FILE}
         target: /run/users.conf
@@ -23,3 +29,25 @@ services:
       PC_NOMINATIM_URL: http://host.docker.internal:18471
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  # One-shot, run as root by global-setup before `up`: copies the fixture library into the
+  # photos volume and makes all three volumes owned by the app's uid. Not part of `up`.
+  seed:
+    image: photocurator:dev
+    profiles: [seed]
+    user: "0:0"
+    entrypoint: ["sh", "-c"]
+    command:
+      - cp -a /src/. /photos/ && chown -R ${PUID}:${PGID} /photos /data /backup
+    volumes:
+      - photos:/photos
+      - data:/data
+      - backup:/backup
+      - type: bind
+        source: ${PHOTOS_PATH}
+        target: /src
+        read_only: true
+
+volumes:
+  photos:
+  data:
+  backup:

@@ -116,3 +116,8 @@
 - 2026-10-30 23:50:39 · 016 · review 1 · started
 - 2026-10-30 23:51:34 · 016 · review 1 · done
 - 2026-10-30 23:51:34 · 016 · story · done
+- 2026-10-30 23:51:45 · gate · short suites (build, test, e2e) · started
+- 2026-10-30 23:59:28 · gate · short suites · done (e2e red: places:25, smoke:13, write-jobs:7)
+- 2026-10-30 23:59:28 · gate · attribution · started
+- 2026-10-31 00:02:06 · gate · attribution · done (places flaky; smoke→009; write-jobs→012)
+- 2026-10-31 00:02:06 · gate · fix 009 smoke · started

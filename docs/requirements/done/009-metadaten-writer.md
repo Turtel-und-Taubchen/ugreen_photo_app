@@ -311,3 +311,5 @@ Manual residue: AC9 — dass UGREEN Fotos den Ort nach „Aktualisieren" zeigt (
 Narrow gate only; der volle Regressionslauf ist Sache des Sprints.
 
 tiers: D 7 / hard 1 · review default · cycles 1 · agents 12
+
+- Regression gate S03: smoke.spec "non-root" regressed by the root fallback in e2e compose.ts; fixed in the following commit (named volumes + seed service, container runs as uid 1000).

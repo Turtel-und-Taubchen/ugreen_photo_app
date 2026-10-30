@@ -17,12 +17,10 @@ export default async function globalSetup(): Promise<void> {
   await startNominatimMock();
   await fs.cp(LIBRARY, path.join(tmp, 'photos'), { recursive: true });
   await createBulkLibrary(path.join(tmp, 'photos'));
-  await fs.mkdir(path.join(tmp, 'data'));
-  await fs.mkdir(path.join(tmp, 'backup'));
-  // The app refuses to start unless all three mounts are writable for PUID:PGID; where the
-  // host cannot map uids (no getuid on Windows) the mode bits are the only guarantee.
-  for (const dir of ['photos', 'data', 'backup']) await fs.chmod(path.join(tmp, dir), 0o777);
   try {
+    // The app refuses to start unless all three mounts are writable for PUID:PGID: copy the
+    // fixtures into named volumes and chown them (a host bind mount cannot do this on Windows).
+    compose(['--profile', 'seed', 'run', '--rm', '--no-deps', 'seed']);
     // --wait returns only once the image's own healthcheck reports healthy.
     compose(['up', '-d', '--pull', 'never', '--wait', '--wait-timeout', '90']);
   } catch (err) {
