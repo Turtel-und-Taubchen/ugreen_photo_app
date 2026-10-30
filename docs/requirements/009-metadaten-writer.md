@@ -54,7 +54,39 @@ refined. Ablauf: [Tech Spec §3.3](../concepts/photocurator-tech-spec.md).
 - Welche Felder je Format? → aus `photocurator-metadaten-strategie.md` übernehmen.
 - Standardwert `PC_PRESERVE_MTIME` → aus dem Erkennungstest des Spikes.
 
+**Refinement S03 (2026-10-30) — BLOCKIERT: Spike-Ergebnis fehlt.**
+`docs/concepts/photocurator-metadaten-strategie.md` enthält nur das Gerüst aus Story 001: die
+Beobachtungsspalten der Feldmatrix (Suche, Tag/Kategorie, bedingtes Album, Ort angezeigt) und
+die Tabelle „Erkennung von Änderungen" sind leer, unter „Entscheidung nach Spike" stehen alle
+vier Punkte auf _offen_ (Felder je Format, Video-Sidecars, Default `PC_PRESERVE_MTIME`, Regel
+falls UGREEN selbst schreibt). Die beiden Fragen oben lassen sich daraus also **nicht**
+beantworten; AC1 („entspricht der Strategie aus dem Spike-Dokument"), AC4 („Standardwert
+entspricht dem Spike-Ergebnis") und AC9 („im Spike ermittelter Hinweis") haben keine
+Faktenbasis. Die Story selbst, das Profil (`.claude/ai-scrum.md`, Notes) und die
+Eingangsbedingung in `sprints/S03/sprint.md` verbieten das Refinement ohne dieses Ergebnis.
+
+**Frage an den Nutzer:** Wie geht es mit 009 weiter?
+
+- **(A) Warten auf den Spike** — du führst `probe generate`/`probe mutate` auf dem NAS durch,
+  füllst `PROTOKOLL.md` aus und trägst Matrix, Erkennungstest und „Entscheidung nach Spike"
+  ins Strategie-Dokument ein; danach wird 009 neu refined. Folge: 009 und die darauf
+  aufbauenden Schreib-Stories (010, 012, 015) ruhen in S03. *Entspricht den eigenen Regeln
+  des Projekts.*
+- **(B) Auf die vorläufige Strategie bauen** — du hebst die Vorbedingung für 009 ausdrücklich
+  auf. Dann gilt: Mapping = „Vorläufige Strategie" (Tech Spec §3.2: mehrfach schreiben,
+  Video ohne QuickTime-Keywords, keine Sidecars) als eine Tabelle in `internal/metadata`;
+  `PC_PRESERVE_MTIME` Default `false` (Tech Spec §3.3/§3.4 „Erkennung gewinnt", bereits so in
+  `deploy/docker-compose.yml`); AC9-Hinweis als vorläufiger Text („UGREEN Fotos zeigt die
+  Änderung nach der nächsten Indexierung"). AC1/AC4/AC9 werden auf „vorläufige Strategie"
+  umformuliert, und eine Folgestory „Spike-Ergebnis ins Mapping einspielen" wird angelegt.
+  Risiko: geschriebene Felder, die UGREEN nicht liest, bzw. fehlende Felder, die es liest —
+  ggf. ein zweiter Schreiblauf über bereits getaggte Dateien.
+- **(C) 009 aus S03 nehmen** — S03 läuft nur mit den Teilen weiter, die nicht in Dateien
+  schreiben; 009 ff. wandern in den nächsten Sprint nach dem Spike.
+
 ## Decisions (Sprint)
+
+- **(User)** Spike-Ergebnis fehlt (2026-10-30): **Option A — warten auf den Spike.** S03 pausiert; nach Ausfüllen von `photocurator-metadaten-strategie.md` werden 009/012/015 neu verfeinert.
 
 ## Plan
 

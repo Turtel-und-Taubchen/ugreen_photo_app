@@ -35,6 +35,8 @@ oder Lieblingsort; Taggen wird durch zuletzt verwendete Tags und Autovervollstä
   dem alten S04 übernommen. 011 (S02) und 014 (S02) sind Voraussetzung für 012 bzw. 015.
 - E2E-Tests nutzen einen Nominatim-Mock; nie den echten Dienst in Tests aufrufen.
 
+- **Pausiert 2026-10-30 16:21:** Eingangsbedingung nicht erfüllt — Spike-Ergebnis fehlt. Entscheidung (User): Option A, Spike abwarten. Refine-Stand: 013 `ready`; 010 und 016 mit vollständigem Plan, aber `draft`; 009, 012, 015 brauchen nach dem Spike ein neues Refine. Wiederaufnahme: Strategie-Dokument ausfüllen, dann `/sprint S03`.
+
 ## Regression gate
 
 <!-- Filled by `/sprint` phase 2b: the commands run, minutes taken, result, commit, and a verdict per failure. -->
