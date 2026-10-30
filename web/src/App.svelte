@@ -1,5 +1,6 @@
 <script lang="ts">
   import AppHeader from './lib/AppHeader.svelte';
+  import Jobs from './routes/Jobs.svelte';
   import Library from './routes/Library.svelte';
   import Login from './routes/Login.svelte';
   import Places from './routes/Places.svelte';
@@ -8,6 +9,7 @@
   const isLogin = location.pathname === '/login';
   const isTags = location.pathname === '/tags';
   const isPlaces = location.pathname === '/orte';
+  const isJobs = location.pathname === '/jobs';
 </script>
 
 {#if isLogin}
@@ -17,6 +19,8 @@
     <AppHeader />
     {#if isTags}
       <Tags />
+    {:else if isJobs}
+      <Jobs />
     {:else if isPlaces}
       <Places />
     {:else}

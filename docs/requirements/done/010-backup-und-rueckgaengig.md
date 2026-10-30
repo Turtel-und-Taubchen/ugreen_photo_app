@@ -1,7 +1,7 @@
 ---
 id: 010
 title: Backup der Originale, Änderungsjournal und Rückgängig pro Job
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E2 Sicheres Schreiben
 estimate: 5
@@ -17,22 +17,22 @@ Entschieden: Journal + einmalige Original-Kopie mit Aufbewahrungsfrist.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Vor dem ersten Schreiben auf eine Datei liegt eine Kopie unter
+- [x] **AC1** — Vor dem ersten Schreiben auf eine Datei liegt eine Kopie unter
   `/backup/<JJJJ-MM-TT>/<relativer Pfad>`; existiert innerhalb der Aufbewahrungsfrist schon eine
   Kopie, wird keine zweite angelegt.
-- [ ] **AC2** — Schlägt das Backup fehl (z. B. kein Platz), wird die Datei nicht verändert und im
+- [x] **AC2** — Schlägt das Backup fehl (z. B. kein Platz), wird die Datei nicht verändert und im
   Job als fehlgeschlagen mit Grund gemeldet.
-- [ ] **AC3** — Für jede geschriebene Datei speichert das Journal Job, Nutzer, Zeitpunkt sowie die
+- [x] **AC3** — Für jede geschriebene Datei speichert das Journal Job, Nutzer, Zeitpunkt sowie die
   alten und neuen Werte der betroffenen Felder.
-- [ ] **AC4** — „Rückgängig" an einem Job stellt für alle seine Dateien die alten Werte wieder
+- [x] **AC4** — „Rückgängig" an einem Job stellt für alle seine Dateien die alten Werte wieder
   her; der Rückgängig-Vorgang ist selbst ein Job mit Ergebnis pro Datei.
-- [ ] **AC5** — Dateien, deren Werte seit dem Job erneut geändert wurden, werden beim
+- [x] **AC5** — Dateien, deren Werte seit dem Job erneut geändert wurden, werden beim
   Rückgängigmachen übersprungen und als Konflikt gemeldet.
-- [ ] **AC6** — Backups älter als die Aufbewahrungsfrist (Platzhalter: 30 Tage) werden täglich
+- [x] **AC6** — Backups älter als die Aufbewahrungsfrist (Platzhalter: 30 Tage) werden täglich
   gelöscht; jüngere bleiben.
-- [ ] **AC7** — Eine Jobliste zeigt die letzten Jobs mit Nutzer, Zeitpunkt, Aktion, Anzahl
+- [x] **AC7** — Eine Jobliste zeigt die letzten Jobs mit Nutzer, Zeitpunkt, Aktion, Anzahl
   Dateien und Ergebnis.
-- [ ] **AC8** — `deploy/README.md` beschreibt, wie eine Datei manuell aus `/backup`
+- [x] **AC8** — `deploy/README.md` beschreibt, wie eine Datei manuell aus `/backup`
   wiederhergestellt wird und wie `/data/app.db` gesichert wird.
 
 ## Open Questions
@@ -274,3 +274,23 @@ Zusätzlich (Entscheidungen, keine eigenen AC): `TestReadBackFailureRestoresStat
 (D2), `TestUndoEndpointRejectsActiveOrAlreadyUndoneJob` (D5).
 
 ## Done
+
+Backup vor dem ersten Schreiben (`internal/writer/backup.go`, Frist `PC_BACKUP_RETENTION_DAYS`, tägliches Aufräumen über `Queue.Exclusive`), Journal mit alten/neuen Werten (`journal.go`, per Read-back), Rückgängig als normaler Job `undo` mit Konfliktprüfung gegen die Datei (`undo.go`, Löschen von Ort/Prüfstatus im Mapping), API `POST /api/jobs/{id}/undo` + Liste (50), Seite `/jobs`, Betriebshandbuch.
+
+Change type: feat
+
+Commit message: `010: backup of originals with retention, change journal, per-job undo with conflict check, jobs page + ops guide`
+
+Decisions:
+- Abgleich mit dem echten 009-Code: die `.inflight`-Vorab-Kopie entsteht dort bei jeder Datei und bleibt unverändert (Crash-Recovery); der Restore nutzt immer sie, nie die Fristkopie. `Backups.Ensure` läuft davor (nach Skip-/Pending-Prüfung), ein Backup-Fehler stoppt vor jedem Schreibzugriff. Der Plan-Zweig „sonst Vorab-Kopie" entfällt damit; `errorMessage` existierte schon (009).
+- `backups.backup_path` relativ zu `/backup`; Prune und „schon gesichert?" teilen `cutoff(now)`; Aufräumen über `Queue.Exclusive` (Mutex um `runNext`).
+- Undo-Payload `{"undo_of": id}`, Änderung je Datei zur Laufzeit aus dem Journal; Unique-Index auf `jobs.undo_of` + `undoMu` machen Doppel-Undo atomar. Neu `metadata.Change.ClearLocation/ClearReviewState` aus der einen Mapping-Tabelle; Review-State „open" wird als Feld löschen zurückgedreht (Parse liest fehlend als open).
+- Alter Ort ohne Koordinaten ist nicht wiederherstellbar: Datei `skipped` mit eigenem Grund.
+- Review-Befunde ungefixt (bewusst): `Ensure` auch bei No-op-Schreibvorgang (harmlos); zwei Uhren (`Backups.Now`/`Pipeline.Now`, in Produktion identisch); Lesefenster zwischen Konfliktprüfung und `WriteFile` (serielle Queue); Test des Mutex-Zugriffs von `runNext` nur indirekt; `resultSummary`/`resultText` bleiben getrennt (unterschiedlicher Text). Gefixt: README-Test schärfer, Journal-Test, e2e-Nutzer, Tech Spec §2.2/§3.3.
+- D1–D7 stehen im Story-File ohne Checkboxen, daher keine Häkchen.
+
+Verification: narrow gate — kein `test-story`: voller `docker build --target test .` + `npm --prefix web run test` (51 Tests), `e2e-story`: `cd web && npx playwright test tests/e2e/jobs.spec.ts` (nach Fix zusammen mit write-jobs.spec.ts), build, lint, typecheck grün. Go-Testnamen werden nicht ausgegeben (Existenz per Quelltext, Pakete `ok`). Review default, 1 Stufe: PASS mit Test-Stärke-Befunden, gefixt und neu verifiziert.
+AC -> Test: AC1 backup_test.go TestFirstWriteLeavesDatedBackupCopy + TestSecondBackupWithinRetentionIsSkipped (+ backup_pipeline_test.go Pipeline-Fall); AC2 TestFailedBackupLeavesFileUntouchedAndFailsWithReason; AC3 TestJournalKeepsJobUserTimeAndOldAndNewValues; AC4 e2e "a job is undone from the job list" + TestUndoRestoresOldValuesOfEveryFile + TestUndoEndpointQueuesUndoJob; AC5 TestUndoSkipsFileChangedSinceJobAsConflict + TestChangeToUntouchedFieldIsNoConflict + e2e; AC6 TestPruneRemovesOnlyBackupsOlderThanRetention; AC7 e2e + TestJobListShowsUserTimeActionCountAndResult; AC8 TestInstallGuideCoversEveryStep (erweitert); Extras TestReadBackFailureRestoresStateBeforeThisWrite, TestUndoEndpointRejectsActiveOrAlreadyUndoneJob — alle bestanden. Manual residue: keine.
+Narrow gate only; der volle Regressionslauf ist Sache des Sprints.
+
+tiers: D 7 / hard 1 · review default · cycles 1 · agents 11

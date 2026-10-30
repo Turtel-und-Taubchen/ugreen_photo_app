@@ -75,6 +75,30 @@ In UGOS Pro: Docker, Projekt, neues Projekt. Füge den Inhalt von `docker-compos
 
 Öffne `http://<NAS-IP>:<PORT>` im Heimnetz. Die App ist nur für das Heimnetz gedacht; richte keine Portweiterleitung im Router ein. Startfehler (z. B. nicht beschreibbarer Ordner, Inbox im Pfad) erscheinen im Container-Log.
 
+## Datei aus dem Backup wiederherstellen
+
+Vor dem ersten Schreiben einer Datei legt die App eine Kopie unter `/volume1/docker/photocurator/backup/<JJJJ-MM-TT>/<relativer Pfad>` ab (im Container `/backup`; der relative Pfad entspricht dem Pfad innerhalb von `Sortiert`). Zum Wiederherstellen kopierst du die Sicherung per SSH über die Datei in `Sortiert`:
+
+```
+cp --preserve=timestamps /volume1/docker/photocurator/backup/<JJJJ-MM-TT>/<relativer Pfad> "<PHOTOS_PATH>/<relativer Pfad>"
+```
+
+`--preserve=timestamps` ist Pflicht: Eine Datei mit neuem Änderungsdatum verschwindet aus UGREEN Fotos, deshalb muss die ursprüngliche Änderungszeit erhalten bleiben. Klicke danach in der App auf „Neu einlesen“, damit der Index die wiederhergestellte Datei übernimmt.
+
+- Aufbewahrung: Backups werden `PC_BACKUP_RETENTION_DAYS` Tage aufbewahrt (Standard 30). Ältere Backups löscht die App täglich. Die Variable steht nicht in `.env.example`; setze sie nur dann als Eintrag unter `environment:` der Compose-Datei, wenn der Standard geändert werden soll.
+- Pro Datei und Aufbewahrungszeitraum wird nur einmal gesichert; das Backup enthält den Zustand vor dem ersten Schreiben, nicht jeden Zwischenstand.
+- Der Ordner `.inflight/` im Backupordner enthält temporäre Daten zur Wiederherstellung nach einem Absturz. Er ist kein Backup, stelle nichts daraus von Hand wieder her.
+
+## App-Datenbank sichern
+
+Die App-Datenbank (`app.db`, u. a. Jobs und Einstellungen) läuft im WAL-Modus; eine Kopie im laufenden Betrieb kann inkonsistent sein. So sicherst du sie:
+
+1. Stoppe den Container (Projekt in UGOS stoppen).
+2. Kopiere `app.db`, `app.db-wal` und `app.db-shm` aus `/volume1/docker/photocurator/data` an einen sicheren Ort (nicht alle drei Dateien sind immer vorhanden; kopiere, was da ist).
+3. Starte den Container wieder.
+
+`index.db` und die Thumbnails musst du nicht sichern, sie entstehen beim Scannen neu.
+
 ## Update
 
 Baue und übertrage das neue Image wie unter "Image übertragen", dann starte das Projekt in UGOS neu (Projekt stoppen und starten). Daten und Backup bleiben erhalten.

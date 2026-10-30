@@ -27,3 +27,27 @@
 - 2026-10-30 19:01:31 · 009 · verify (after review 1) · started
 - 2026-10-30 19:07:49 · 009 · verify (after review 1) · done
 - 2026-10-30 19:07:53 · 009 · story · done
+- 2026-10-30 19:08:05 · 010 · build · started
+- 2026-10-30 19:08:38 · 010 · D1 Backup-Speicher · started
+- 2026-10-30 19:14:57 · 010 · D1 Backup-Speicher · done
+- 2026-10-30 19:14:57 · 010 · D2 Backup in Pipeline (hard) · started
+- 2026-10-30 19:20:27 · 010 · D2 Backup in Pipeline (hard) · done
+- 2026-10-30 19:20:27 · 010 · D3 Journal · started
+- 2026-10-30 19:25:46 · 010 · D3 Journal · done
+- 2026-10-30 19:25:46 · 010 · D4 Rueckgaengig-Kern · started
+- 2026-10-30 19:41:34 · 010 · D4 Rueckgaengig-Kern · done
+- 2026-10-30 19:41:34 · 010 · D5 API Jobliste/Undo · started
+- 2026-10-30 19:41:34 · 010 · D7 Betriebshandbuch · started
+- 2026-10-30 19:53:17 · 010 · D5 API Jobliste/Undo · done
+- 2026-10-30 19:53:17 · 010 · D7 Betriebshandbuch · done
+- 2026-10-30 19:53:17 · 010 · D6 Seite Jobs + e2e · started
+- 2026-10-30 19:59:13 · 010 · D6 Seite Jobs + e2e · done
+- 2026-10-30 19:59:13 · 010 · verify · started
+- 2026-10-30 20:04:40 · 010 · verify · done
+- 2026-10-30 20:04:40 · 010 · review 1 · started
+- 2026-10-30 20:06:21 · 010 · review 1 · done
+- 2026-10-30 20:06:21 · 010 · fix 1 review findings · started
+- 2026-10-30 20:14:17 · 010 · fix 1 review findings · done
+- 2026-10-30 20:14:17 · 010 · verify (after review 1) · started
+- 2026-10-30 20:17:49 · 010 · verify (after review 1) · done
+- 2026-10-30 20:17:49 · 010 · story · done

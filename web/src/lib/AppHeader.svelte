@@ -33,6 +33,7 @@
     <a href="/">Fotos</a>
     <a href="/tags">Tags</a>
     <a href="/orte">Ortssuche</a>
+    <a href="/jobs">Jobs</a>
   </nav>
   <button type="button" onclick={logout}>Abmelden</button>
   <JobStatus />

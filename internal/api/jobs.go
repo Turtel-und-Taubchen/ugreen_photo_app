@@ -16,7 +16,7 @@ import (
 
 const (
 	actionTagsAdd = "tags.add"
-	jobListLimit  = 20
+	jobListLimit  = 50
 )
 
 type jobRequest struct {
@@ -29,6 +29,7 @@ type jobRequest struct {
 
 type jobJSON struct {
 	ID         int64   `json:"id"`
+	User       string  `json:"user"`
 	Action     string  `json:"action"`
 	Status     string  `json:"status"`
 	Total      int     `json:"total"`
@@ -38,6 +39,8 @@ type jobJSON struct {
 	Failed     int     `json:"failed"`
 	CreatedAt  *string `json:"created_at"`
 	FinishedAt *string `json:"finished_at"`
+	UndoOf     *int64  `json:"undo_of"`
+	UndoneBy   *int64  `json:"undone_by"`
 }
 
 type jobItemJSON struct {
@@ -51,9 +54,17 @@ type jobDetailJSON struct {
 	Items []jobItemJSON `json:"items"`
 }
 
+// idOrNil maps the store's 0 for "no such job" to JSON null.
+func idOrNil(id int64) *int64 {
+	if id == 0 {
+		return nil
+	}
+	return &id
+}
+
 func toJobJSON(j writer.Job) jobJSON {
 	return jobJSON{
-		ID: j.ID, Action: j.Action, Status: j.Status, Total: j.Total, Done: j.Done,
+		ID: j.ID, User: j.Username, UndoOf: idOrNil(j.UndoOf), UndoneBy: idOrNil(j.UndoneBy), Action: j.Action, Status: j.Status, Total: j.Total, Done: j.Done,
 		OK: j.OK, Skipped: j.Skipped, Failed: j.Failed,
 		CreatedAt: rfc3339(j.CreatedAt), FinishedAt: rfc3339(j.FinishedAt),
 	}
@@ -132,6 +143,28 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB) {
 			out = append(out, toJobJSON(j))
 		}
 		writeJSON(w, http.StatusOK, out)
+	})
+
+	mux.HandleFunc("POST /api/jobs/{id}/undo", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+			return
+		}
+		user, _ := UserFromContext(r.Context())
+		undoID, err := q.Undo(r.Context(), id, user)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		case errors.Is(err, writer.ErrAlreadyUndone):
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "job was already undone"})
+		case errors.Is(err, writer.ErrJobActive):
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "job is still queued or running"})
+		case err != nil:
+			logInternal(w, "undo job", err)
+		default:
+			writeJSON(w, http.StatusAccepted, map[string]int64{"id": undoID})
+		}
 	})
 
 	mux.HandleFunc("GET /api/jobs/{id}", func(w http.ResponseWriter, r *http.Request) {

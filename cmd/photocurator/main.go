@@ -104,6 +104,7 @@ func serve(args []string) int {
 	}
 	exifWriter := &exif.Writer{ConfigPath: exifConfig, PreserveMtime: wcfg.PreserveMtime}
 	defer exifWriter.Close()
+	backups := &writer.Backups{DB: db, Root: paths.PhotosDir, Dir: paths.BackupDir, Retention: wcfg.BackupRetentionDays, Now: time.Now}
 	writes := &writer.Queue{DB: db, Pipeline: &writer.Pipeline{
 		Root:      paths.PhotosDir,
 		BackupDir: paths.BackupDir,
@@ -112,6 +113,7 @@ func serve(args []string) int {
 		Index:     scanner,
 		Quiet:     scan.Quiet,
 		Now:       time.Now,
+		Backups:   backups,
 	}}
 	thumbDir := filepath.Join(paths.DataDir, "thumbs")
 	if err := os.MkdirAll(thumbDir, 0o755); err != nil {
@@ -150,6 +152,10 @@ func serve(args []string) int {
 		slog.Error("write queue", "err", err)
 		return 1
 	}
+	pruneCtx, cancelPrune := context.WithCancel(ctx)
+	pruneDone := make(chan struct{})
+	go func() { defer close(pruneDone); pruneLoop(pruneCtx, writes, backups, 24*time.Hour) }()
+	defer func() { cancelPrune(); <-pruneDone }()
 	// Registered after idxDB.Close, so the scan loop has ended before the index closes.
 	scanCtx, cancelScan := context.WithCancel(ctx)
 	scanDone := make(chan struct{})
@@ -200,6 +206,23 @@ func serve(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+// pruneLoop prunes expired backups at once and then every interval, never while a write job runs.
+func pruneLoop(ctx context.Context, q *writer.Queue, b *writer.Backups, interval time.Duration) {
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for {
+		err := q.Exclusive(ctx, func() error { return b.Prune(b.Now()) })
+		if err != nil && ctx.Err() == nil {
+			slog.Error("prune backups", "err", err)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+	}
 }
 
 func thumbEntry(p library.Photo) thumbs.Entry {

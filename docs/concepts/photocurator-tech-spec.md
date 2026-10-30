@@ -96,9 +96,9 @@ Arbeitslisten sind reine Abfragen (`NOT EXISTS photo_tags`, `gps_lat IS NULL`,
 | `tag_definitions` | Kategorien ohne Fotos (leere Knoten); Tags mit Fotos kommen aus dem Index |
 | `recent_tags` | zuletzt verwendete Tags (Nutzer oder global — offener Punkt) |
 | `favorite_places` | Name, Koordinaten, Ortsteile |
-| `jobs` | Job-ID, Nutzer, Art, Parameter, Status, Zähler, Zeitstempel |
-| `job_items` | Job, Datei, Ergebnis (`ok`/`skipped`/`failed`), Fehlertext (ohne alte/neue Werte; das Journal für „Rückgängig“ folgt mit der Rückgängig-Story) |
-| `backups` | Datei, Backup-Pfad, Zeitpunkt (für Aufbewahrung und „schon gesichert?") |
+| `jobs` | Job-ID, Nutzer, Art, Parameter, Status, Zähler, Zeitstempel; `undo_of` (Job, den dieser Job rückgängig macht) |
+| `job_items` | Job, Datei, Ergebnis (`ok`/`skipped`/`failed`), Fehlertext; Journal für „Rückgängig“: `old_values`, `new_values` (JSON, Domänenfelder) und `written_at` |
+| `backups` | `rel_path`, `backup_path` (relativ zu `/backup`), `created_at` (für Aufbewahrung und „schon gesichert?") |
 | `geocode_cache` | Anfrage-Schlüssel, Antwort-JSON, Zeitpunkt |
 | `dismissed_suggestions` | abgelehnte Ortsvorschläge pro Foto |
 
@@ -169,7 +169,9 @@ Ablauf pro Datei in einem Job:
    Spike: mit geänderter mtime verschwand die Datei aus dem UGREEN-Index), `-config photocurator.config`, Werte über Argumentdatei
    (keine Shell, kein Quoting-Risiko).
 6. **Read-back:** Felder erneut lesen, mit Sollwerten vergleichen; `ImageDataHash` muss
-   gleich sein. Abweichung → `failed` + automatische Wiederherstellung aus dem Backup.
+   gleich sein. Abweichung → `failed` + automatische Wiederherstellung in place aus der
+   Vorab-Kopie dieses Schreibvorgangs (`/backup/.inflight/<JJJJ-MM-TT>/<rel_path>`), nie aus dem
+   datierten Aufbewahrungs-Backup; dieses entsteht bereits vorher (Schritt 2).
 7. Index-Zeile aktualisieren; `job_items` hält nur Ergebnis und Fehlertext.
 
 Ein Fehler betrifft immer nur die eine Datei; der Job läuft weiter. Es läuft **genau ein

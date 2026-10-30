@@ -21,6 +21,9 @@ type Change struct {
 	AddTags, RemoveTags []string // "Parent/Child" paths
 	Location            *Location
 	ReviewState         string // "done", "irrelevant" or "open"; empty leaves the state alone
+	// ClearLocation and ClearReviewState delete the field. A deletion runs before a Location
+	// written by the same Change, so the result holds exactly that place and no older leftovers.
+	ClearLocation, ClearReviewState bool `json:",omitempty"`
 }
 
 // Domain fields of a Change.
@@ -208,6 +211,21 @@ func Args(format string, old Meta, c Change) ([]string, error) {
 		}
 	}
 
+	if c.ReviewState != "" && c.ClearReviewState {
+		return nil, fmt.Errorf("review state both set and cleared")
+	}
+	// Deleting means assigning an empty value to every tag the field is written to.
+	if c.ClearLocation {
+		for _, w := range rules[fieldLocation].Add {
+			emit(w, "")
+		}
+	}
+	if c.ClearReviewState {
+		for _, w := range rules[fieldReview].Add {
+			emit(w, "")
+		}
+	}
+
 	if l := c.Location; l != nil {
 		for _, w := range rules[fieldLocation].Add {
 			var v string
@@ -276,6 +294,13 @@ func remainingTags(old Meta, c Change) []string {
 func Expect(old Meta, c Change) Meta {
 	m := old
 	m.Tags = remainingTags(old, c)
+	if c.ClearLocation {
+		m.Lat, m.Lon = nil, nil
+		m.Label, m.Sublocation, m.City, m.State, m.Country = "", "", "", "", ""
+	}
+	if c.ClearReviewState {
+		m.ReviewState = ReviewOpen // a file without a state reads as open
+	}
 	if l := c.Location; l != nil {
 		lat, lon := l.Lat, l.Lon
 		m.Lat, m.Lon = &lat, &lon

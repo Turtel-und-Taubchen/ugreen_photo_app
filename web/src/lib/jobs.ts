@@ -6,6 +6,9 @@ export interface Job {
   id: number;
   action: string;
   status: JobStatus;
+  user: string;
+  undo_of: number | null;
+  undone_by: number | null;
   total: number;
   done: number;
   ok: number;
@@ -43,6 +46,27 @@ export const isActive = (j: Job): boolean => j.status === 'queued' || j.status =
 export function progressText(job: Job, waiting: number): string {
   const text = `Schreibe ${job.done} von ${job.total}`;
   return waiting > 0 ? `${text} · ${waiting} ${waiting === 1 ? 'Job wartet' : 'Jobs warten'}` : text;
+}
+
+export const undoJob = (id: number): Promise<{ id: number }> => api<{ id: number }>(`/api/jobs/${id}/undo`, { method: 'POST' });
+
+const ACTION_LABELS: Record<string, string> = { 'tags.add': 'Tags hinzufügen' };
+
+export function actionLabel(job: Job, all: Job[]): string {
+  if (job.action !== 'undo') return ACTION_LABELS[job.action] ?? job.action;
+  const source = all.find((j) => j.id === job.undo_of);
+  return source ? `Rückgängig: ${actionLabel(source, all)}` : 'Rückgängig';
+}
+
+export function resultSummary(job: Job): string {
+  return `${job.ok} erfolgreich · ${job.skipped} übersprungen · ${job.failed} fehlgeschlagen`;
+}
+
+// Active jobs are still changing files; an already undone one has nothing left to revert.
+export const canUndo = (job: Job): boolean => !isActive(job) && job.undone_by === null;
+
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 export function resultText(job: Job): string {

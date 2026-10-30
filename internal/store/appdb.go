@@ -49,6 +49,18 @@ var migrations = []string{
 		updated_at INTEGER NOT NULL
 	);
 	CREATE INDEX job_items_job ON job_items(job_id)`,
+	`CREATE TABLE backups (
+		rel_path TEXT NOT NULL,
+		backup_path TEXT NOT NULL,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX backups_rel_path ON backups(rel_path)`,
+	`ALTER TABLE job_items ADD COLUMN old_values TEXT;
+	ALTER TABLE job_items ADD COLUMN new_values TEXT;
+	ALTER TABLE job_items ADD COLUMN written_at INTEGER`,
+	// The unique index lets the database decide which of two quick undos of one job wins.
+	`ALTER TABLE jobs ADD COLUMN undo_of INTEGER REFERENCES jobs(id);
+	CREATE UNIQUE INDEX jobs_undo_of ON jobs(undo_of) WHERE undo_of IS NOT NULL`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.

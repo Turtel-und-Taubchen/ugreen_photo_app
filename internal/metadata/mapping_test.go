@@ -187,6 +187,69 @@ func TestEveryFormatWritesAndReadsBackTagsPlaceAndReviewState(t *testing.T) {
 	}
 }
 
+func TestEveryFormatClearsPlaceAndReviewState(t *testing.T) {
+	cases := []struct{ format, fixture string }{
+		{"jpeg", "library/2024/07/sample.jpg"},
+		{"heic", "library/2024/07/sample.heic"},
+		{"png", "library/2024/08/screenshot.png"},
+		{"mp4", "library/2024/08/clip.mp4"},
+		{"mov", "library/2024/08/short.mov"},
+	}
+	if len(cases) != len(formats) {
+		t.Fatalf("%d cases for %d formats", len(cases), len(formats))
+	}
+	set := Change{
+		Location: &Location{
+			Lat: 48.137154, Lon: -11.576124, Label: "Marktplatz", Sublocation: "Altstadt",
+			City: "Muenchen", State: "Bayern", Country: "Deutschland",
+		},
+		ReviewState: "done",
+	}
+	wipe := Change{ClearLocation: true, ClearReviewState: true}
+	for _, c := range cases {
+		t.Run(c.format, func(t *testing.T) {
+			path := testsupport.CopyFixture(t, c.fixture)
+			w := newWriter(t)
+			ctx := context.Background()
+			apply := func(ch Change) Meta {
+				old := Parse(readFields(t, path))
+				args, err := Args(c.format, old, ch)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := w.Write(ctx, path, args); err != nil {
+					t.Fatal(err)
+				}
+				got := Parse(readFields(t, path))
+				if want := Expect(old, ch); !Matches(c.format, got, want) {
+					t.Errorf("read back %+v, want %+v", got, want)
+				}
+				return got
+			}
+			if m := apply(set); m.Lat == nil || m.ReviewState == "" {
+				t.Fatalf("setup did not write: %+v", m)
+			}
+			m := apply(wipe)
+			if m.Lat != nil || m.Lon != nil || m.Label != "" || m.Sublocation != "" || m.City != "" ||
+				m.State != "" || m.Country != "" || m.ReviewState != ReviewOpen {
+				t.Errorf("place or review state left behind: %+v", m)
+			}
+		})
+	}
+}
+
+func TestClearThenSetLeavesOnlyTheNewPlace(t *testing.T) {
+	old := Meta{City: "Alt", Country: "Land"}
+	c := Change{ClearLocation: true, Location: &Location{Lat: 1, Lon: 2, City: "Neu"}}
+	got := Expect(old, c)
+	if got.City != "Neu" || got.Country != "" || got.Lat == nil {
+		t.Errorf("Expect = %+v", got)
+	}
+	if _, err := Args("jpeg", old, Change{ReviewState: "done", ClearReviewState: true}); err == nil {
+		t.Error("set and clear of the review state accepted")
+	}
+}
+
 func TestForeignKeywordsSurviveAddingATag(t *testing.T) {
 	path := testsupport.CopyFixture(t, filepath.ToSlash("library/2024/07/tagged.jpg"))
 	w := newWriter(t)

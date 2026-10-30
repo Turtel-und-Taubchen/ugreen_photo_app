@@ -172,6 +172,8 @@ func TestMtimeFollowsPreserveMtimeSetting(t *testing.T) {
 
 func TestFilesInQuietPeriodOrOutsidePhotosAreSkipped(t *testing.T) {
 	e := newEnv(t, true)
+	now := settled.Add(time.Hour)
+	e.p.Backups = newBackups(t, e, &now)
 	ctx := context.Background()
 	change := metadata.Change{AddTags: []string{"Urlaub"}}
 
@@ -202,6 +204,9 @@ func TestFilesInQuietPeriodOrOutsidePhotosAreSkipped(t *testing.T) {
 		t.Error("file outside the library was changed")
 	}
 	e.assertNoInflightCopies(t)
+	if got := listing(t, e.p.BackupDir); len(got) > 2 || (len(got) == 2 && got[1] != inflightDir) {
+		t.Errorf("a skipped file got a backup: %v", got)
+	}
 }
 
 func TestIndexShowsWrittenValuesRightAfterTheWrite(t *testing.T) {

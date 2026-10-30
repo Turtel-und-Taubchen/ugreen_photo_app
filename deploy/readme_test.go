@@ -15,10 +15,16 @@ func TestInstallGuideCoversEveryStep(t *testing.T) {
 	readme := string(raw)
 	for _, h := range []string{
 		"## Ordner anlegen", "## Nutzer und UID ermitteln", "## Rechte", "## .env anlegen", "## Nutzer anlegen",
-		"## Image übertragen", "## Projekt anlegen", "## Erster Aufruf", "## Update",
+		"## Image übertragen", "## Projekt anlegen", "## Erster Aufruf",
+		"## Datei aus dem Backup wiederherstellen", "## App-Datenbank sichern", "## Update",
 	} {
 		if !strings.Contains(readme, "\n"+h+"\n") {
 			t.Errorf("heading %q missing", h)
+		}
+	}
+	for _, s := range []string{"PC_BACKUP_RETENTION_DAYS", "--preserve=timestamps", "app.db-wal", "app.db-shm"} {
+		if !strings.Contains(readme, s) {
+			t.Errorf("%s not mentioned in README", s)
 		}
 	}
 	env, err := os.ReadFile(".env.example")

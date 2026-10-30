@@ -40,6 +40,8 @@ type Job struct {
 	CreatedAt  time.Time
 	StartedAt  time.Time // zero until the job runs
 	FinishedAt time.Time // zero until the job ends
+	UndoOf     int64     // the job an undo job reverts; 0 for any other job
+	UndoneBy   int64     // the undo job that reverted this one; 0 when none did
 }
 
 // JobItem is the outcome of one file of a job; State is "pending" until it was handled.
@@ -47,6 +49,9 @@ type JobItem struct {
 	RelPath string
 	State   string
 	Reason  string
+	// Old and New are the journal of a handled file (see Result); they are not part of the API.
+	Old, New  Journal
+	WrittenAt time.Time // zero when nothing was written
 }
 
 // Queue runs write jobs in the order they were created, one at a time and one file at a time.
@@ -55,6 +60,10 @@ type Queue struct {
 	DB       *sql.DB // app.db
 	Pipeline *Pipeline
 
+	// exclusive is held for the whole of a job, so Exclusive callers never overlap a write.
+	exclusive sync.Mutex
+
+	undoMu  sync.Mutex
 	mu      sync.Mutex
 	started bool
 	wake    chan struct{}
@@ -206,10 +215,13 @@ func (q *Queue) run(ctx context.Context) {
 
 // runNext runs the oldest queued job and reports whether it ran to its end.
 func (q *Queue) runNext(ctx context.Context) (bool, error) {
+	q.exclusive.Lock()
+	defer q.exclusive.Unlock()
 	var id int64
 	var payload string
-	err := q.DB.QueryRowContext(ctx, `SELECT id, payload FROM jobs WHERE status = ? ORDER BY id LIMIT 1`, JobQueued).
-		Scan(&id, &payload)
+	var undoOf sql.NullInt64
+	err := q.DB.QueryRowContext(ctx, `SELECT id, payload, undo_of FROM jobs WHERE status = ? ORDER BY id LIMIT 1`, JobQueued).
+		Scan(&id, &payload, &undoOf)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -229,9 +241,21 @@ func (q *Queue) runNext(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
+	var source map[string]JobItem
+	if undoOf.Valid {
+		if source, err = q.sourceItems(ctx, undoOf.Int64); err != nil {
+			return false, err
+		}
+	}
+
 	for _, rel := range rels {
 		// An error in one file is its result, not a reason to stop the job.
-		res := q.Pipeline.WriteFile(ctx, rel, c)
+		var res Result
+		if undoOf.Valid {
+			res = q.Pipeline.undoFile(ctx, rel, source[rel])
+		} else {
+			res = q.Pipeline.WriteFile(ctx, rel, c)
+		}
 		// Stored even when ctx ended meanwhile: the file is already written or restored.
 		if err := q.record(context.WithoutCancel(ctx), id, rel, res); err != nil {
 			return false, err
@@ -275,8 +299,24 @@ func (q *Queue) record(ctx context.Context, id int64, rel string, res Result) er
 		return err
 	}
 	defer tx.Rollback()
-	if _, err := tx.ExecContext(ctx, `UPDATE job_items SET state = ?, reason = ?, updated_at = ?
-		WHERE job_id = ? AND rel_path = ?`, string(res.State), res.Reason, time.Now().Unix(), id, rel); err != nil {
+	// Values only exist for a file that was read; a failed or skipped file carries none.
+	var oldJSON, newJSON, writtenAt any
+	if res.State == StateOK {
+		var err error
+		if oldJSON, err = journalJSON(res.Old); err != nil {
+			return err
+		}
+		if newJSON, err = journalJSON(res.New); err != nil {
+			return err
+		}
+		if !res.WrittenAt.IsZero() {
+			writtenAt = res.WrittenAt.Unix()
+		}
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE job_items SET state = ?, reason = ?, updated_at = ?,
+			old_values = ?, new_values = ?, written_at = ?
+		WHERE job_id = ? AND rel_path = ?`, string(res.State), res.Reason, time.Now().Unix(),
+		oldJSON, newJSON, writtenAt, id, rel); err != nil {
 		return err
 	}
 	col := "failed"
@@ -292,18 +332,20 @@ func (q *Queue) record(ctx context.Context, id int64, rel string, res Result) er
 	return tx.Commit()
 }
 
-const jobColumns = `id, username, action, status, total, done, ok, skipped, failed, created_at, started_at, finished_at`
+const jobColumns = `id, username, action, status, total, done, ok, skipped, failed, created_at, started_at, finished_at, undo_of,
+	(SELECT u.id FROM jobs u WHERE u.undo_of = jobs.id)`
 
 type rowScanner interface{ Scan(...any) error }
 
 func scanJob(r rowScanner) (Job, error) {
 	var j Job
 	var created int64
-	var started, finished sql.NullInt64
+	var started, finished, undoOf, undoneBy sql.NullInt64
 	if err := r.Scan(&j.ID, &j.Username, &j.Action, &j.Status, &j.Total, &j.Done, &j.OK, &j.Skipped, &j.Failed,
-		&created, &started, &finished); err != nil {
+		&created, &started, &finished, &undoOf, &undoneBy); err != nil {
 		return Job{}, err
 	}
+	j.UndoOf, j.UndoneBy = undoOf.Int64, undoneBy.Int64
 	j.CreatedAt = time.Unix(created, 0)
 	j.StartedAt, j.FinishedAt = unixOrZero(started), unixOrZero(finished)
 	return j, nil
@@ -333,7 +375,8 @@ func (q *Queue) Get(ctx context.Context, id int64) (Job, []JobItem, error) {
 	if err != nil {
 		return Job{}, nil, err
 	}
-	rows, err := q.DB.QueryContext(ctx, `SELECT rel_path, state, reason FROM job_items WHERE job_id = ? ORDER BY rowid`, id)
+	rows, err := q.DB.QueryContext(ctx, `SELECT rel_path, state, reason, old_values, new_values, written_at
+		FROM job_items WHERE job_id = ? ORDER BY rowid`, id)
 	if err != nil {
 		return Job{}, nil, err
 	}
@@ -341,9 +384,19 @@ func (q *Queue) Get(ctx context.Context, id int64) (Job, []JobItem, error) {
 	var items []JobItem
 	for rows.Next() {
 		var it JobItem
-		if err := rows.Scan(&it.RelPath, &it.State, &it.Reason); err != nil {
+		var oldV, newV *string
+		var written sql.NullInt64
+		if err := rows.Scan(&it.RelPath, &it.State, &it.Reason, &oldV, &newV, &written); err != nil {
 			return Job{}, nil, err
 		}
+		var err error
+		if it.Old, err = parseJournal(oldV); err != nil {
+			return Job{}, nil, fmt.Errorf("job %d %s old values: %w", id, it.RelPath, err)
+		}
+		if it.New, err = parseJournal(newV); err != nil {
+			return Job{}, nil, fmt.Errorf("job %d %s new values: %w", id, it.RelPath, err)
+		}
+		it.WrittenAt = unixOrZero(written)
 		items = append(items, it)
 	}
 	return j, items, rows.Err()

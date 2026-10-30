@@ -60,6 +60,10 @@ func preCopy(dst, src string, mtime time.Time) (err error) {
 		return err
 	}
 	defer in.Close()
+	info, err := in.Stat()
+	if err != nil {
+		return err
+	}
 	tmp, err := os.CreateTemp(dir, tmpPrefix+"*"+tmpSuffix)
 	if err != nil {
 		return err
@@ -78,6 +82,9 @@ func preCopy(dst, src string, mtime time.Time) (err error) {
 		err = cerr
 	}
 	if err != nil {
+		return err
+	}
+	if err := os.Chmod(tmp.Name(), info.Mode().Perm()); err != nil {
 		return err
 	}
 	if err := os.Chtimes(tmp.Name(), time.Time{}, mtime); err != nil {

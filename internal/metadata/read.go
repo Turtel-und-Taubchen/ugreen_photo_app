@@ -23,6 +23,9 @@ var ReadTags = []string{
 }
 
 // Meta is the domain view of one ExifTool record.
+// ReviewOpen is the review state of a file that carries none.
+const ReviewOpen = "open"
+
 type Meta struct {
 	Tags                              []string
 	Lat, Lon                          *float64
@@ -153,7 +156,7 @@ func Parse(fields map[string]any) Meta {
 	m.Country = first(fields, "XMP-photoshop:Country", "IPTC:Country-PrimaryLocationName")
 	m.Label = first(fields, "XMP-iptcExt:LocationShownLocationName")
 
-	m.ReviewState = "open"
+	m.ReviewState = ReviewOpen
 	switch s := first(fields, "XMP-photocurator:ReviewState"); s {
 	case "done", "irrelevant":
 		m.ReviewState = s
