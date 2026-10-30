@@ -17,6 +17,10 @@ var migrations = []string{
 		expires_at INTEGER NOT NULL,
 		renewed_at INTEGER NOT NULL
 	)`,
+	`CREATE TABLE tag_definitions (
+		path TEXT PRIMARY KEY,
+		created_at INTEGER NOT NULL
+	)`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.

@@ -147,6 +147,7 @@ func serve(args []string) int {
 		},
 		Photos: photoList{idxDB},
 		Index:  idxDB,
+		Tags:   &api.TagDeps{App: db, Index: idxDB},
 	}), ReadHeaderTimeout: 10 * time.Second}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()

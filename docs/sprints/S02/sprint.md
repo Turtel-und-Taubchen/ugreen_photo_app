@@ -23,7 +23,7 @@ Nominatim.
 - [x] 006 — Thumbnails mit Cache für Fotos und Videos
 - [x] 007 — Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht
 - [x] 008 — Mehrfach-, Bereichs- und Gruppenauswahl
-- [ ] 011 — Hierarchische Kategorien definieren und als Baum anzeigen
+- [x] 011 — Hierarchische Kategorien definieren und als Baum anzeigen
 - [ ] 014 — Ortssuche und Reverse-Geocoding über Nominatim
 
 ## Notes

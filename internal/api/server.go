@@ -39,6 +39,9 @@ func NewHandler(static fs.FS, deps AuthDeps, lib LibraryDeps) http.Handler {
 	if lib.Index != nil {
 		registerSelection(mux, lib.Index)
 	}
+	if lib.Tags != nil {
+		registerTags(mux, lib.Tags)
+	}
 	// Unknown API paths must never fall through to the SPA's index.html.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})

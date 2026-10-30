@@ -2,8 +2,10 @@
   import AppHeader from './lib/AppHeader.svelte';
   import Library from './routes/Library.svelte';
   import Login from './routes/Login.svelte';
+  import Tags from './routes/Tags.svelte';
 
   const isLogin = location.pathname === '/login';
+  const isTags = location.pathname === '/tags';
 </script>
 
 {#if isLogin}
@@ -11,7 +13,11 @@
 {:else}
   <div class="shell">
     <AppHeader />
-    <Library />
+    {#if isTags}
+      <Tags />
+    {:else}
+      <Library />
+    {/if}
   </div>
 {/if}
 

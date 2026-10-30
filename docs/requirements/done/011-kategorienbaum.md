@@ -1,7 +1,7 @@
 ---
 id: 011
 title: Hierarchische Kategorien definieren und als Baum anzeigen
-status: ready # draft -> ready -> in-progress -> done
+status: done
 created: 2026-10-29
 epic: E3 Tags & Kategorien
 estimate: 3
@@ -16,16 +16,16 @@ Kategorien sind dasselbe Konzept: Eine Kategorie ist ein Tag mit Kindern.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Ein neuer Tag kann mit Pfad angelegt werden (`Anlass/Geburtstag`); fehlende
+- [x] **AC1** — Ein neuer Tag kann mit Pfad angelegt werden (`Anlass/Geburtstag`); fehlende
   Elternknoten entstehen automatisch.
-- [ ] **AC2** — Die Tag-Verwaltung zeigt alle bekannten Tags als Baum — aus den Dateien (Index)
+- [x] **AC2** — Die Tag-Verwaltung zeigt alle bekannten Tags als Baum — aus den Dateien (Index)
   und den angelegten, noch leeren Kategorien — jeweils mit Anzahl der Fotos.
-- [ ] **AC3** — Ein Tag ohne Fotos kann gelöscht werden; für einen Tag mit Fotos ist Löschen
+- [x] **AC3** — Ein Tag ohne Fotos kann gelöscht werden; für einen Tag mit Fotos ist Löschen
   gesperrt, mit dem Hinweis, ihn zuerst über „Tags entfernen" von den Fotos zu lösen.
-- [ ] **AC4** — Ungültige Namen werden mit Erklärung abgewiesen: leere Segmente, Zeichen, die in
+- [x] **AC4** — Ungültige Namen werden mit Erklärung abgewiesen: leere Segmente, Zeichen, die in
   den Zielfeldern als Trenner dienen (`|`, `;`, `,`, `/` innerhalb eines Segments), und Segmente
   über der Längengrenze der Zielfelder (IPTC: 64 Byte).
-- [ ] **AC5** — Nach einem Index-Neuaufbau sind alle in Dateien vorhandenen Tags wieder im Baum;
+- [x] **AC5** — Nach einem Index-Neuaufbau sind alle in Dateien vorhandenen Tags wieder im Baum;
   leere Kategorien bleiben erhalten (App-Zustand).
 
 ## Open Questions
@@ -74,7 +74,7 @@ angelegt hat, ergänzt D2 dort die Tag-Abfragen und `tag_definitions`.
 
 ## Deliverables
 
-- [ ] **D1 — Tag-Pfade validieren und Baum bauen (`internal/tags`).** Neue Dateien
+- [x] **D1 — Tag-Pfade validieren und Baum bauen (`internal/tags`).** Neue Dateien
   `internal/tags/path.go`, `internal/tags/tree.go`, Tests `internal/tags/path_test.go`,
   `internal/tags/tree_test.go`. Reines Go, keine DB.
   - `ParsePath(input string) (string, error)`: an `/` splitten, jedes Segment mit
@@ -99,7 +99,7 @@ angelegt hat, ergänzt D2 dort die Tag-Abfragen und `tag_definitions`.
     `"a photo carrying two tags under one parent counts once for the parent"`;
     `"an empty definition appears with count zero and its parents"`.
 
-- [ ] **D2 — `tag_definitions` in `app.db` und Tag-Abfragen auf dem Index.** Dateien:
+- [x] **D2 — `tag_definitions` in `app.db` und Tag-Abfragen auf dem Index.** Dateien:
   `internal/store/appdb.go` (Migration als nächsten Eintrag an `migrations` **anhängen**, nie einen
   bestehenden ändern), `internal/store/appdb_test.go`, neu `internal/tags/definitions.go` +
   `internal/tags/definitions_test.go`, neu `internal/library/tagquery.go` +
@@ -126,7 +126,7 @@ angelegt hat, ergänzt D2 dort die Tag-Abfragen und `tag_definitions`.
     `"subtree counts treat underscore and percent literally"` (Index-Zeilen `A_b/x`, `Axb/y`,
     `A%/z` → Anzahl für `A_b` ist 1). Der bestehende Migrationstest in `appdb_test.go` bleibt grün.
 
-- [ ] **D3 — API `/api/tags` und Verdrahtung.** Dateien: neu `internal/api/tags.go`,
+- [x] **D3 — API `/api/tags` und Verdrahtung.** Dateien: neu `internal/api/tags.go`,
   `internal/api/tags_test.go`; `internal/api/server.go` (Routen in `NewHandler`; Abhängigkeiten
   analog `AuthDeps` übergeben), `cmd/photocurator/main.go` (App-DB und Index-Handle übergeben).
   Nutzt `tags.ParsePath/Create/List/DeleteSubtree/BuildTree` und
@@ -151,7 +151,7 @@ angelegt hat, ergänzt D2 dort die Tag-Abfragen und `tag_definitions`.
     `index.db` löschen, neu scannen → `GET /api/tags` ist identisch (Datei-Tag mit Anzahl ≥ 1,
     `Anlass/Geburtstag` mit Anzahl 0).
 
-- [ ] **D4 — Seite „Tags" mit Baum, Anlegen und Löschen.** Dateien: neu
+- [x] **D4 — Seite „Tags" mit Baum, Anlegen und Löschen.** Dateien: neu
   `web/src/routes/Tags.svelte`, neu `web/src/lib/tags.ts` (Aufrufe über `api()` aus
   `web/src/lib/api.ts`, Typ `TagNode`, Sortierung mit `Intl.Collator('de')`), `web/src/App.svelte`
   (Route `/tags` im Routing, das Story 007 hinterlassen hat; ohne Router wie bisher über
@@ -207,3 +207,21 @@ z. B. `TestCreatingAPathAlsoCreatesItsMissingParents`); Playwright-Tests tragen 
 Abdeckung: AC1 → D1+D2+D3+D4 · AC2 → D1+D2+D3+D4 · AC3 → D2+D3+D4 · AC4 → D1+D3+D4 · AC5 → D2+D3.
 
 ## Done
+
+Tag-Pfade (`tags.ParsePath`), Baum mit Teilbaum-Zählung (`tags.BuildTree`), `tag_definitions` in `app.db`, `GET/POST/DELETE /api/tags` und Seite `/tags` mit Anlegen/Löschen/Sperre sind umgesetzt. Schreibt nichts in Dateien.
+
+Commit: `011: Kategorienbaum — tags.ParsePath/BuildTree, tag_definitions, /api/tags, Seite Tags + E2E`
+
+Verifikation (enges Gate): `npm --prefix web run build` + `docker build --target runtime` grün; `docker build --target test .` (inkl. ExifTool) + `npm --prefix web run test` grün; `docker build --target lint .` grün (nach gofmt-Zeilenenden-Fix an appdb.go) + `npm --prefix web run lint` grün; `npm --prefix web run check` grün; `cd web && npx playwright test tests/e2e/tags.spec.ts` grün. Review (default): PASS, keine Blocker.
+AC → Test (alle gelaufen und grün, Go auf Paketebene des Docker-`test`-Stage): AC1 `TestCreatingAPathAlsoCreatesItsMissingParents` + e2e; AC2 `TestAPhotoCarryingTwoTagsUnderOneParentCountsOnceForTheParent`, `TestSubtreeCountsTreatUnderscoreAndPercentLiterally` + e2e; AC3 `TestDeletingATagThatPhotosCarryIsRefused`, `TestDeletingACategoryRemovesItsEmptyDescendantsButNotItsParentOrALookalike` + e2e; AC4 `TestInvalidTagNamesAreRejectedWithAReason` + e2e; AC5 `TestTheTagTreeSurvivesAnIndexRebuild`. Kein manual residue. Volles Regressions-Gate steht aus (Sprint).
+
+Decisions:
+- `tagged.jpg` (005) trägt bereits `Anlass/Geburtstag`; E2E und AC5-Test legen darum `Ausflug/Wandern` als leere Kategorie an, statt des im Plan genannten Pfads. Keine neue Fixture.
+- `library.TagPairs(ctx, db)` liefert `(seq, errFn)` — `errFn()` nach `BuildTree` prüft Lesefehler; `TagSubtreeCount(ctx, db, path)` nimmt `db` wie die übrigen Library-Funktionen.
+- DELETE liefert 404 nur, wenn der Pfad nicht in `tag_definitions` steht (bei Anzahl 0 kann ein Index-Knoten nicht existieren).
+- Tag-Routen hängen als optionales `LibraryDeps.Tags *TagDeps{App, Index}` in der Session-/CSRF-Schicht.
+- Header erhielt zusätzlich einen Link „Fotos" (Rückweg zur Bibliothek); beide Links ≥ 44 px.
+- Go-Dateien auf LF normalisiert (Working-Tree-CRLF ließ `gofmt -l` an der Raw-String-Migration scheitern).
+- Bewusst offen (Review, unkritisch): `unicode.IsControl` fängt unsichtbare Cf-Zeichen (U+200B) nicht; ungültiges UTF-8 wird nicht abgewiesen.
+
+tiers: D 4 / hard 0 · review default · cycles 0 · agents 6

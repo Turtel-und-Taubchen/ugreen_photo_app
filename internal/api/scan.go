@@ -27,6 +27,8 @@ type LibraryDeps struct {
 	Photos PhotoLister
 	// Index is index.db; it serves the selection endpoints.
 	Index *sql.DB
+	// Tags serves /api/tags; nil leaves the routes unregistered.
+	Tags *TagDeps
 }
 
 type unreadableJSON struct {
