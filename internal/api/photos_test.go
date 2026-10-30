@@ -27,6 +27,43 @@ func (fakeReader) Detail(_ context.Context, id int64) (library.Detail, bool, err
 		Place: library.Place{City: "Wien"}, ReviewState: "open", NextID: &next}, true, nil
 }
 
+type coordReader struct{ fakeReader }
+
+func (coordReader) Detail(_ context.Context, id int64) (library.Detail, bool, error) {
+	lat, lon := 48.2, 16.37
+	d := library.Detail{Photo: library.Photo{ID: id, RelPath: "a.jpg", MediaType: "image"}, Tags: []string{}}
+	if id == 1 {
+		d.Place = library.Place{Lat: &lat, Lon: &lon}
+	}
+	return d, true, nil
+}
+
+func TestPhotoDetailIncludesCoordinates(t *testing.T) {
+	s := newTestServerDeps(t, api.LibraryDeps{Photos: coordReader{}})
+	sess := s.signedIn(t, "anna")
+	for id, wantSet := range map[string]bool{"1": true, "2": false} {
+		rec := s.do(http.MethodGet, "/api/photos/"+id, "", sess)
+		wantJSONStatus(t, id, rec, http.StatusOK)
+		var d struct {
+			Location map[string]any `json:"location"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &d); err != nil {
+			t.Fatal(err)
+		}
+		lat, hasLat := d.Location["lat"]
+		lon, hasLon := d.Location["lon"]
+		if !hasLat || !hasLon {
+			t.Fatalf("photo %s: location lacks lat/lon keys: %v", id, d.Location)
+		}
+		if wantSet && (lat != 48.2 || lon != 16.37) {
+			t.Errorf("photo %s: lat/lon = %v/%v, want 48.2/16.37", id, lat, lon)
+		}
+		if !wantSet && (lat != nil || lon != nil) {
+			t.Errorf("photo %s: lat/lon = %v/%v, want null", id, lat, lon)
+		}
+	}
+}
+
 func TestPhotoReadRoutesAnswerWithTheDocumentedShapeAndRejectBadParameters(t *testing.T) {
 	s := newTestServerDeps(t, api.LibraryDeps{Photos: fakeReader{}})
 	sess := s.signedIn(t, "anna")

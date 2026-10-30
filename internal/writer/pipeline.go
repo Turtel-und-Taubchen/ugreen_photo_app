@@ -40,6 +40,8 @@ const (
 	reasonOutside  = "außerhalb von /photos"
 	reasonNotFound = "Datei nicht gefunden"
 	reasonCurrent  = "bereits aktuell"
+	reasonHasPlace = "hat bereits einen Ort"
+	reasonNoPlace  = "kein Ort vorhanden"
 )
 
 // Pipeline writes metadata changes into files below Root, one file at a time.
@@ -134,6 +136,14 @@ func (p *Pipeline) WriteFile(ctx context.Context, rel string, c metadata.Change)
 	old, fields, err := p.readMetaFields(work, abs)
 	if err != nil {
 		return Result{State: StateFailed, Reason: "Metadaten nicht lesbar: " + err.Error()}
+	}
+	// Decided on the values just read, not on what the selection looked like when the job was
+	// created: the file may have gained or lost its place since.
+	if c.Location != nil && c.LocationMode == metadata.LocationModeMissing && old.Lat != nil {
+		return Result{State: StateSkipped, Reason: reasonHasPlace}
+	}
+	if c.ClearLocation && c.Location == nil && !old.HasPlace() {
+		return Result{State: StateSkipped, Reason: reasonNoPlace}
 	}
 	args, err := metadata.Args(format, fields, c)
 	if err != nil {

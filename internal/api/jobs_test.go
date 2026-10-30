@@ -333,6 +333,52 @@ func TestAnInvalidTagPathIsRejectedWithItsReasonAndCreatesNoJob(t *testing.T) {
 	}
 }
 
+func TestLocationJobWithABadPayloadIsRefusedAndAValidOneIsQueued(t *testing.T) {
+	s, q := jobsServer(t)
+	sess := s.signedIn(t, "anna")
+	post := func(action, payload string) *httptest.ResponseRecorder {
+		return s.do(http.MethodPost, "/api/jobs",
+			`{"selection":{"include_ids":[1]},"action":"`+action+`","payload":`+payload+`}`, sess, withXRW)
+	}
+	for name, c := range map[string][2]string{
+		"no location":  {"location.set", `{"mode":"all"}`},
+		"missing mode": {"location.set", `{"location":{"lat":1,"lon":2,"label":"X"}}`},
+		"unknown mode": {"location.set", `{"mode":"some","location":{"lat":1,"lon":2,"label":"X"}}`},
+		"no latitude":  {"location.set", `{"mode":"all","location":{"lon":2,"label":"X"}}`},
+		"no longitude": {"location.set", `{"mode":"all","location":{"lat":1,"label":"X"}}`},
+		"latitude":     {"location.set", `{"mode":"all","location":{"lat":91,"lon":2,"label":"X"}}`},
+		"longitude":    {"location.set", `{"mode":"all","location":{"lat":1,"lon":181,"label":"X"}}`},
+		"empty name":   {"location.set", `{"mode":"all","location":{"lat":1,"lon":2,"label":" "}}`},
+		"control char": {"location.set", `{"mode":"all","location":{"lat":1,"lon":2,"label":"X","city":"a\u0000b"}}`},
+	} {
+		rec := post(c[0], c[1])
+		wantJSONStatus(t, name, rec, http.StatusBadRequest)
+		var e map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &e); err != nil || e["error"] == "" {
+			t.Errorf("%s: body %q lacks a reason", name, rec.Body.String())
+		}
+	}
+	if jobs, err := q.List(context.Background(), 10); err != nil || len(jobs) != 0 {
+		t.Fatalf("jobs = %v, %v; a refused request must queue nothing", jobs, err)
+	}
+
+	wantJSONStatus(t, "set", post("location.set",
+		`{"mode":"missing","location":{"lat":48.2,"lon":16.37,"label":" Stephansdom ","city":"Wien","countryCode":"at"}}`), http.StatusAccepted)
+	wantJSONStatus(t, "remove", post("location.remove", `{}`), http.StatusAccepted)
+
+	jobs, err := q.List(context.Background(), 10)
+	if err != nil || len(jobs) != 2 {
+		t.Fatalf("jobs = %v, %v; want two", jobs, err)
+	}
+	var payload string
+	if err := q.DB.QueryRow(`SELECT payload FROM jobs WHERE action = 'location.set'`).Scan(&payload); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(payload, `"Label":"Stephansdom"`) || !strings.Contains(payload, `"LocationMode":"missing"`) || !strings.Contains(payload, `"ClearLocation":true`) {
+		t.Errorf("payload = %s, want trimmed label, mode and ClearLocation", payload)
+	}
+}
+
 func TestRemovingATagQueuesARemoveJobWithoutCreatingTheTag(t *testing.T) {
 	s, q := jobsServer(t)
 	sess := s.signedIn(t, "anna")

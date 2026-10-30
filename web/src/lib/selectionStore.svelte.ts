@@ -12,6 +12,16 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 // Responses of any request but the latest are stale; a slow earlier answer must not overwrite a newer count.
 let latest = 0;
 
+export interface SelectionCount {
+  count: number;
+  /** How many of the selected photos already carry a place. */
+  located: number;
+}
+
+/** Asks the server about the current selection; the same request feeds the bar's count and the place dialogs. */
+export const countSelection = (): Promise<SelectionCount> =>
+  api<SelectionCount>('/api/selection/count', { method: 'POST', body: model.toRequest(state) });
+
 function refreshCount(): void {
   clearTimeout(timer);
   const mine = ++latest;
@@ -21,7 +31,7 @@ function refreshCount(): void {
   }
   timer = setTimeout(async () => {
     try {
-      const res = await api<{ count: number }>('/api/selection/count', { method: 'POST', body: model.toRequest(state) });
+      const res = await countSelection();
       if (mine === latest) count = res.count;
     } catch {
       // Keep the last known count; the next change asks again.

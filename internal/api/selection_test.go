@@ -50,6 +50,25 @@ func TestCountingAMonthSelectionWithExclusionsAnswersTheResolvedCount(t *testing
 	}
 }
 
+func TestSelectionCountReportsPhotosWithLocation(t *testing.T) {
+	idx := selectionIndex(t)
+	if _, err := idx.Exec(`UPDATE photos SET gps_lat = 48.2, gps_lon = 16.37 WHERE id = 1`); err != nil {
+		t.Fatal(err)
+	}
+	s := newTestServerDeps(t, api.LibraryDeps{Index: idx})
+	sess := s.signedIn(t, "anna")
+
+	rec := s.do(http.MethodPost, "/api/selection/count", `{"include_ids":[1,2]}`, sess, withXRW)
+	wantJSONStatus(t, "count", rec, http.StatusOK)
+	var got map[string]int
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["count"] != 2 || got["located"] != 1 {
+		t.Errorf("got %v, want count 2 and located 1", got)
+	}
+}
+
 func TestAnInvalidSelectionAnswers400(t *testing.T) {
 	s := newTestServerDeps(t, api.LibraryDeps{Index: selectionIndex(t)})
 	sess := s.signedIn(t, "anna")

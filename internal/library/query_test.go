@@ -128,6 +128,27 @@ func TestTheDetailCarriesTagsPlaceReviewStateDateSourceAndPath(t *testing.T) {
 	}
 }
 
+func TestPhotoDetailReadsCoordinatesFromTheIndex(t *testing.T) {
+	db := seedGrid(t, gridSeed)
+	if _, err := db.Exec(`UPDATE photos SET gps_lat = 48.208493, gps_lon = 16.373118 WHERE id = 3`); err != nil {
+		t.Fatal(err)
+	}
+	with, ok, err := PhotoDetail(context.Background(), db, 3)
+	if err != nil || !ok {
+		t.Fatalf("PhotoDetail = %v, %v", ok, err)
+	}
+	if with.Place.Lat == nil || with.Place.Lon == nil || *with.Place.Lat != 48.208493 || *with.Place.Lon != 16.373118 {
+		t.Errorf("coordinates = %v, %v, want 48.208493, 16.373118", with.Place.Lat, with.Place.Lon)
+	}
+	without, ok, err := PhotoDetail(context.Background(), db, 1)
+	if err != nil || !ok {
+		t.Fatalf("PhotoDetail = %v, %v", ok, err)
+	}
+	if without.Place.Lat != nil || without.Place.Lon != nil {
+		t.Errorf("coordinates = %v, %v, want nil", without.Place.Lat, without.Place.Lon)
+	}
+}
+
 func TestPreviousAndNextFollowTheGridOrderAcrossMonthsAndStopAtTheEnds(t *testing.T) {
 	db := seedGrid(t, gridSeed)
 	// Grid order, newest first: 1, 2, 3, 4, 5, then the undated 6.

@@ -11,6 +11,7 @@
 
 <script lang="ts">
   import { errorMessage } from './api';
+  import PlaceMap from './map/PlaceMap.svelte';
   import { emptyParts, parseCoordinate, reversePlace, searchPlaces, type Place } from './geo';
 
   let {
@@ -53,11 +54,18 @@
     }
   }
 
-  function choose(place: Place) {
-    lat = String(place.lat);
-    lon = String(place.lon);
-    name = place.label;
-    parts = { ...place.parts };
+  function apply(next: PickedPlace) {
+    lat = String(next.lat);
+    lon = String(next.lon);
+    name = next.name;
+    parts = { ...next.parts };
+    emit();
+  }
+
+  // A map click only moves the point; name and parts describe the previous place until the user decides.
+  function pick(p: { lat: number; lon: number }) {
+    lat = String(p.lat);
+    lon = String(p.lon);
     emit();
   }
 
@@ -101,7 +109,7 @@
   <ul role="list" class="results" aria-label="Treffer">
     {#each results as place, i (i)}
       <li>
-        <button type="button" class="hit" onclick={() => choose(place)}>
+        <button type="button" class="hit" onclick={() => apply({ lat: place.lat, lon: place.lon, name: place.label, parts: place.parts })}>
           <strong>{place.name}</strong>
           <span>{place.address}</span>
           <small>{place.kind}</small>
@@ -112,6 +120,7 @@
 
   <section aria-labelledby="chosen-title">
     <h3 id="chosen-title">Gewählter Ort</h3>
+    <PlaceMap {point} onpick={pick} />
     <div class="coords">
       <div>
         <label for="place-lat">Breite</label>

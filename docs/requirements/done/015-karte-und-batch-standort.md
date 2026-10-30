@@ -1,7 +1,7 @@
 ---
 id: 015
 title: Standort im Batch setzen — per Suche oder Karte
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E4 Standorte
 estimate: 5
@@ -16,15 +16,15 @@ den Ort anzeigt und für Orts-Alben nutzen kann.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Der Dialog „Ort setzen" zeigt eine Karte (OSM mit Attribution); ein Klick setzt
+- [x] **AC1** — Der Dialog „Ort setzen" zeigt eine Karte (OSM mit Attribution); ein Klick setzt
   einen Marker, ein Suchtreffer (Story 014) zentriert die Karte und setzt den Marker.
-- [ ] **AC2** — „Übernehmen" schreibt für alle ausgewählten Fotos Koordinaten, Ortsname und
+- [x] **AC2** — „Übernehmen" schreibt für alle ausgewählten Fotos Koordinaten, Ortsname und
   Ortsteile gemäß Schreibstrategie als einen Job (Fotos und Videos).
-- [ ] **AC3** — Haben ausgewählte Fotos bereits einen Ort, fragt der Dialog vorher: „alle
+- [x] **AC3** — Haben ausgewählte Fotos bereits einen Ort, fragt der Dialog vorher: „alle
   überschreiben" oder „nur Fotos ohne Ort"; die Wahl wirkt wie angegeben.
-- [ ] **AC4** — „Ort entfernen" löscht Koordinaten und Ortsfelder aus den ausgewählten Dateien.
-- [ ] **AC5** — Die Detailansicht zeigt Ortsname und eine kleine Karte mit Marker.
-- [ ] **AC6** — Die Kartenbibliothek wird erst beim Öffnen des Dialogs geladen; das
+- [x] **AC4** — „Ort entfernen" löscht Koordinaten und Ortsfelder aus den ausgewählten Dateien.
+- [x] **AC5** — Die Detailansicht zeigt Ortsname und eine kleine Karte mit Marker.
+- [x] **AC6** — Die Kartenbibliothek wird erst beim Öffnen des Dialogs geladen; das
   Haupt-Bundle der Startseite enthält sie nicht.
 
 ## Open Questions
@@ -138,7 +138,7 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
 
 ## Deliverables
 
-- [ ] **D1 — Job-Aktionen „Ort setzen" und „Ort entfernen" (Backend).**
+- [x] **D1 — Job-Aktionen „Ort setzen" und „Ort entfernen" (Backend).**
   Dateien: `internal/geo/validate.go` (neu), `internal/geo/validate_test.go` (neu), die Datei der
   Ort-Aktion im Writer-Paket aus 009 (vorgesehen `internal/writer/location.go`, neu) und
   `internal/writer/location_test.go` (neu), die Stelle, an der 012 `tags.add`/`tags.remove`
@@ -168,7 +168,7 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
   `location`-Feld mehr lesbar, auch nicht bei Videos; Datei ohne Ort `skipped` und unverändert);
   `internal/geo/validate_test.go` › `TestLocationInputWithBadCoordinatesNamesOrControlCharsIsRefused`.
 
-- [ ] **D2 — API: Anzahl mit Ort in der Auswahl, Koordinaten in der Detailansicht.**
+- [x] **D2 — API: Anzahl mit Ort in der Auswahl, Koordinaten in der Detailansicht.**
   Dateien: `internal/api/selection.go` (Antwort `{"count": n, "located": k}`; `located` = Fotos
   der aufgelösten Auswahl mit `gps_lat IS NOT NULL`), die Zählfunktion in `internal/library`
   neben `CountSelection` (eine Abfrage mit beiden Zählern, z. B. `COUNT(*)`, `COUNT(gps_lat)`;
@@ -183,7 +183,7 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
   `internal/api/photos_test.go` › `TestPhotoDetailIncludesCoordinates` (Foto mit GPS → `lat`/`lon`
   gesetzt, ohne → `null`).
 
-- [ ] **D3 — Karte im `PlacePicker` (lazy geladen) + E2E-Kartenhelfer.**
+- [x] **D3 — Karte im `PlacePicker` (lazy geladen) + E2E-Kartenhelfer.**
   Dateien: `web/package.json`/`package-lock.json` (`leaflet` ^1.9, dev `@types/leaflet`),
   `web/src/lib/map/leaflet.ts` (neu; **einzige** Stelle mit `import 'leaflet'` und
   `import 'leaflet/dist/leaflet.css'`, exportiert z. B. `createMap(el, opts)`; nur per
@@ -219,7 +219,7 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
   eine andere Kartenstelle → Breite/Länge ändern sich, „Ortsname" bleibt „Mein Hotel" (bzw. der
   zuletzt getippte Name), Mock-Protokoll ohne neue Anfrage.
 
-- [ ] **D4 — Dialog „Ort setzen" und „Ort entfernen" an der Auswahl + E2E-Flow.**
+- [x] **D4 — Dialog „Ort setzen" und „Ort entfernen" an der Auswahl + E2E-Flow.**
   Dateien: `web/src/lib/SetPlaceDialog.svelte` (neu), `web/src/lib/SelectionBar.svelte` (Knöpfe
   „Ort setzen", „Ort entfernen" neben den Tag-Knöpfen aus 012, ≥ 44 px), die Dialog-Hülle der
   012-Dialoge (wiederverwenden; existiert die Form dort zweimal ohne gemeinsame Hülle, zuerst nach
@@ -257,7 +257,7 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
      → beide Details „kein Ort"; Read-back ohne GPS- und Ortsfelder (Ausgangszustand der
      Fixtures wiederhergestellt).
 
-- [ ] **D5 — Ortsname und kleine Karte in der Detailansicht.**
+- [x] **D5 — Ortsname und kleine Karte in der Detailansicht.**
   Dateien: `web/src/lib/detail/PhotoDetail.svelte`, der Detail-Typ in `web/src/lib/photos.ts`
   (`location.lat/lon: number | null` aus D2), `web/tests/e2e/photo-detail.spec.ts`. Unter
   `data-testid="detail-place"` (Ortsname bzw. „kein Ort" wie bisher) bei vorhandenen Koordinaten
@@ -312,3 +312,19 @@ Nicht Teil: Lieblingsorte (016), Ortsvorschlag (017), Arbeitsliste „ohne Ort" 
   für 015.
 
 ## Done
+
+Zusammenfassung: Aktionen `location.set`/`location.remove` (Modus `all`/`missing` je Datei auf frisch gelesenen Werten, Skip vor Backup), `POST /api/selection/count` → `{count, located}`, Detail-API mit `lat`/`lon`, Leaflet nur per dynamischem Import (`PlaceMap` in Picker und Detailansicht), Dialoge „Ort setzen"/„Ort entfernen" an der Auswahl, gemeinsame `Dialog.svelte`-Hülle.
+Change type: feat
+Commit message: `015: Standort im Batch — location.set/remove (Modus, Skip vor Backup), Karte (lazy Leaflet) im PlacePicker, Dialog Ort setzen/entfernen, Detailkarte + e2e`
+
+Verifikation (enge Gate): `npm --prefix web run build` + `docker build --target runtime` (Image neu vor e2e), `docker build --target test .` + vitest (54), `docker build --target lint .` + eslint, `svelte-check` grün; e2e `cd web && npx playwright test tests/e2e/set-place.spec.ts tests/e2e/places.spec.ts tests/e2e/photo-detail.spec.ts` grün (Nominatim-Mock, OSM-Kacheln gestubbt). Review 1 (Sonnet): PASS mit Befunden, bestätigte behoben (vakuose Backup-Assertion, fehlende lat/lon-Pflicht → 0,0, Library-Test für gps-Lesen, lastPick-Reset, Tech-Spec §7), danach Gate erneut grün.
+AC → Test (verifiziert): AC1/AC6 set-place + places + photo-detail e2e (bestanden); AC2/AC3/AC4 e2e set-place + Go-Integrationstests `internal/writer/location_test.go` (laufen im `test`-Stage, nur Paketebene `ok` sichtbar, Testnamen nicht einzeln im Output), `TestLocationInput…`, `TestSelectionCountReportsPhotosWithLocation`; AC5 photo-detail e2e + `TestPhotoDetailIncludesCoordinates` + `TestPhotoDetailReadsCoordinatesFromTheIndex`. Keine manual residue.
+
+Decisions:
+- Modus/Skip-Regeln liegen in `Pipeline.WriteFile` über `metadata.Change.LocationMode` (kein `internal/writer/location.go`); Setzen sendet immer `ClearLocation` + `Location`, damit leere Ortsteile ältere Werte löschen. `mode=all` mit identischem Ort schreibt trotzdem (Backup) — harmlos.
+- `countryCode` wird validiert/normalisiert, aber nicht geschrieben (Mapping hat kein Feld).
+- Die Anzahl `located` wird beim Klick auf „Übernehmen" geholt (nicht beim Tippen) — gleiche Wirkung, weniger Anfragen.
+- `Dialog.svelte` extrahiert (012-Dialoge nutzen sie); `selectionStore.countSelection()` liefert `{count, located}`.
+- E2E: Monatsliste zeigt Ordner (`YYYY/MM`), `showTile` baut das Label aus dem Pfad; Karten-Klick abseits der Zoom-Buttons.
+- Offen/nicht behoben: `RemovePlaceDialog` nutzt `selection.count` als Momentwert; Hilfsfunktionen `showTile`/`select` in set-place.spec könnten für 016 nach helpers/ wandern.
+tiers: D 5 / hard 0 · review default · cycles 1 · agents 10

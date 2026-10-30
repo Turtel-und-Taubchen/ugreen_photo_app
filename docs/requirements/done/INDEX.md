@@ -19,3 +19,4 @@ second roadmap.
 - 010 — Backup der Originale, Änderungsjournal und Rückgängig pro Job · S03 · Backup mit Frist, Journal (Read-back-Werte), Undo-Job mit Konfliktprüfung, Seite /jobs, Betriebshandbuch
 - 012 — Tags im Batch zuweisen und entfernen · S03 · Auswahlleiste weist Tags zu/entfernt sie dateiweise (Frisch-Lesen, Skip vor Backup, Eltern-Erhalt) mit Dialogen und e2e
 - 013 — Zuletzt verwendete Tags und Autovervollständigung · S03 · globale Recent-Liste (serverseitig), clientseitige Vorschläge mit Umlaut-Teilstring, TagPicker im Zuweisen-Dialog mit e2e bei 390 px
+- 015 — Standort im Batch setzen — per Suche oder Karte · S03 · Batch-Ort setzen/entfernen als Job mit lazy geladener OSM-Karte im Picker und in der Detailansicht.

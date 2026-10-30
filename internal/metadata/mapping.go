@@ -24,6 +24,22 @@ type Change struct {
 	// ClearLocation and ClearReviewState delete the field. A deletion runs before a Location
 	// written by the same Change, so the result holds exactly that place and no older leftovers.
 	ClearLocation, ClearReviewState bool `json:",omitempty"`
+	// LocationMode decides per file, on the values read just before the write, whether a
+	// Location applies: LocationModeMissing leaves a file that already has coordinates alone.
+	// Empty means LocationModeAll.
+	LocationMode string `json:",omitempty"`
+}
+
+// Values of Change.LocationMode.
+const (
+	LocationModeAll     = "all"
+	LocationModeMissing = "missing"
+)
+
+// HasPlace reports whether m holds any location field.
+func (m Meta) HasPlace() bool {
+	return m.Lat != nil || m.Lon != nil || m.Label != "" || m.Sublocation != "" || m.City != "" ||
+		m.State != "" || m.Country != ""
 }
 
 // Domain fields of a Change.

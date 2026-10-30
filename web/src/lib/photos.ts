@@ -42,6 +42,8 @@ export interface PhotoLocation {
   city: string;
   state: string;
   country: string;
+  lat: number | null;
+  lon: number | null;
 }
 
 /** `prev_id` is the next newer photo, `next_id` the next older one; null at either end. */

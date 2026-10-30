@@ -53,11 +53,13 @@ type folderJSON struct {
 }
 
 type placeJSON struct {
-	Label       string `json:"label"`
-	Sublocation string `json:"sublocation"`
-	City        string `json:"city"`
-	State       string `json:"state"`
-	Country     string `json:"country"`
+	Label       string   `json:"label"`
+	Sublocation string   `json:"sublocation"`
+	City        string   `json:"city"`
+	State       string   `json:"state"`
+	Country     string   `json:"country"`
+	Lat         *float64 `json:"lat"`
+	Lon         *float64 `json:"lon"`
 }
 
 type detailJSON struct {

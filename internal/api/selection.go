@@ -24,7 +24,7 @@ func registerSelection(mux *http.ServeMux, idx *sql.DB) {
 			badRequest(w, err.Error())
 			return
 		}
-		n, err := library.CountSelection(r.Context(), idx, sel)
+		n, located, err := library.CountSelectionLocated(r.Context(), idx, sel)
 		if errors.Is(err, library.ErrInvalidSelection) {
 			badRequest(w, err.Error())
 			return
@@ -34,7 +34,7 @@ func registerSelection(mux *http.ServeMux, idx *sql.DB) {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]int{"count": n})
+		writeJSON(w, http.StatusOK, map[string]int{"count": n, "located": located})
 	})
 
 	mux.HandleFunc("POST /api/selection/tags", func(w http.ResponseWriter, r *http.Request) {

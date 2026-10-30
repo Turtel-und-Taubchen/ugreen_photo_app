@@ -31,9 +31,11 @@ type Groups struct {
 	Folders []FolderCount
 }
 
-// Place is the human-readable location written in a file.
+// Place is the location written in a file: the human-readable names plus the coordinates,
+// which are nil when the file has none.
 type Place struct {
 	Label, Sublocation, City, State, Country string
+	Lat, Lon                                 *float64
 }
 
 // Detail is everything the detail view shows about one file. PrevID is the neighbour shown
@@ -136,17 +138,21 @@ func ListMonth(ctx context.Context, db *sql.DB, month string, after *ListCursor,
 // PhotoDetail returns the full record with tags and grid neighbours; ok is false for an unknown id.
 func PhotoDetail(ctx context.Context, db *sql.DB, id int64) (d Detail, ok bool, err error) {
 	var sub, city, state, country, label sql.NullString
+	var lat, lon sql.NullFloat64
 	err = db.QueryRowContext(ctx, `SELECT `+photoColumns+`, folder, format, taken_source,
-		loc_label, loc_sublocation, loc_city, loc_state, loc_country, review_state, read_error
+		loc_label, loc_sublocation, loc_city, loc_state, loc_country, gps_lat, gps_lon, review_state, read_error
 		FROM photos WHERE id = ?`, id).Scan(&d.ID, &d.RelPath, &d.MediaType, &d.Size, &d.MtimeNs, &d.TakenAt,
-		&d.Folder, &d.Format, &d.TakenSource, &label, &sub, &city, &state, &country, &d.ReviewState, &d.ReadError)
+		&d.Folder, &d.Format, &d.TakenSource, &label, &sub, &city, &state, &country, &lat, &lon, &d.ReviewState, &d.ReadError)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Detail{}, false, nil
 	}
 	if err != nil {
 		return Detail{}, false, err
 	}
-	d.Place = Place{label.String, sub.String, city.String, state.String, country.String}
+	d.Place = Place{Label: label.String, Sublocation: sub.String, City: city.String, State: state.String, Country: country.String}
+	if lat.Valid && lon.Valid {
+		d.Place.Lat, d.Place.Lon = &lat.Float64, &lon.Float64
+	}
 
 	d.Tags = []string{}
 	rows, err := db.QueryContext(ctx, `SELECT tag_path FROM photo_tags WHERE photo_id = ? ORDER BY tag_path`, id)

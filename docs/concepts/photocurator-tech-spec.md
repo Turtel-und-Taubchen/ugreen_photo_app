@@ -232,7 +232,8 @@ täglich gelöscht.
 | GET | `/api/me` | Angemeldeter Nutzer: `{username}` |
 | GET | `/api/photos?filter…&after=<cursor>` | Liste mit Keyset-Cursor |
 | GET | `/api/photos/groups?filter…` | Tages-/Monatsgruppen mit Anzahl |
-| GET | `/api/photos/{id}` | Details |
+| GET | `/api/photos/{id}` | Details inkl. `location.lat`/`lon` (null ohne Koordinaten) |
+| POST | `/api/selection/count` | Auswahl auflösen: `{selection}` → `{count, located}` (`located` = Fotos mit Koordinaten) |
 | GET | `/api/thumbs/{id}/{s|l}` | Thumbnail |
 | GET | `/api/tags` | Tag-Baum mit Anzahl |
 | POST | `/api/jobs` | Batch-Job anlegen: `{selection, action, payload}` |
@@ -264,7 +265,7 @@ feste Dateiliste auf.
 - Virtualisiertes Raster (nur sichtbare Zeilen im DOM), gruppiert nach Monat/Tag.
 - Auswahlmodell: Tippen (Einzeln), Shift+Klick bzw. „Bereich bis hier" am Handy, Gruppenkopf
   „alle auswählen".
-- Leaflet für Karten, nur im Ort-Dialog geladen (Code-Splitting).
+- Leaflet für Karten, nur per dynamischem Import geladen (Code-Splitting) — Dialog ‚Ort setzen', Seite `/orte`, Detailkarte.
 - Responsiv ab 360 px Breite, Bedienelemente ≥ 44 px Touch-Fläche.
 
 ## 8. Deployment

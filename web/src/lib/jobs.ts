@@ -59,7 +59,24 @@ export const undoJob = (id: number): Promise<{ id: number }> => api<{ id: number
 const ACTION_LABELS: Record<string, string> = {
   'tags.add': 'Tags hinzufügen',
   'tags.remove': 'Tags entfernen',
+  'location.set': 'Ort setzen',
+  'location.remove': 'Ort entfernen',
 };
+
+export interface LocationPayload {
+  location: {
+    lat: number;
+    lon: number;
+    label: string;
+    sublocation: string;
+    city: string;
+    state: string;
+    country: string;
+    countryCode: string;
+  };
+  /** "missing" leaves photos that already have a place untouched. */
+  mode: 'all' | 'missing';
+}
 
 export function actionLabel(job: Job, all: Job[]): string {
   if (job.action !== 'undo') return ACTION_LABELS[job.action] ?? job.action;

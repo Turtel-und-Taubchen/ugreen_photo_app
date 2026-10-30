@@ -1,5 +1,6 @@
 <script lang="ts">
   import { errorMessage } from './api';
+  import Dialog from './Dialog.svelte';
   import { createJob } from './jobs';
   import { toRequest } from './selection';
   import { selection } from './selectionStore.svelte';
@@ -7,7 +8,6 @@
 
   let { onClose }: { onClose: () => void } = $props();
 
-  let dialog: HTMLDialogElement;
   let available = $state<SelectionTag[]>([]);
   let loaded = $state(false);
   let checked = $state<string[]>([]);
@@ -16,14 +16,10 @@
 
   const label = (t: SelectionTag) => `${t.path} (${t.count} ${t.count === 1 ? 'Foto' : 'Fotos'})`;
 
-  function modal(node: HTMLDialogElement) {
-    dialog = node;
-    node.showModal();
-    fetchSelectionTags(toRequest(selection.state))
-      .then((tags) => (available = tags))
-      .catch((e) => (error = errorMessage(e)))
-      .finally(() => (loaded = true));
-  }
+  fetchSelectionTags(toRequest(selection.state))
+    .then((tags) => (available = tags))
+    .catch((e) => (error = errorMessage(e)))
+    .finally(() => (loaded = true));
 
   async function remove() {
     error = '';
@@ -39,8 +35,7 @@
   }
 </script>
 
-<dialog use:modal aria-labelledby="remove-title" onclose={onClose}>
-  <h2 id="remove-title">Tags entfernen</h2>
+<Dialog title="Tags entfernen" {onClose}>
   {#if loaded && available.length === 0 && !error}
     <p>Die ausgewählten Fotos haben keine Tags.</p>
   {/if}
@@ -57,18 +52,14 @@
   {#if error}
     <p role="alert">{error}</p>
   {/if}
-  <div class="actions">
-    <button type="button" onclick={() => dialog.close()}>Abbrechen</button>
+  {#snippet actions(close)}
+    <button type="button" onclick={close}>Abbrechen</button>
     <button type="button" disabled={checked.length === 0 || busy} onclick={remove}>Entfernen</button>
-  </div>
-</dialog>
+  {/snippet}
+</Dialog>
 
 <style>
-  dialog { width: min(32rem, calc(100vw - 2rem)); box-sizing: border-box; }
-  h2 { margin-top: 0; }
   ul { list-style: none; margin: 0; padding: 0; }
   label { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; }
   input[type='checkbox'] { width: 1.5rem; height: 1.5rem; }
-  .actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
-  button { min-height: 44px; min-width: 44px; padding: 0 0.75rem; font-size: 1rem; }
 </style>

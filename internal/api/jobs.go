@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"photocurator/internal/geo"
 	"photocurator/internal/library"
 	"photocurator/internal/metadata"
 	"photocurator/internal/tags"
@@ -17,15 +18,63 @@ import (
 const (
 	actionTagsAdd    = "tags.add"
 	actionTagsRemove = "tags.remove"
-	jobListLimit     = 50
+
+	actionLocationSet    = "location.set"
+	actionLocationRemove = "location.remove"
+	jobListLimit         = 50
 )
 
 type jobRequest struct {
 	Selection library.Selection `json:"selection"`
 	Action    string            `json:"action"`
 	Payload   struct {
-		Tags []string `json:"tags"`
+		Tags     []string       `json:"tags"`
+		Location *locationInput `json:"location"`
+		Mode     string         `json:"mode"`
 	} `json:"payload"`
+}
+
+type locationInput struct {
+	Lat         *float64 `json:"lat"` // pointers: an absent coordinate must not become (0, 0)
+	Lon         *float64 `json:"lon"`
+	Label       string   `json:"label"`
+	Sublocation string   `json:"sublocation"`
+	City        string   `json:"city"`
+	State       string   `json:"state"`
+	Country     string   `json:"country"`
+	CountryCode string   `json:"countryCode"`
+}
+
+// locationSetChange validates the payload and builds the change. ClearLocation rides along so
+// that parts the new place leaves empty do not keep an older file's value.
+func locationSetChange(in *locationInput, mode string) (metadata.Change, error) {
+	if in == nil {
+		return metadata.Change{}, errors.New("payload.location fehlt")
+	}
+	if mode != metadata.LocationModeAll && mode != metadata.LocationModeMissing {
+		return metadata.Change{}, errors.New("payload.mode muss \"all\" oder \"missing\" sein")
+	}
+	if in.Lat == nil || in.Lon == nil {
+		return metadata.Change{}, errors.New("payload.location.lat und lon sind erforderlich")
+	}
+	if err := geo.ValidatePoint(*in.Lat, *in.Lon); err != nil {
+		return metadata.Change{}, err
+	}
+	label, parts, err := geo.ValidateLocationText(in.Label, geo.Parts{
+		Sublocation: in.Sublocation, City: in.City, State: in.State, Country: in.Country, CountryCode: in.CountryCode,
+	})
+	if err != nil {
+		return metadata.Change{}, err
+	}
+	// countryCode is validated and normalised above but not written: the mapping has no field for it.
+	return metadata.Change{
+		Location: &metadata.Location{
+			Lat: *in.Lat, Lon: *in.Lon, Label: label,
+			Sublocation: parts.Sublocation, City: parts.City, State: parts.State, Country: parts.Country,
+		},
+		ClearLocation: true,
+		LocationMode:  mode,
+	}, nil
 }
 
 type jobJSON struct {
@@ -85,29 +134,41 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB, td *TagDeps)
 			badRequest(w, "invalid job body")
 			return
 		}
-		if req.Action != actionTagsAdd && req.Action != actionTagsRemove {
-			badRequest(w, "unknown action")
-			return
-		}
-		if len(req.Payload.Tags) == 0 {
-			badRequest(w, "payload.tags must not be empty")
-			return
-		}
-		// The canonical path is what the metadata mapping splits into terms and hierarchy.
-		paths := make([]string, 0, len(req.Payload.Tags))
-		for _, t := range req.Payload.Tags {
-			p, err := tags.ParsePath(t)
+		var paths []string
+		var change metadata.Change
+		switch req.Action {
+		case actionTagsAdd, actionTagsRemove:
+			if len(req.Payload.Tags) == 0 {
+				badRequest(w, "payload.tags must not be empty")
+				return
+			}
+			// The canonical path is what the metadata mapping splits into terms and hierarchy.
+			paths = make([]string, 0, len(req.Payload.Tags))
+			for _, t := range req.Payload.Tags {
+				p, err := tags.ParsePath(t)
+				if err != nil {
+					badRequest(w, err.Error())
+					return
+				}
+				paths = append(paths, p)
+			}
+			if req.Action == actionTagsRemove {
+				change.RemoveTags = paths
+			} else {
+				change.AddTags = paths
+			}
+		case actionLocationSet:
+			c, err := locationSetChange(req.Payload.Location, req.Payload.Mode)
 			if err != nil {
 				badRequest(w, err.Error())
 				return
 			}
-			paths = append(paths, p)
-		}
-		change := metadata.Change{}
-		if req.Action == actionTagsRemove {
-			change.RemoveTags = paths
-		} else {
-			change.AddTags = paths
+			change = c
+		case actionLocationRemove:
+			change.ClearLocation = true
+		default:
+			badRequest(w, "unknown action")
+			return
 		}
 		if err := req.Selection.Validate(); err != nil {
 			badRequest(w, err.Error())

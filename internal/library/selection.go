@@ -208,11 +208,17 @@ func ResolveSelection(ctx context.Context, db *sql.DB, s Selection) ([]Resolved,
 
 // CountSelection counts what ResolveSelection would return, without loading the files.
 func CountSelection(ctx context.Context, db *sql.DB, s Selection) (int, error) {
+	n, _, err := CountSelectionLocated(ctx, db, s)
+	return n, err
+}
+
+// CountSelectionLocated counts the selection and, from the same resolution, how many of its
+// files carry coordinates (located <= n).
+func CountSelectionLocated(ctx context.Context, db *sql.DB, s Selection) (n, located int, err error) {
 	where, args, ok, err := selectionWhere(ctx, db, s)
 	if err != nil || !ok {
-		return 0, err
+		return 0, 0, err
 	}
-	var n int
-	err = db.QueryRowContext(ctx, `SELECT count(*) FROM photos WHERE `+where, args...).Scan(&n)
-	return n, err
+	err = db.QueryRowContext(ctx, `SELECT count(*), count(gps_lat) FROM photos WHERE `+where, args...).Scan(&n, &located)
+	return n, located, err
 }

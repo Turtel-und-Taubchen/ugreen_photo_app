@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Thumbnail from '../Thumbnail.svelte';
+  import PlaceMap from '../map/PlaceMap.svelte';
   import { fetchPhoto, type PhotoDetail } from '../photos';
   import { swipeDirection } from './swipe';
 
@@ -14,6 +15,11 @@
 
   let photo = $state<PhotoDetail | null>(null);
   let failed = $state(false);
+
+  // Primitive deps keep the map instance alive across photos; only a missing coordinate removes it.
+  const lat = $derived(photo?.location.lat ?? null);
+  const lon = $derived(photo?.location.lon ?? null);
+  const point = $derived(lat !== null && lon !== null ? { lat, lon } : null);
 
   const STATE_LABELS: Record<string, string> = { open: 'offen', done: 'erledigt', irrelevant: 'nicht relevant' };
   const DATE_HINTS: Record<string, string> = {
@@ -113,6 +119,9 @@
       </dd>
       <dt>Ort</dt>
       <dd data-testid="detail-place">{photo.location.label || 'kein Ort'}</dd>
+      {#if point}
+        <dd class="map"><PlaceMap {point} height={160} /></dd>
+      {/if}
       <dt>Status</dt>
       <dd data-testid="detail-state">{STATE_LABELS[photo.review_state] ?? photo.review_state}</dd>
       <dt>Pfad</dt>
@@ -130,6 +139,7 @@
   dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; }
   dt { font-weight: 600; }
   dd { margin: 0; overflow-wrap: anywhere; }
+  .map { grid-column: 1 / -1; }
   small { display: block; color: #555; }
   ul { margin: 0; padding-left: 1.1rem; }
 </style>

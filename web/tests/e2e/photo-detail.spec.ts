@@ -3,6 +3,7 @@ import { users } from './helpers/auth';
 import { bulkPlan } from './helpers/bulk-library';
 import { openTile } from './helpers/grid';
 import { waitForLibrary } from './helpers/library';
+import { stubTiles, watchLeaflet } from './helpers/map';
 
 interface Item {
   id: number;
@@ -51,6 +52,8 @@ async function swipe(page: Page, dx: number, dy = 0): Promise<void> {
 test("the detail view shows a photo's facts and steps through photos with arrow keys and swipes", async ({ page }) => {
   test.setTimeout(480_000);
   await page.setViewportSize({ width: 390, height: 844 });
+  await stubTiles(page);
+  const leafletLoaded = watchLeaflet(page);
   await waitForLibrary(page.request);
   await page.goto('/');
   await expect(page.getByTestId('current-user')).toHaveText(users.anna.name);
@@ -68,6 +71,8 @@ test("the detail view shows a photo's facts and steps through photos with arrow 
   await expect(page.getByTestId('detail-state')).toHaveText('offen');
   await expect(page.getByTestId('detail-tags')).toHaveText('keine Tags');
   await expect(page.getByTestId('detail-place')).toHaveText('kein Ort');
+  await expect(page.getByRole('region', { name: 'Karte' })).toHaveCount(0);
+  expect(await leafletLoaded()).toBe(false);
   await page.keyboard.press('ArrowLeft');
   await expect(path).toHaveText(newestItems[0].relPath);
   await page.keyboard.press('ArrowRight');
@@ -92,6 +97,9 @@ test("the detail view shows a photo's facts and steps through photos with arrow 
   await expect(path).toHaveText('2024/07/tagged.jpg');
   await expect(page.getByTestId('detail-state')).toHaveText('erledigt');
   await expect(page.getByTestId('detail-place')).toHaveText('Stadtpark, Graz');
+  const map = page.getByRole('region', { name: 'Karte' });
+  await expect(map).toBeVisible(settle);
+  await expect(map.locator('.pc-marker')).toBeVisible(settle);
   await expect(page.getByTestId('detail-tags')).toContainText('Geburtstag');
   await expect(page.getByTestId('detail-taken')).toContainText('14. Juli 2024');
   await expect(page.getByText(/Datum aus/)).toHaveCount(0);

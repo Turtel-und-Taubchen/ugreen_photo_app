@@ -82,3 +82,25 @@
 - 2026-10-30 22:06:18 · 013 · review 1 · started
 - 2026-10-30 22:07:20 · 013 · review 1 · done
 - 2026-10-30 22:07:30 · 013 · story · done
+- 2026-10-30 22:07:40 · 015 · build · started
+- 2026-10-30 22:08:06 · 015 · D1 Job-Aktionen location.set/remove · started
+- 2026-10-30 22:21:10 · 015 · D1 Job-Aktionen location.set/remove · done
+- 2026-10-30 22:21:11 · 015 · D2 API count/located + detail coords · started
+- 2026-10-30 22:25:38 · 015 · D2 API count/located + detail coords · done
+- 2026-10-30 22:25:38 · 015 · D3 PlaceMap + Picker + e2e helper · started
+- 2026-10-30 22:27:35 · 015 · D3 PlaceMap + Picker + e2e helper · done
+- 2026-10-30 22:27:35 · 015 · D4 Dialog Ort setzen/entfernen + e2e · started
+- 2026-10-30 22:29:28 · 015 · D4 Dialog Ort setzen/entfernen + e2e · done
+- 2026-10-30 22:29:28 · 015 · D5 Detailkarte · started
+- 2026-10-30 22:30:10 · 015 · D5 Detailkarte · done
+- 2026-10-30 22:30:10 · 015 · verify · started
+- 2026-10-30 22:41:33 · 015 · verify · blocked: places.spec + set-place.spec e2e red (fixing)
+- 2026-10-30 22:41:33 · 015 · D6 fix e2e specs · started
+- 2026-10-30 22:57:34 · 015 · D6 fix e2e specs · done
+- 2026-10-30 22:57:34 · 015 · verify · done
+- 2026-10-30 22:57:34 · 015 · review 1 · started
+- 2026-10-30 22:59:18 · 015 · review 1 · done
+- 2026-10-30 22:59:18 · 015 · D7 review fixes · started
+- 2026-10-30 23:06:01 · 015 · D7 review fixes · done
+- 2026-10-30 23:06:01 · 015 · verify · started
+- 2026-10-30 23:18:07 · 015 · story · done
