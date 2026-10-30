@@ -1,6 +1,6 @@
 ---
 sprint: S02
-status: in-progress # planned | in-progress | done
+status: done # planned | in-progress | done
 branch: main
 milestone: M2, M3, M4
 ---
@@ -37,3 +37,16 @@ Nominatim.
 ## Regression gate
 
 <!-- Filled by `/sprint` phase 2b: the commands run, minutes taken, result, commit, and a verdict per failure. -->
+
+Lauf auf `05d6ab8` (HEAD nach 014), 2026-10-30:
+
+| Befehl | Minuten | Ergebnis |
+|---|---|---|
+| `build` | < 1 | grün |
+| `test` (Go im Docker-Cache, Vitest 45) | < 1 | grün |
+| `lint` | < 1 | grün |
+| `typecheck` | < 1 | grün |
+| `e2e` (13 Flows) | 6,2 | grün |
+
+`e2e-all`: none. Keine Fehler, keine Quarantäne-Einträge, kein unerwarteter Pass.
+
