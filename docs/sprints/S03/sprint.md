@@ -1,7 +1,7 @@
 ---
 sprint: S03
-status: planned # planned | in-progress | done
-branch: # set by /sprint
+status: in-progress # planned | in-progress | done
+branch: main
 milestone: M3, M4
 ---
 
