@@ -31,7 +31,7 @@ Kopiere `.env.example` nach `.env` und trage die Werte ein:
 
 - `PUID`, `PGID`: UID und GID des Nutzers aus dem vorigen Schritt
 - `TZ`: Zeitzone, z. B. `Europe/Vienna`
-- `NOMINATIM_CONTACT`: Kontaktadresse für die Nominatim-Nutzungsrichtlinie
+- `NOMINATIM_CONTACT`: Kontaktadresse für die Nominatim-Nutzungsrichtlinie (ohne Kontakt ist die Ortssuche deaktiviert)
 - `PHOTOS_PATH`: Pfad zu `Sortiert` (nur dieser Ordner, nie die Inbox)
 - `DATA_PATH`: Datenordner
 - `BACKUP_PATH`: Backupordner

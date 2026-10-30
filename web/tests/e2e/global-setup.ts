@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compose, ROOT_FILE } from './compose';
 import { createBulkLibrary } from './helpers/bulk-library';
+import { startNominatimMock } from './nominatim-mock';
 
 const LIBRARY = fileURLToPath(new URL('../../../testdata/library', import.meta.url));
 
@@ -13,6 +14,7 @@ export default async function globalSetup(): Promise<void> {
   await fs.mkdir(path.dirname(ROOT_FILE), { recursive: true });
   await fs.writeFile(ROOT_FILE, tmp);
   compose(['down', '-v']);
+  await startNominatimMock();
   await fs.cp(LIBRARY, path.join(tmp, 'photos'), { recursive: true });
   await createBulkLibrary(path.join(tmp, 'photos'));
   await fs.mkdir(path.join(tmp, 'data'));

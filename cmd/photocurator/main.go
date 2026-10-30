@@ -20,6 +20,7 @@ import (
 	"photocurator/internal/auth"
 	"photocurator/internal/config"
 	"photocurator/internal/exif"
+	"photocurator/internal/geo"
 	"photocurator/internal/library"
 	"photocurator/internal/metadata"
 	"photocurator/internal/probe"
@@ -60,6 +61,7 @@ func serve(args []string) int {
 		addr = ":8080"
 	}
 	paths := config.PathsFromEnv(os.Getenv)
+	geoCfg := config.GeoFromEnv(os.Getenv)
 	users, scan, err := checkStart(paths, os.Getenv)
 	if err != nil {
 		slog.Error("invalid configuration, refusing to start", "err", err)
@@ -148,6 +150,12 @@ func serve(args []string) int {
 		Photos: photoList{idxDB},
 		Index:  idxDB,
 		Tags:   &api.TagDeps{App: db, Index: idxDB},
+		Geo: geo.New(geo.Options{
+			BaseURL: geoCfg.BaseURL,
+			Contact: geoCfg.Contact,
+			Version: version.Version,
+			DB:      db,
+		}),
 	}), ReadHeaderTimeout: 10 * time.Second}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()

@@ -21,6 +21,11 @@ var migrations = []string{
 		path TEXT PRIMARY KEY,
 		created_at INTEGER NOT NULL
 	)`,
+	`CREATE TABLE geocode_cache (
+		key TEXT PRIMARY KEY,
+		response TEXT NOT NULL,
+		fetched_at INTEGER NOT NULL
+	)`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.

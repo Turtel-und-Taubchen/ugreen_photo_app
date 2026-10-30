@@ -19,3 +19,7 @@ services:
       PC_USERS_FILE: /run/users.conf
       # No settle time: e2e files are written once and must be indexed by the first scan.
       PC_SCAN_QUIET: "0s"
+      # The host-side mock; the contact address comes from the base file via NOMINATIM_CONTACT.
+      PC_NOMINATIM_URL: http://host.docker.internal:18471
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

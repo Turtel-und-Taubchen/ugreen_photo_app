@@ -31,6 +31,7 @@
   <nav>
     <a href="/">Fotos</a>
     <a href="/tags">Tags</a>
+    <a href="/orte">Ortssuche</a>
   </nav>
   <button type="button" onclick={logout}>Abmelden</button>
 </header>

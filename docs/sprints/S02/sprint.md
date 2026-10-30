@@ -24,7 +24,7 @@ Nominatim.
 - [x] 007 — Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht
 - [x] 008 — Mehrfach-, Bereichs- und Gruppenauswahl
 - [x] 011 — Hierarchische Kategorien definieren und als Baum anzeigen
-- [ ] 014 — Ortssuche und Reverse-Geocoding über Nominatim
+- [x] 014 — Ortssuche und Reverse-Geocoding über Nominatim
 
 ## Notes
 

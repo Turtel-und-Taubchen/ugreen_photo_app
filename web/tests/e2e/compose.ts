@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 export const PROJECT = 'photocurator-e2e';
 export const E2E_PORT = 18470;
+export const NOMINATIM_MOCK_PORT = 18471;
 /** The production compose file; the e2e run only overlays it, so it deploys what users deploy. */
 export const BASE_FILE = fileURLToPath(new URL('../../../deploy/docker-compose.yml', import.meta.url));
 export const OVERRIDE_FILE = fileURLToPath(new URL('./compose.e2e.yml', import.meta.url));

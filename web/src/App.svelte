@@ -2,10 +2,12 @@
   import AppHeader from './lib/AppHeader.svelte';
   import Library from './routes/Library.svelte';
   import Login from './routes/Login.svelte';
+  import Places from './routes/Places.svelte';
   import Tags from './routes/Tags.svelte';
 
   const isLogin = location.pathname === '/login';
   const isTags = location.pathname === '/tags';
+  const isPlaces = location.pathname === '/orte';
 </script>
 
 {#if isLogin}
@@ -15,6 +17,8 @@
     <AppHeader />
     {#if isTags}
       <Tags />
+    {:else if isPlaces}
+      <Places />
     {:else}
       <Library />
     {/if}

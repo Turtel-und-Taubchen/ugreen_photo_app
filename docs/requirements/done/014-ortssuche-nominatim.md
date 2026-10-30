@@ -1,7 +1,7 @@
 ---
 id: 014
 title: Ortssuche und Reverse-Geocoding über Nominatim
-status: ready # draft -> ready -> in-progress -> done
+status: done
 created: 2026-10-29
 epic: E4 Standorte
 estimate: 5
@@ -17,23 +17,23 @@ Autovervollständigung. Details: [Tech Spec §10](../concepts/photocurator-tech-
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Eine Suche (ausgelöst per Enter oder Knopf, nicht bei jedem Tastendruck) zeigt
+- [x] **AC1** — Eine Suche (ausgelöst per Enter oder Knopf, nicht bei jedem Tastendruck) zeigt
   bis zu 10 Treffer mit Name, Adresse und Art; mit der hinterlegten Nominatim-Testantwort für
   „Ritzenhofer Saalfelden" erscheint der POI als erster Treffer.
-- [ ] **AC2** — Alle Anfragen an Nominatim gehen über den Server; bei 5 gleichzeitigen Suchen
+- [x] **AC2** — Alle Anfragen an Nominatim gehen über den Server; bei 5 gleichzeitigen Suchen
   (auch von zwei Nutzern) liegen zwischen zwei ausgehenden Anfragen mindestens 1 s.
-- [ ] **AC3** — Jede ausgehende Anfrage trägt den User-Agent
+- [x] **AC3** — Jede ausgehende Anfrage trägt den User-Agent
   `PhotoCurator/<version> (<Kontakt aus Konfiguration>)`; ohne konfigurierten Kontakt ist die
   Ortssuche deaktiviert und die Oberfläche sagt warum.
-- [ ] **AC4** — Eine wiederholte gleiche Suche (Groß-/Kleinschreibung und Leerzeichen egal)
+- [x] **AC4** — Eine wiederholte gleiche Suche (Groß-/Kleinschreibung und Leerzeichen egal)
   wird aus dem Cache beantwortet, ohne ausgehende Anfrage; Cache-Einträge verfallen nach der
   Frist (Platzhalter: 90 Tage).
-- [ ] **AC5** — Für einen Kartenpunkt liefert Reverse-Geocoding über denselben Limiter und Cache
+- [x] **AC5** — Für einen Kartenpunkt liefert Reverse-Geocoding über denselben Limiter und Cache
   einen Ortsvorschlag.
-- [ ] **AC6** — Aus einem Treffer entsteht ein lesbarer, editierbarer Ortsname nach dem Muster
+- [x] **AC6** — Aus einem Treffer entsteht ein lesbarer, editierbarer Ortsname nach dem Muster
   `<Name>, <Ort>` („Ritzenhofer, Saalfelden") sowie die Ortsteile Sublocation, City, State,
   Country.
-- [ ] **AC7** — Ist Nominatim nicht erreichbar oder antwortet mit Fehler, erscheint eine
+- [x] **AC7** — Ist Nominatim nicht erreichbar oder antwortet mit Fehler, erscheint eine
   verständliche Meldung; ein Ort kann trotzdem per Kartenklick und manuell eingegebenem Namen
   gesetzt werden.
 
@@ -108,7 +108,7 @@ Zeitnachbarn (017), Cache-Aufräumjob.
 
 ## Deliverables
 
-- [ ] **D1 — Nominatim-Treffer → `Place` (Name, Label, Ortsteile) + Fixtures.**
+- [x] **D1 — Nominatim-Treffer → `Place` (Name, Label, Ortsteile) + Fixtures.**
   Dateien: `internal/geo/place.go`, `internal/geo/place_test.go`,
   `testdata/nominatim/search-ritzenhofer-saalfelden.json`, `testdata/nominatim/search-saalfelden.json`,
   `testdata/nominatim/reverse-saalfelden.json`. Fixtures sind **handgeschriebene** Antworten im
@@ -135,7 +135,7 @@ Zeitnachbarn (017), Cache-Aufräumjob.
   place parts", „a hit without its own name is labelled with the town alone",
   „search results keep Nominatim's order and stop at ten".
 
-- [ ] **D2 — Geocoder: Client, globaler Limiter, Cache in `app.db`.** Nutzt `ParseSearch`/
+- [x] **D2 — Geocoder: Client, globaler Limiter, Cache in `app.db`.** Nutzt `ParseSearch`/
   `ParseReverse` und `Place` aus `internal/geo/place.go`.
   Dateien: `internal/geo/geocoder.go`, `internal/geo/limiter.go`, `internal/geo/cache.go`,
   `internal/geo/geocoder_test.go`, `internal/geo/limiter_test.go`, `internal/store/appdb.go`
@@ -168,7 +168,7 @@ Zeitnachbarn (017), Cache-Aufräumjob.
   and the cache with search", „an unreachable or failing Nominatim yields an upstream error and
   caches nothing", „without a contact the geocoder sends nothing".
 
-- [ ] **D3 — Konfiguration + API `/api/geo/*`.** Nutzt `geo.New`, `Search`, `Reverse`, `Enabled`,
+- [x] **D3 — Konfiguration + API `/api/geo/*`.** Nutzt `geo.New`, `Search`, `Reverse`, `Enabled`,
   `ErrDisabled`, `ErrUpstream` aus `internal/geo`.
   Dateien: `internal/config/geo.go` (neu: `Geo{Contact, BaseURL}` aus `PC_NOMINATIM_CONTACT` und
   `PC_NOMINATIM_URL`, Muster wie `PathsFromEnv(getenv)` in `internal/config/paths.go`; Standard-URL
@@ -192,7 +192,7 @@ Zeitnachbarn (017), Cache-Aufräumjob.
   nothing", „a Nominatim outage answers 502 with a readable message", „an empty search or invalid
   coordinates are refused without asking Nominatim".
 
-- [ ] **D4 — Nominatim-Mock im E2E-Harness.** Dateien: `web/tests/e2e/nominatim-mock.ts` (neu),
+- [x] **D4 — Nominatim-Mock im E2E-Harness.** Dateien: `web/tests/e2e/nominatim-mock.ts` (neu),
   `web/tests/e2e/global-setup.ts`, `web/tests/e2e/global-teardown.ts`,
   `web/tests/e2e/compose.e2e.yml`, `web/tests/e2e/compose.ts` (Konstante
   `NOMINATIM_MOCK_PORT = 18471`). Mock = `node:http`-Server auf `0.0.0.0:18471` (nur so erreicht
@@ -212,7 +212,7 @@ Zeitnachbarn (017), Cache-Aufräumjob.
   (`auth`, `smoke`, `deployment`) laufen unverändert grün; das Verhalten des Mocks prüft der Flow
   aus D5.
 
-- [ ] **D5 — Ortssuche-Oberfläche + E2E-Flow.** Nutzt die API `GET /api/geo/status|search|reverse`
+- [x] **D5 — Ortssuche-Oberfläche + E2E-Flow.** Nutzt die API `GET /api/geo/status|search|reverse`
   (Antworten: `{enabled, reason?}`, `{results:[Place]}`, `{place:Place|null}`, Fehler
   `{error}` mit 400/502/503; `Place` = `{name,address,kind,lat,lon,label,parts{sublocation,city,state,country,countryCode}}`)
   und den Mock auf `http://127.0.0.1:18471` mit `POST /__mock/reset`, `POST /__mock/mode`
@@ -295,3 +295,19 @@ Zeitnachbarn (017), Cache-Aufräumjob.
   Entscheidung) (D2, D3, D5)
 
 ## Done
+
+Ortssuche über Nominatim: Paket `internal/geo` (Treffer-Mapping, Client, globaler 1-s-Limiter, Cache in `app.db`), API `/api/geo/status|search|reverse`, Konfiguration `PC_NOMINATIM_CONTACT`/`PC_NOMINATIM_URL`, Nominatim-Mock im E2E-Harness, Seite `/orte` mit `PlacePicker.svelte` (Interface `onchange(PickedPlace|null)` für 015).
+
+Commit: `014: Ortssuche — internal/geo (Nominatim-Client, Limiter, geocode_cache), /api/geo/*, Seite /orte + PlacePicker, Nominatim-Mock + E2E`
+
+Verification (narrow gate): `npm --prefix web run build && docker build --target runtime -t photocurator:dev .`, `docker build --target test . && npm --prefix web run test` (12 Dateien / 45 Tests), `docker build --target lint . && npm --prefix web run lint`, `npm --prefix web run check` — grün; `e2e-story` = `npx playwright test tests/e2e/places.spec.ts` grün (nach Review-Fix erneut). Review (default): PASS, Findings (E2E Schritt 3 nur scheinbar prüfend, Tipp-Check ohne Wartebedingung, City/Country nicht gescoped) behoben. Volles Gate steht aus (Sprint).
+AC → Test: AC1–AC7 wie in `## Acceptance Tests`, alle vorhanden und grün (Go-Tests nur über Paket-`ok` beobachtet, E2E und Vitest namentlich). Keine manual residue.
+
+Decisions:
+- Migration `geocode_cache` ist die dritte (011 belegt die zweite); `Geo` hängt als Interface in `LibraryDeps`, `NewHandler` bleibt unverändert.
+- Limiter hält das Tor von vor dem Warten bis nach HTTP-Aufruf und Cache-Schreiben (nie zwei Anfragen offen); Cache-Treffer nach dem Warten und Abbruch verbrauchen keinen Slot; Antwort-Body auf 4 MiB begrenzt; `ErrDisabled` vor Cache.
+- Reverse sendet lat/lon auf 5 Nachkommastellen (wie der Cache-Schlüssel); Cache-Lese-/Schreibfehler sind keine `ErrUpstream` (→ 500).
+- `ben` als zweiter Testnutzer in `internal/api/auth_test.go` ergänzt (Sitzungsprüfung kennt nur bekannte Nutzer). Container-Kontakt `e2e@example.invalid` kam bereits über `composeEnv` in `compose.ts`.
+- Offene Kleinigkeiten (nicht behoben): Start-Zeitpunkt-vor-Request nicht per Test unterscheidbar (Fake-Uhr steht während HTTP); `message()`-Helfer in PlacePicker ist die dritte Kopie (Tags, Login); `PlacePicker` gibt `PickedPlace` statt Nominatim-`Place` aus.
+
+tiers: D 5 / hard 1 · review default · cycles 1 · agents 9

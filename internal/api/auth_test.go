@@ -73,7 +73,7 @@ func newTestServerDeps(t *testing.T, lib api.LibraryDeps) *testServer {
 		"index.html":    {Data: []byte(indexHTML)},
 		"assets/app.js": {Data: []byte("console.log(1)")},
 	}, api.AuthDeps{
-		Users:    auth.Users{"anna": annaHash()},
+		Users:    auth.Users{"anna": annaHash(), "ben": annaHash()},
 		Sessions: s.sessions,
 		Limiter:  auth.NewLoginLimiter(s.clock.Now),
 		Verify: func(phc, pw string) (bool, error) {

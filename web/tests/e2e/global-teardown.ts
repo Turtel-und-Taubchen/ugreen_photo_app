@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
 import { compose, ROOT_FILE } from './compose';
+import { stopNominatimMock } from './nominatim-mock';
 
 export default async function globalTeardown(): Promise<void> {
+  await stopNominatimMock();
   const root = (await fs.readFile(ROOT_FILE, 'utf8').catch(() => '')).trim();
   process.env.PC_E2E_ROOT = root;
   compose(['down', '-v']);

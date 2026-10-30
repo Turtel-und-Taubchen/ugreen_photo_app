@@ -29,6 +29,8 @@ type LibraryDeps struct {
 	Index *sql.DB
 	// Tags serves /api/tags; nil leaves the routes unregistered.
 	Tags *TagDeps
+	// Geo serves /api/geo; nil leaves the routes unregistered.
+	Geo Geocoder
 }
 
 type unreadableJSON struct {
