@@ -9,12 +9,12 @@
   the commands read both.
 
   The workflow itself lives in this repository: `.claude/commands/{refine,build,sprint,
-  roadmap,concept}.md` plus `.claude/agents/{deliverable-hard,story-review-hard}.md`.
+  roadmap,concept,release-check}.md` plus `.claude/agents/{deliverable-hard,story-review-hard}.md`.
   Everyone who clones the repo can use it; the plugin is only needed to install or
   update those files (`/ai-scrum:setup`). Hashes of the managed copies: .claude/ai-scrum.lock
 -->
 
-ai-scrum-version: 4.9.0
+ai-scrum-version: 4.10.0
 project: PhotoCurator
 
 ## Verify
@@ -48,17 +48,6 @@ e2e-story: cd web && npx playwright test {files} <!-- {files} relative to web/, 
 e2e-story-slices: 1 <!-- 1 = one call; n > 1 only when e2e-story carries {shard} and one call could exceed ten minutes — /build then runs {shard} = 1/n … n/n in sequence -->
 e2e-all: none <!-- e.g. npm run ui:flows | npx playwright test --project=flows | none -->
 e2e-cleanup: docker compose -p photocurator-e2e down -v <!-- stops the e2e app container + fixture library a killed run leaves behind; does not touch a dev instance under another project name -->
-release-verify: none <!-- e.g. npm run verify:release | make release-check | none — /sprint's last step (phase 4): "will a PR and a release of this commit pass?", on the final commit; nothing is committed after a green run -->
-
-<!--
-  release-verify = the project's own releasable check: a command that runs what the PR and
-               release pipelines block on, against the commit at hand (ideally merged into the
-               release branch, as the PR would be). /sprint runs it once as its very last step,
-               after the review commit and a roadmap check, fixes a red result at most twice and
-               reports the verdict as the first line of its final report. `none` = the short
-               suites (build, test, lint, typecheck) run there instead — they are what the
-               review commit's doc edits can break.
--->
 <!--
   Narrow per story, broad per sprint. `/build` runs a story-sized gate; `/sprint` runs
   the full one once, after the last story, and bisects a red result back to a story.
@@ -118,6 +107,20 @@ changelog-path: none
     - short, punchy, a little funny. Not a paragraph explaining the implementation.
     - the language is `doc-language`
 -->
+
+## Release
+
+Whether a sprint ends releasable: `/sprint` merges the release branch in at its start and runs
+`/release-check` as its very last step — the merge of the final commit into the release branch,
+in a throwaway clone with a clean install, every blocking step of the PR and the release
+pipelines (the release as a dry run), under CI conditions. Its verdict, `releasable: yes | NO |
+UNVERIFIED`, heads the sprint's final report. Run `/release-check` yourself before opening a PR.
+
+release-branch: main <!-- the branch PRs target and releases run on, e.g. main | none -->
+release-verify: auto <!-- auto | <your own command> | none -->
+release-plan: none <!-- read-only, prints the next version + bump level, e.g. pwsh -File scripts/plan-release.ps1 | node scripts/release.mjs --print-plan | npx semantic-release --dry-run | none -->
+release-dry-run: none <!-- the release minus commit, tag, push, publish, e.g. pwsh -File scripts/ci-release.ps1 -DryRun | node scripts/release.mjs --dry-run | none -->
+commit-style: plain <!-- plain | conventional — the subjects /sprint and /build write -->
 
 ## Branching
 
