@@ -25,7 +25,7 @@ Nutzer-Entscheidungen (003): Backup-Pfad `/volume1/docker/photocurator/backup`; 
 - Versionen in 002: Vite 7.3 (npm 10.9 stürzt bei Vite 8 ab), TypeScript 6.0 (typescript-eslint), Vitest 4 mit `--legacy-peer-deps`.
 - 001: `UserData:Keywords` (Video) entfällt, ExifTool 13.25 kann es nicht schreiben; `libheif-plugin-x265` im Dockerfile ergänzt.
 - `npm run test:e2e` baut `photocurator:dev` nicht mehr; vorher `build` aus dem Profil ausführen.
-- Bewusst nicht behoben, als Follow-ups in der [Roadmap](../../ROADMAP.md) geführt: Image-Größe ~978 MB, `x/sys/unix` ohne Build-Tag, Limiter-Map-Bereinigung, Session-Lookup für Assets, 360-px-Layout ungeprüft, Setup-Fehler überspringt Teardown, `test-support` im Profil nachziehen.
+- Bewusst nicht behoben, als Follow-ups in der [Roadmap](../../../ROADMAP.md) geführt: Image-Größe ~978 MB, `x/sys/unix` ohne Build-Tag, Limiter-Map-Bereinigung, Session-Lookup für Assets, 360-px-Layout ungeprüft, Setup-Fehler überspringt Teardown, `test-support` im Profil nachziehen.
 - Fortschrittsdatei: die ersten Zeilen (Orchestrator-Einträge bis Story-002-Start) tragen kein Datum, spätere Agent-Zeilen schon; Zeitstempel sind monoton, keiner liegt in der Zukunft.
 - Go-Testnamen sind im Docker-`test`-Stage ohne `-v` nicht sichtbar; Nachweis je Story = Paket `ok` + Test per grep vorhanden.
 

@@ -24,7 +24,7 @@ Protokoll, mit dem auf dem NAS geklärt wird, welche Metadatenfelder UGREEN Foto
 
 ## Notes
 
-- Definition of Done: [BACKLOG.md](../../BACKLOG.md#definition-of-done).
+- Definition of Done: [BACKLOG.md](../../../BACKLOG.md#definition-of-done).
 - 002 zuerst: Es schafft die Verify-Befehle, die `.claude/ai-scrum.md` schon nennt.
 - **Nach dem Sprint (Nutzer):** Testsatz aus 001 nach `Sortiert/_pcprobe/` kopieren, in UGREEN
   Fotos prüfen, `PROTOKOLL.md` ausfüllen, Ergebnis in

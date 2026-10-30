@@ -28,7 +28,7 @@ Nominatim.
 
 ## Notes
 
-- Definition of Done: [BACKLOG.md](../../BACKLOG.md#definition-of-done).
+- Definition of Done: [BACKLOG.md](../../../BACKLOG.md#definition-of-done).
 - Rein lesend — unabhängig vom Spike-Ergebnis. Läuft parallel zur Spike-Durchführung auf dem NAS.
 - 011 und 014 am 2026-10-30 per `/roadmap plan` aus S03/S04 vorgezogen (beide schreiben nichts in
   Dateien). 011 nach 005, weil der Baum Tags aus dem Index zeigt.

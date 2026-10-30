@@ -11,7 +11,7 @@ Das Review von Sprint S02 hat in Index, Auswahl und Kategorien Kanten gefunden, 
 nicht im Sprint behoben wurden. Keine davon ist im Alltag sichtbar, jede kann aber zu einem
 falschen Zustand oder einer unnötigen Startblockade führen. Sie sollen gesammelt geschlossen
 werden, bevor das MVP abgeschlossen wird (spätestens mit 021).
-Quelle: [S02 review](../sprints/S02/review.md).
+Quelle: [S02 review](../sprints/done/S02/review.md).
 
 ## Acceptance Criteria
 

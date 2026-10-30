@@ -36,7 +36,7 @@ Für die nächste Planung relevant (Details in den `## Decisions (Sprint)`-Absch
 - **Go-Testnachweis:** Das Dockerfile ruft `go test` ohne `-v`; die Builds belegten Go-Tests deshalb nur paketweise („ok"), nicht pro Testname.
 - **Zugriffssperre:** `deploy/.env.example` ist für Agenten gesperrt, daher wurden `PC_SCAN_INTERVAL`/`PC_SCAN_QUIET` nicht in die Deploy-Compose durchgereicht → Follow-up in der Roadmap.
 - **CLAUDE.md fehlt** im Repo; die Agenten nutzten Profil und Tech Spec als Leitplanken.
-- **Bewusst nicht behobene Review-Funde** sind in [022 — Robustheit und Testlücken](../../requirements/022-robustheit-aus-s02-review.md) (Story-Entwurf) bzw. als Follow-ups in der [Roadmap](../../ROADMAP.md#follow-ups-worth-doing) gelandet. Als nicht handlungsbedürftig eingestuft: der nice-Test prüft nur den Befehlsbau, die Fake-Uhr in 014 unterscheidet den Startzeitpunkt nicht, `PickedPlace` statt `Place` (bewusste Schnittstelle), Detail-Tag-Assertion prüft nur einen Tag, Scheduler meldet kurz `idle` nach `Trigger()`, `finished_at` mit Sekundenauflösung.
+- **Bewusst nicht behobene Review-Funde** sind in [022 — Robustheit und Testlücken](../../../requirements/022-robustheit-aus-s02-review.md) (Story-Entwurf) bzw. als Follow-ups in der [Roadmap](../../../ROADMAP.md#follow-ups-worth-doing) gelandet. Als nicht handlungsbedürftig eingestuft: der nice-Test prüft nur den Befehlsbau, die Fake-Uhr in 014 unterscheidet den Startzeitpunkt nicht, `PickedPlace` statt `Place` (bewusste Schnittstelle), Detail-Tag-Assertion prüft nur einen Tag, Scheduler meldet kurz `idle` nach `Trigger()`, `finished_at` mit Sekundenauflösung.
 
 ## Blockiert / offen
 
