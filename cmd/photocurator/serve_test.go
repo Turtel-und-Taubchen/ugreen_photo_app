@@ -23,7 +23,7 @@ func TestServeRefusesToStartWithInvalidPaths(t *testing.T) {
 	t.Setenv("PC_BACKUP_DIR", missing)
 	t.Setenv("PC_LISTEN", addr)
 
-	if _, _, err := checkStart(config.PathsFromEnv(os.Getenv), os.Getenv); err == nil {
+	if _, _, _, err := checkStart(config.PathsFromEnv(os.Getenv), os.Getenv); err == nil {
 		t.Fatal("checkStart accepted invalid paths")
 	}
 	if code := serve(nil); code != 1 {

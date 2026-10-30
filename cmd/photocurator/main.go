@@ -27,6 +27,7 @@ import (
 	"photocurator/internal/store"
 	"photocurator/internal/thumbs"
 	"photocurator/internal/version"
+	"photocurator/internal/writer"
 	"photocurator/web"
 )
 
@@ -62,7 +63,7 @@ func serve(args []string) int {
 	}
 	paths := config.PathsFromEnv(os.Getenv)
 	geoCfg := config.GeoFromEnv(os.Getenv)
-	users, scan, err := checkStart(paths, os.Getenv)
+	users, scan, wcfg, err := checkStart(paths, os.Getenv)
 	if err != nil {
 		slog.Error("invalid configuration, refusing to start", "err", err)
 		return 1
@@ -89,14 +90,29 @@ func serve(args []string) int {
 		slog.Error("exiftool config", "err", err)
 		return 1
 	}
+	if !wcfg.PreserveMtime {
+		slog.Warn("PC_PRESERVE_MTIME=false: written files get a new modification time, UGREEN may drop them from its photo index")
+	}
+	reader := exif.Reader{ConfigPath: exifConfig, Tags: metadata.ReadTags}
 	scanner := &library.Scanner{
 		Root:   paths.PhotosDir,
 		DB:     idxDB,
-		Reader: exif.Reader{ConfigPath: exifConfig, Tags: metadata.ReadTags},
+		Reader: reader,
 		Quiet:  scan.Quiet,
 		Now:    time.Now,
 		Loc:    time.Local,
 	}
+	exifWriter := &exif.Writer{ConfigPath: exifConfig, PreserveMtime: wcfg.PreserveMtime}
+	defer exifWriter.Close()
+	writes := &writer.Queue{DB: db, Pipeline: &writer.Pipeline{
+		Root:      paths.PhotosDir,
+		BackupDir: paths.BackupDir,
+		Exif:      exifWriter,
+		Reader:    reader,
+		Index:     scanner,
+		Quiet:     scan.Quiet,
+		Now:       time.Now,
+	}}
 	thumbDir := filepath.Join(paths.DataDir, "thumbs")
 	if err := os.MkdirAll(thumbDir, 0o755); err != nil {
 		slog.Error("thumbnail cache", "err", err)
@@ -125,6 +141,15 @@ func serve(args []string) int {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
+	// Start recovers interrupted writes, so it has to finish before the first scan and the first
+	// request: a scan must never index a half-written file that Recover is about to restore.
+	// Registered after idxDB.Close, so the write queue has ended before the index closes.
+	writeCtx, cancelWrites := context.WithCancel(ctx)
+	defer func() { cancelWrites(); writes.Wait() }()
+	if err := writes.Start(writeCtx); err != nil {
+		slog.Error("write queue", "err", err)
+		return 1
+	}
 	// Registered after idxDB.Close, so the scan loop has ended before the index closes.
 	scanCtx, cancelScan := context.WithCancel(ctx)
 	scanDone := make(chan struct{})
@@ -147,6 +172,7 @@ func serve(args []string) int {
 			Service:  thumbSvc,
 			CacheDir: thumbDir,
 		},
+		Writes: writes,
 		Photos: photoList{idxDB},
 		Index:  idxDB,
 		Tags:   &api.TagDeps{App: db, Index: idxDB},
@@ -198,14 +224,18 @@ func (l photoList) Detail(ctx context.Context, id int64) (library.Detail, bool, 
 }
 
 // checkStart (paths, users file, scan settings) must pass before any port is opened.
-func checkStart(p config.Paths, get func(string) string) (auth.Users, config.Scan, error) {
+func checkStart(p config.Paths, get func(string) string) (auth.Users, config.Scan, config.Writer, error) {
 	if err := config.ValidatePaths(p); err != nil {
-		return nil, config.Scan{}, err
+		return nil, config.Scan{}, config.Writer{}, err
 	}
 	users, err := auth.LoadUsers(p.UsersFile)
 	if err != nil {
-		return nil, config.Scan{}, err
+		return nil, config.Scan{}, config.Writer{}, err
 	}
 	scan, err := config.ScanFromEnv(get)
-	return users, scan, err
+	if err != nil {
+		return nil, config.Scan{}, config.Writer{}, err
+	}
+	w, err := config.WriterFromEnv(get)
+	return users, scan, w, err
 }

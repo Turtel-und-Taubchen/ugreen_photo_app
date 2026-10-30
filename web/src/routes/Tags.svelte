@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ApiError } from '../lib/api';
+  import { errorMessage } from '../lib/api';
   import TagItem from '../lib/TagItem.svelte';
   import { createTag, deleteTag, fetchTags, type TagNode } from '../lib/tags';
 
@@ -13,10 +13,6 @@
     loaded = true;
   }
 
-  function message(e: unknown): string {
-    return e instanceof ApiError && e.body?.error ? e.body.error : 'Anfrage fehlgeschlagen';
-  }
-
   async function create(event: SubmitEvent) {
     event.preventDefault();
     error = '';
@@ -25,7 +21,7 @@
       path = '';
       await reload();
     } catch (e) {
-      error = message(e);
+      error = errorMessage(e);
     }
   }
 
@@ -34,12 +30,12 @@
     try {
       await deleteTag(target);
     } catch (e) {
-      error = message(e);
+      error = errorMessage(e);
     }
     await reload();
   }
 
-  reload().catch((e) => (error = message(e)));
+  reload().catch((e) => (error = errorMessage(e)));
 </script>
 
 <main>

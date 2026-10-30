@@ -25,8 +25,10 @@ export function composeEnv(root: string): Record<string, string> {
     PHOTOS_PATH: path.join(base, 'photos'),
     DATA_PATH: path.join(base, 'data'),
     BACKUP_PATH: path.join(base, 'backup'),
-    PUID: String(process.getuid?.() ?? 1000),
-    PGID: String(process.getgid?.() ?? 1000),
+    // Without getuid (Windows host) the bind mount presents every file as root-owned and
+    // writable for root only, so root is the one uid that can write the fixture photos.
+    PUID: String(process.getuid?.() ?? 0),
+    PGID: String(process.getgid?.() ?? 0),
     BIND_IP: '127.0.0.1',
     PORT: String(E2E_PORT),
     TZ: 'Europe/Vienna',

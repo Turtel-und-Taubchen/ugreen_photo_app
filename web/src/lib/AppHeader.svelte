@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from './api';
   import { fetchHealth } from './health';
+  import JobStatus from './JobStatus.svelte';
 
   const health = fetchHealth();
   const me = api<{ username: string }>('/api/me');
@@ -34,6 +35,7 @@
     <a href="/orte">Ortssuche</a>
   </nav>
   <button type="button" onclick={logout}>Abmelden</button>
+  <JobStatus />
 </header>
 
 <style>

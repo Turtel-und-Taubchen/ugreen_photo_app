@@ -4,3 +4,26 @@
 - 2026-10-30 17:08:30 · refine · 009 010 012 015 016 · started (resume after spike)
 - 2026-10-30 17:14:25 · refine · 009 010 012 013 015 016 · done
 - 2026-10-30 17:14:25 · 009 · build · started
+- 2026-10-30 17:14:40 · 009 · D1 ExifTool-Schreibsitzung · started
+- 2026-10-30 17:20:00 · 009 · D1 ExifTool-Schreibsitzung · done
+- 2026-10-30 17:20:01 · 009 · D2 Feldmapping · started
+- 2026-10-30 17:26:06 · 009 · D2 Feldmapping · done
+- 2026-10-30 17:26:06 · 009 · D3 Sichere Pipeline (hard) · started
+- 2026-10-30 17:34:18 · 009 · D3 Sichere Pipeline (hard) · done
+- 2026-10-30 17:34:18 · 009 · D4 Job-Warteschlange · started
+- 2026-10-30 17:46:43 · 009 · D4 Job-Warteschlange · done
+- 2026-10-30 17:46:43 · 009 · D5 Konfiguration und Verdrahtung · started
+- 2026-10-30 17:51:07 · 009 · D5 Konfiguration und Verdrahtung · done
+- 2026-10-30 17:51:07 · 009 · D6 Job-API · started
+- 2026-10-30 18:07:12 · 009 · D6 Job-API · done
+- 2026-10-30 18:07:12 · 009 · D7 Job-Status in der Oberfläche · started
+- 2026-10-30 18:37:35 · 009 · D7 Job-Status in der Oberfläche · done
+- 2026-10-30 18:37:35 · 009 · verify · started
+- 2026-10-30 18:43:28 · 009 · verify · done
+- 2026-10-30 18:43:28 · 009 · review 1 · started
+- 2026-10-30 18:46:56 · 009 · review 1 · done
+- 2026-10-30 18:46:56 · 009 · fix 1 review findings · started
+- 2026-10-30 19:01:31 · 009 · fix 1 review findings · done
+- 2026-10-30 19:01:31 · 009 · verify (after review 1) · started
+- 2026-10-30 19:07:49 · 009 · verify (after review 1) · done
+- 2026-10-30 19:07:53 · 009 · story · done

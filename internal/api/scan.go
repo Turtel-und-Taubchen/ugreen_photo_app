@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"photocurator/internal/library"
+	"photocurator/internal/writer"
 )
 
 // unreadableLimit caps the list in the response; unreadable_count carries the real total.
@@ -31,6 +32,8 @@ type LibraryDeps struct {
 	Tags *TagDeps
 	// Geo serves /api/geo; nil leaves the routes unregistered.
 	Geo Geocoder
+	// Writes runs the metadata write jobs.
+	Writes *writer.Queue
 }
 
 type unreadableJSON struct {

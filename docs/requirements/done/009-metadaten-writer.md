@@ -1,7 +1,7 @@
 ---
 id: 009
 title: Sicherer Metadaten-Writer mit Batch-Jobs
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E2 Sicheres Schreiben
 estimate: 8
@@ -22,31 +22,31 @@ refined. Ablauf: [Tech Spec §3.3](../concepts/photocurator-tech-spec.md).
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Das Feldmapping (Format × Domänenfeld → Metadatenfelder) entspricht der
+- [x] **AC1** — Das Feldmapping (Format × Domänenfeld → Metadatenfelder) entspricht der
   Strategie aus dem Spike-Dokument und liegt an genau einer Stelle im Code; für jedes Format
   (JPEG, HEIC, PNG, MP4, MOV) belegt ein Test an einer Fixture-Kopie, dass Tags, Ort und
   Prüfstatus in genau diese Felder geschrieben und wieder gelesen werden.
-- [ ] **AC2** — Nach dem Schreiben sind Inode, Besitzer und Rechte der Datei unverändert, und im
+- [x] **AC2** — Nach dem Schreiben sind Inode, Besitzer und Rechte der Datei unverändert, und im
   Fotoordner liegen keine zusätzlichen Dateien (z. B. `_original`).
-- [ ] **AC3** — Die Bilddaten (ExifTool `ImageDataHash`) sind vor und nach dem Schreiben
+- [x] **AC3** — Die Bilddaten (ExifTool `ImageDataHash`) sind vor und nach dem Schreiben
   identisch; weicht der Read-back ab, wird die Datei aus dem Backup wiederhergestellt und als
   fehlgeschlagen gemeldet.
-- [ ] **AC4** — Das Änderungsdatum der Datei wird gemäß Konfiguration `PC_PRESERVE_MTIME`
+- [x] **AC4** — Das Änderungsdatum der Datei wird gemäß Konfiguration `PC_PRESERVE_MTIME`
   behandelt; der Standardwert entspricht dem Spike-Ergebnis (Entscheidung: Erkennung durch
   UGREEN hat Vorrang).
-- [ ] **AC5** — In einem Batch mit einer absichtlich defekten bzw. schreibgeschützten Datei
+- [x] **AC5** — In einem Batch mit einer absichtlich defekten bzw. schreibgeschützten Datei
   werden alle anderen Dateien geschrieben; das Ergebnis zeigt „n erfolgreich, m fehlgeschlagen"
   und je fehlgeschlagener Datei Pfad und Fehlermeldung.
-- [ ] **AC6** — Es läuft höchstens ein Schreibjob gleichzeitig; weitere Jobs warten in einer
+- [x] **AC6** — Es läuft höchstens ein Schreibjob gleichzeitig; weitere Jobs warten in einer
   Warteschlange. Fortschritt (x von y) ist in der Oberfläche sichtbar, auch nach Neuladen der
   Seite.
-- [ ] **AC7** — Dateien jünger als die Ruhezeit sowie Pfade außerhalb von `/photos` werden nicht
+- [x] **AC7** — Dateien jünger als die Ruhezeit sowie Pfade außerhalb von `/photos` werden nicht
   geschrieben, sondern als übersprungen gemeldet.
-- [ ] **AC8** — Bereits vorhandene fremde Werte in Listenfeldern (z. B. Keywords anderer
+- [x] **AC8** — Bereits vorhandene fremde Werte in Listenfeldern (z. B. Keywords anderer
   Programme) bleiben erhalten.
-- [ ] **AC9** — Nach Abschluss eines Jobs ist der Index für die betroffenen Dateien aktuell, und
+- [x] **AC9** — Nach Abschluss eines Jobs ist der Index für die betroffenen Dateien aktuell, und
   die Oberfläche zeigt den im Spike ermittelten Hinweis, wann UGREEN Fotos die Änderung zeigt.
-- [ ] **AC10** — Wird die App während eines Jobs beendet, ist der Job danach als abgebrochen
+- [x] **AC10** — Wird die App während eines Jobs beendet, ist der Job danach als abgebrochen
   markiert, und keine Datei ist halb geschrieben (jede Datei hat entweder alte oder neue Werte).
 
 ## Open Questions
@@ -287,3 +287,27 @@ Zusätzlich (Entscheidungen, keine eigenen AC): `TestWriterRejectsLineBreaksInAr
 `TestJobDetailListsEveryFailedFileWithReason` (D6).
 
 ## Done
+
+Schreibschicht gebaut: ein `-stay_open`-ExifTool-Writer, die eine Mapping-Tabelle (Format x Feld), die Pipeline je Datei
+(Vorab-Kopie, Read-back mit Matches + ImageDataHash, Wiederherstellen in place, `Recover`), eine FIFO-Job-Queue mit
+genau einem Läufer und persistentem Fortschritt (`jobs`/`job_items`), `PC_PRESERVE_MTIME` (Standard `true`),
+`POST/GET /api/jobs` (`tags.add`) und der Job-Status im Header mit Hinweis. Ein schreibgeschütztes bzw. defektes File scheitert allein.
+
+Change type: feat
+
+Commit message: `009: safe metadata writer — mapping table, per-file pipeline with in-place restore, job queue + API + UI`
+
+Decisions:
+- Hook-abgebrochene Datei endet im Restart-Test als `failed` (Hook-Fehlertext), Rest `skipped`, Job `aborted`; fehlende Datei = `failed` "Datei nicht gefunden".
+- Pre-Copy bleibt nur, wenn das Original abweicht und nicht zurückschreibbar ist; ist es byte-gleich zur Kopie (z. B. 0444), wird die Kopie verworfen (sonst blockiert sie die Datei dauerhaft).
+- `library.FormatOf` exportiert (Format für `Args`/`Matches`); `Recover` und `Queue.Start` laufen vor dem Scan-Scheduler.
+- E2E-Harness: `web/tests/e2e/compose.ts` fällt ohne `process.getuid` (Windows) auf UID/GID 0 zurück — Docker Desktop zeigt Bind-Mounts als root:644.
+- Tech Spec: `job_items.old/new`-Journal entfernt (gehört zur Undo-Story 010); Standard `PC_PRESERVE_MTIME=true`.
+- Bei read-only Dateien meldet ExifTool kein "Error:"; der Grund lautet "Read-back weicht ab" statt ExifTool-Text (akzeptiert, Datei bleibt unverändert).
+
+Verification: narrow gate (kein `test-story`; `docker build --target test .` + `npm --prefix web run test` voll, `e2e-story`: `cd web && npx playwright test tests/e2e/write-jobs.spec.ts`), build, lint, typecheck grün; Go-Pakete alle `ok` (Testnamen nicht ausgegeben, Existenz per grep bestätigt, kein Skip). Review (default, 1 Stufe): FAIL -> 5 Befunde gefixt (read-only Stuck-State, Hash-Zweig-Test, Start-Reihenfolge, e2e-Grund, Tech-Spec) und neu verifiziert. Offene Low-Befunde ungefixt: Cancel unmittelbar nach erfolgreichem ExifTool-Aufruf (kein Aufrufer betroffen), DB-Fehler nach `running` lässt Job bis zum Neustart `running`, `FormatOf` dupliziert einen Lookup.
+AC -> Test: AC1 TestEveryFormatWritesAndReadsBackTagsPlaceAndReviewState + TestEveryWrittenTagIsAlsoRead; AC2 TestWriteKeepsInodeOwnerModeAndLeavesNoExtraFiles; AC3 Mapping-Hash je Format + TestReadBackMismatchRestoresFileAndReportsFailure + TestHashMismatchRestoresFileEvenWhenTheReadBackMatches; AC4 TestMtimeFollowsPreserveMtimeSetting + TestPreserveMtimeDefaultsToTrueAndRejectsInvalidValues; AC5 TestBrokenFileFailsAloneAndTheRestIsWritten + TestReadOnlyFileInABatchFailsAloneAndTheRestIsWritten + e2e; AC6 TestOnlyOneWriteJobRunsAtATimeAndOthersWait + jobs.test.ts + e2e; AC7 TestFilesInQuietPeriodOrOutsidePhotosAreSkipped; AC8 TestForeignKeywordsSurviveAddingATag + TestListFieldsAreNeverAssignedWhole; AC9 TestIndexShowsWrittenValuesRightAfterTheWrite + e2e; AC10 TestRestartMarksJobsAbortedAndRestoresTheFileInFlight + TestRecoverRestoresAHalfWrittenFileFromItsInflightCopy — alle bestanden.
+Manual residue: AC9 — dass UGREEN Fotos den Ort nach „Aktualisieren" zeigt (proprietäre App auf dem NAS).
+Narrow gate only; der volle Regressionslauf ist Sache des Sprints.
+
+tiers: D 7 / hard 1 · review default · cycles 1 · agents 12

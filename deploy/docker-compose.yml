@@ -10,7 +10,7 @@ services:
       TZ: ${TZ}
       PC_NOMINATIM_CONTACT: ${NOMINATIM_CONTACT}
       PC_PHOTOS_HOST_PATH: ${PHOTOS_PATH}
-      PC_PRESERVE_MTIME: "false"
+      PC_PRESERVE_MTIME: "true"
     volumes:
       - ${PHOTOS_PATH}:/photos
       - ${DATA_PATH}:/data

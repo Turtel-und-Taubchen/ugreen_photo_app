@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"photocurator/internal/exif"
@@ -94,6 +96,41 @@ func (s *Scanner) Run(ctx context.Context, progress func(done, total int)) (Resu
 	}
 	res.Removed, err = removeVanished(ctx, s.DB, known, files, unreadable)
 	return res, err
+}
+
+// IndexFiles reads the given files ('/'-separated, relative to Root) into the index right away,
+// regardless of the quiet period, through the same block path as Run. Names that are not
+// library media and entries that are not regular files are ignored.
+func (s *Scanner) IndexFiles(ctx context.Context, rels []string) error {
+	now := time.Now
+	if s.Now != nil {
+		now = s.Now
+	}
+	root, err := filepath.EvalSymlinks(s.Root)
+	if err != nil {
+		return fmt.Errorf("library root: %w", err)
+	}
+	var files []mediaFile
+	for _, rel := range rels {
+		kind, ok := mediaKinds[strings.ToLower(path.Ext(rel))]
+		if !ok {
+			continue
+		}
+		info, err := os.Lstat(filepath.Join(root, filepath.FromSlash(rel)))
+		if err != nil {
+			return fmt.Errorf("index %s: %w", rel, err)
+		}
+		if !info.Mode().IsRegular() {
+			continue
+		}
+		files = append(files, mediaFile{rel: rel, kind: kind, size: info.Size(), mtime: info.ModTime()})
+	}
+	for i := 0; i < len(files); i += blockSize {
+		if _, err := s.indexBlock(ctx, root, files[i:min(i+blockSize, len(files))], now()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // settling reports a file that may still be being written. An mtime further in the future

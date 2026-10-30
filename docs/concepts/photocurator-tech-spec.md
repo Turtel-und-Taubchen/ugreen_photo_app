@@ -97,7 +97,7 @@ Arbeitslisten sind reine Abfragen (`NOT EXISTS photo_tags`, `gps_lat IS NULL`,
 | `recent_tags` | zuletzt verwendete Tags (Nutzer oder global — offener Punkt) |
 | `favorite_places` | Name, Koordinaten, Ortsteile |
 | `jobs` | Job-ID, Nutzer, Art, Parameter, Status, Zähler, Zeitstempel |
-| `job_items` | Job, Datei, Ergebnis (`ok`/`skipped`/`failed`), Fehlertext, alte/neue Werte (JSON) — **das Journal** |
+| `job_items` | Job, Datei, Ergebnis (`ok`/`skipped`/`failed`), Fehlertext (ohne alte/neue Werte; das Journal für „Rückgängig“ folgt mit der Rückgängig-Story) |
 | `backups` | Datei, Backup-Pfad, Zeitpunkt (für Aufbewahrung und „schon gesichert?") |
 | `geocode_cache` | Anfrage-Schlüssel, Antwort-JSON, Zeitpunkt |
 | `dismissed_suggestions` | abgelehnte Ortsvorschläge pro Foto |
@@ -161,19 +161,21 @@ Ablauf pro Datei in einem Job:
 2. **Backup**, falls in der Aufbewahrungsfrist noch keine Kopie existiert:
    `/backup/<JJJJ-MM-TT>/<rel_path>` (Kopie, dann `fsync`). Schlägt das fehl → Datei `failed`,
    keine Änderung.
-3. Alte Werte der betroffenen Felder lesen → Journal (`job_items.old`).
+3. Alte Werte der betroffenen Felder lesen (nur für den Soll-Ist-Vergleich; kein Journal — die
+   Vorab-Kopie unter `BackupDir/.inflight` trägt die Wiederherstellung).
 4. **Bilddaten-Prüfsumme** vorher: ExifTool `ImageDataHash` (SHA-256).
 5. Schreiben mit ExifTool: `-overwrite_original_in_place` (Inode, Besitzer und Rechte bleiben;
-   keine `_original`-Dateien), `-P` nur wenn `PRESERVE_MTIME=true` (Standard `false`,
-   endgültig nach Spike), `-config photocurator.config`, Werte über Argumentdatei
+   keine `_original`-Dateien), `-P` wenn `PC_PRESERVE_MTIME=true` (Standard `true`, nach
+   Spike: mit geänderter mtime verschwand die Datei aus dem UGREEN-Index), `-config photocurator.config`, Werte über Argumentdatei
    (keine Shell, kein Quoting-Risiko).
 6. **Read-back:** Felder erneut lesen, mit Sollwerten vergleichen; `ImageDataHash` muss
    gleich sein. Abweichung → `failed` + automatische Wiederherstellung aus dem Backup.
-7. Index-Zeile aktualisieren, `job_items.new` speichern.
+7. Index-Zeile aktualisieren; `job_items` hält nur Ergebnis und Fehlertext.
 
 Ein Fehler betrifft immer nur die eine Datei; der Job läuft weiter. Es läuft **genau ein
 Schreibjob** gleichzeitig (Queue). Ein Neustart während eines Jobs markiert ihn als
-abgebrochen; bereits verarbeitete Dateien sind im Journal.
+abgebrochen; die Datei in Bearbeitung wird aus der Vorab-Kopie wiederhergestellt, bereits
+verarbeitete Dateien stehen in `job_items`.
 
 **Rückgängig** schreibt die alten Werte aus dem Journal zurück — nur für Dateien, deren
 aktuelle Werte noch den neuen Werten des Jobs entsprechen; andere werden übersprungen und
@@ -185,8 +187,9 @@ täglich gelöscht.
 
 - Phockup schreibt nur durch Verschieben aus der Inbox nach `Sortiert`. Dateien unter der
   Ruhezeit werden weder gelesen noch geschrieben.
-- UGREEN-Indexer: Schreiben in-place ist kurz; ob UGREEN per mtime, Inotify oder periodisch
-  erkennt, liefert der Spike. Standard: mtime ändert sich (Entscheidung „Erkennung gewinnt").
+- UGREEN-Indexer: Der Spike zeigte, dass eine Datei mit geänderter mtime aus dem UGREEN-Index
+  verschwand, mit unveränderter mtime der neue Speicherort übernommen wurde. Standard
+  daher: mtime bleibt erhalten (`PC_PRESERVE_MTIME=true`).
 - PhotoCurator legt **keine Dateien** in `/photos` an (keine Thumbnails, keine Sidecars — außer
   der Spike erzwingt Video-Sidecars; dann gesondert entscheiden).
 
@@ -278,7 +281,7 @@ services:
       TZ: ${TZ}
       PC_NOMINATIM_CONTACT: ${NOMINATIM_CONTACT}
       PC_PHOTOS_HOST_PATH: ${PHOTOS_PATH}
-      PC_PRESERVE_MTIME: "false"
+      PC_PRESERVE_MTIME: "true"
     volumes:
       - ${PHOTOS_PATH}:/photos
       - ${DATA_PATH}:/data

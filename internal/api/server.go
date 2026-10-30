@@ -39,6 +39,9 @@ func NewHandler(static fs.FS, deps AuthDeps, lib LibraryDeps) http.Handler {
 	if lib.Index != nil {
 		registerSelection(mux, lib.Index)
 	}
+	if lib.Writes != nil && lib.Index != nil {
+		registerJobs(mux, lib.Writes, lib.Index)
+	}
 	if lib.Tags != nil {
 		registerTags(mux, lib.Tags)
 	}

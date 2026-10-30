@@ -10,7 +10,7 @@
 </script>
 
 <script lang="ts">
-  import { ApiError } from './api';
+  import { errorMessage } from './api';
   import { emptyParts, parseCoordinate, reversePlace, searchPlaces, type Place } from './geo';
 
   let {
@@ -38,10 +38,6 @@
     onchange?.(point ? { ...point, name, parts: { ...parts } } : null);
   }
 
-  function message(e: unknown): string {
-    return e instanceof ApiError && e.body?.error ? e.body.error : 'Anfrage fehlgeschlagen';
-  }
-
   async function search(event: SubmitEvent) {
     event.preventDefault();
     if (!enabled || busy || query.trim() === '') return;
@@ -51,7 +47,7 @@
       results = (await searchPlaces(query)).slice(0, 10);
       searched = true;
     } catch (e) {
-      error = message(e);
+      error = errorMessage(e);
     } finally {
       busy = false;
     }
@@ -79,7 +75,7 @@
       }
       emit();
     } catch (e) {
-      error = message(e);
+      error = errorMessage(e);
     } finally {
       busy = false;
     }

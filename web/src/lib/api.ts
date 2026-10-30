@@ -40,3 +40,8 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
   }
   return body as T;
 }
+
+/** The server's own message when it sent one, otherwise a generic text. */
+export function errorMessage(e: unknown): string {
+  return e instanceof ApiError && e.body?.error ? e.body.error : 'Anfrage fehlgeschlagen';
+}

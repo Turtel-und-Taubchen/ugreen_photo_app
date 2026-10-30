@@ -40,6 +40,7 @@ Kopiere `.env.example` nach `.env` und trage die Werte ein:
 - `PC_IMAGE`: Image-Name und Tag (Standard `photocurator:latest`)
 - `PC_SCAN_INTERVAL` (optional, Standard `15m`, mindestens `1m`): Abstand zwischen zwei automatischen Bibliotheks-Scans; bei Bedarf als Eintrag unter `environment:` der Compose-Datei setzen, nicht in `.env`
 - `PC_SCAN_QUIET` (optional, Standard `5m`, ebenfalls unter `environment:` der Compose-Datei): Ruhezeit; Dateien, die jünger als diese Zeit geändert wurden, werden erst im nächsten Scan erfasst. Das schützt vor halb verschobenen Phockup-Dateien.
+- `PC_PRESERVE_MTIME` (optional, Standard `true`, erlaubt `true`/`false`, ebenfalls unter `environment:` der Compose-Datei): `true` lässt die Änderungszeit einer Datei beim Metadaten-Schreiben unverändert. Im Spike verschwand eine Datei mit geänderter mtime aus dem UGREEN-Index, mit unveränderter mtime wurde der neue Speicherort übernommen. `false` nur setzen, wenn du das bewusst in Kauf nimmst; beim Start erscheint dann eine Warnung.
 
 Beim Start prüft die App, dass der Fotopfad nicht `Inbox` enthält.
 

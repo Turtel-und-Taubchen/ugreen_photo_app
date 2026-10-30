@@ -20,6 +20,13 @@ var mediaKinds = map[string]mediaKind{
 	".mov": {"mov", "video"},
 }
 
+// FormatOf is the indexed format of a file name ("jpeg", "mp4", ...); ok is false for files
+// the library does not hold.
+func FormatOf(name string) (format string, ok bool) {
+	k, ok := mediaKinds[strings.ToLower(filepath.Ext(name))]
+	return k.format, ok
+}
+
 type mediaFile struct {
 	rel   string // '/'-separated, relative to the root
 	kind  mediaKind

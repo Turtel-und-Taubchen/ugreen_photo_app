@@ -17,7 +17,7 @@ oder Lieblingsort; Taggen wird durch zuletzt verwendete Tags und Autovervollstä
 
 <!-- Order = the order the build phase works through. Dependent stories go last. -->
 
-- [ ] 009 — Sicherer Metadaten-Writer mit Batch-Jobs
+- [x] 009 — Sicherer Metadaten-Writer mit Batch-Jobs
 - [ ] 010 — Backup der Originale, Änderungsjournal und Rückgängig pro Job
 - [ ] 012 — Tags im Batch zuweisen und entfernen
 - [ ] 013 — Zuletzt verwendete Tags und Autovervollständigung

@@ -15,3 +15,4 @@ second roadmap.
 - 008 — Mehrfach-, Bereichs- und Gruppenauswahl · S02 · serverseitige Auflösung (Filter + ein-/ausgeschlossene IDs, /api/selection/count), Auswahlmodus im Raster mit Shift+Klick, Monats-/Tagesauswahl und langem Drücken
 - 011 — Hierarchische Kategorien definieren und als Baum anzeigen · S02 · Tag-Pfade validieren, Baum mit Zählung, /api/tags und Seite „Tags“ mit Anlegen/Löschen-Sperre
 - 014 — Ortssuche und Reverse-Geocoding über Nominatim · S02 · Suche/Reverse über /api/geo/* mit 1-s-Limiter und 90-Tage-Cache, Seite /orte mit PlacePicker, E2E gegen Nominatim-Mock
+- 009 — Sicherer Metadaten-Writer mit Batch-Jobs · S03 · ExifTool-Writer, eine Mapping-Tabelle, Pipeline mit Vorab-Kopie/Read-back/Restore in place, FIFO-Jobs mit Fortschritt, /api/jobs (tags.add) und Job-Status im Header

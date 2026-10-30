@@ -26,6 +26,29 @@ var migrations = []string{
 		response TEXT NOT NULL,
 		fetched_at INTEGER NOT NULL
 	)`,
+	`CREATE TABLE jobs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		action TEXT NOT NULL,
+		payload TEXT NOT NULL,
+		status TEXT NOT NULL,
+		total INTEGER NOT NULL,
+		done INTEGER NOT NULL DEFAULT 0,
+		ok INTEGER NOT NULL DEFAULT 0,
+		skipped INTEGER NOT NULL DEFAULT 0,
+		failed INTEGER NOT NULL DEFAULT 0,
+		created_at INTEGER NOT NULL,
+		started_at INTEGER,
+		finished_at INTEGER
+	);
+	CREATE TABLE job_items (
+		job_id INTEGER NOT NULL REFERENCES jobs(id),
+		rel_path TEXT NOT NULL,
+		state TEXT NOT NULL,
+		reason TEXT NOT NULL DEFAULT '',
+		updated_at INTEGER NOT NULL
+	);
+	CREATE INDEX job_items_job ON job_items(job_id)`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.
