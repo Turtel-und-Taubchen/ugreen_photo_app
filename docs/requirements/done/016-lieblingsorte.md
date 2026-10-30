@@ -1,7 +1,7 @@
 ---
 id: 016
 title: Lieblingsorte speichern und wiederverwenden
-status: ready # draft -> ready -> in-progress -> done
+status: done
 created: 2026-10-29
 epic: E4 Standorte
 estimate: 2
@@ -15,12 +15,12 @@ sondern mit einem Tipp übernehmen.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Ein im Dialog „Ort setzen" gewählter Ort kann als Lieblingsort gespeichert
+- [x] **AC1** — Ein im Dialog „Ort setzen" gewählter Ort kann als Lieblingsort gespeichert
   werden; der Name ist dabei editierbar.
-- [ ] **AC2** — Der Dialog listet die Lieblingsorte; ein Tipp übernimmt Koordinaten, Ortsname und
+- [x] **AC2** — Der Dialog listet die Lieblingsorte; ein Tipp übernimmt Koordinaten, Ortsname und
   Ortsteile und setzt den Marker.
-- [ ] **AC3** — Lieblingsorte können umbenannt und gelöscht werden.
-- [ ] **AC4** — Die Verwendung eines Lieblingsorts erzeugt keine Nominatim-Anfrage.
+- [x] **AC3** — Lieblingsorte können umbenannt und gelöscht werden.
+- [x] **AC4** — Die Verwendung eines Lieblingsorts erzeugt keine Nominatim-Anfrage.
 
 ## Open Questions
 
@@ -104,7 +104,7 @@ Schreiben in Dateien (bleibt „Übernehmen" aus 015).
 
 ## Deliverables
 
-- [ ] **D1 — Tabelle `favorite_places` + Speicherfunktionen in `internal/geo`.**
+- [x] **D1 — Tabelle `favorite_places` + Speicherfunktionen in `internal/geo`.**
   Dateien: `internal/store/appdb.go`, `internal/geo/favorites.go` (neu),
   `internal/geo/favorites_test.go` (neu). Muster für einfache app.db-Funktionen:
   `internal/tags/definitions.go` (Funktionen mit `ctx` + `*sql.DB`).
@@ -140,7 +140,7 @@ Schreiben in Dateien (bleibt „Übernehmen" aus 015).
   „a vanished favourite place cannot be renamed or deleted and its id is never reused",
   „favourite places with invalid coordinates or control characters are refused".
 
-- [ ] **D2 — API `/api/places`.** Nutzt aus `internal/geo/favorites.go`: `Favorite`
+- [x] **D2 — API `/api/places`.** Nutzt aus `internal/geo/favorites.go`: `Favorite`
   (`{id,name,lat,lon,parts{sublocation,city,state,country,countryCode}}`), `ListFavorites`,
   `CreateFavorite`, `RenameFavorite`, `DeleteFavorite`, `ErrFavoriteExists`, `ErrFavoriteNotFound`,
   `*FavoriteInputError{Msg}`.
@@ -169,7 +169,7 @@ Schreiben in Dateien (bleibt „Übernehmen" aus 015).
   um → anna sieht den neuen Namen → ben löscht → annas Liste leer);
   „favourite place requests with bad input, duplicates or unknown ids are refused" (400, 409, 404).
 
-- [ ] **D3 — Lieblingsorte im PlacePicker + E2E-Flow.** Nutzt die API aus D2:
+- [x] **D3 — Lieblingsorte im PlacePicker + E2E-Flow.** Nutzt die API aus D2:
   `GET /api/places` → `{places:[Favorite]}`, `POST /api/places` `{name,lat,lon,parts}` → 201
   `{place}`, `PATCH /api/places/{id}` `{name}` → `{place}`, `DELETE /api/places/{id}` → 204,
   Fehler `{error}` mit 400/404/409; `Favorite` = `{id,name,lat,lon,parts:PlaceParts}`.
@@ -259,3 +259,22 @@ Schreiben in Dateien (bleibt „Übernehmen" aus 015).
   are one list that both users maintain" (D2)
 
 ## Done
+
+Kurz: Lieblingsorte als gemeinsame Liste (Tabelle `favorite_places`, `internal/geo/favorites.go`, `/api/places` GET/POST/PATCH/DELETE) und Abschnitt „Lieblingsorte" im `PlacePicker` (Speichern mit editierbarem Namen, Tipp = `apply()` ohne Nominatim, Umbenennen inline, Löschen zweistufig).
+
+Change type: feat
+
+Commit: `016: Lieblingsorte — favorite_places-Tabelle, /api/places, Lieblingsorte im PlacePicker (speichern, übernehmen ohne Nominatim, umbenennen, löschen) + e2e`
+
+Decisions:
+- Validierung wiederverwendet `ValidatePoint`/`ValidateLocationText` aus `internal/geo/validate.go` (Entscheidung 015); statt `FavoriteInputError` gilt `*geo.LocationInputError` (Meldungen daher „Ortsname …"; API zeigt `Msg` unverändert als 400). Die D1/D2-Texte oben nennen noch `FavoriteInputError`.
+- Doppelte Namen: UNIQUE-Verletzung auf `name_key` wird gemappt (kein Vorab-Check in Transaktion); 409-Text nennt den gesendeten Namen.
+- `showTile`/`folderLabel` aus `set-place.spec.ts` nach `web/tests/e2e/helpers/grid.ts` verschoben (helpers/map.ts hat sie nicht) und von beiden Specs genutzt.
+- E2E-Assertion „keine Browser-Anfrage auf `/api/geo/`" nimmt `/api/geo/status` aus (Statusprobe beim Öffnen des Dialogs, kein Nominatim); Such-/Reverse-Aufrufe und Mock-Protokoll werden geprüft.
+- `places.test.ts` (Sortierung, Vitest) zusätzlich; Client sortiert mit `Intl.Collator('de')`, Server nach `name_key`.
+
+Verification (narrow gate): build+docker runtime, `docker build --target test` + vitest (55), lint, check grün; `npx playwright test tests/e2e/favorite-places.spec.ts tests/e2e/set-place.spec.ts` 2/2 grün (e2e-story, ein Lauf). Review stage 1 (default): PASS.
+AC → Test: AC1–AC4 → e2e favorite-places.spec.ts (passed); AC1/AC3 → `TestFavouritePlacesAreOneListThatBothUsersMaintain`, `TestFavouritePlaceRequestsWithBadInput…` (internal/api, Paket grün); AC2/AC3 → vier Tests in `internal/geo/favorites_test.go` (Paket grün, Einzelnamen im Docker-Output nicht sichtbar, Funktionen vorhanden). Kein manual residue.
+Bewusst nicht behoben (Review, gering): 200-Runen-Grenze ohne eigenen Test; 404 bei Rename/Delete lässt veralteten Eintrag bis zum Neuladen stehen; `renaming`/`deleting` können für verschiedene Zeilen gleichzeitig gesetzt sein; POST ohne lat/lon wird als 0,0 akzeptiert; leichte Überschneidung zweier Fehlertests; Umlaut-Reihenfolge Client vs. Server nur ASCII getestet.
+
+tiers: D 3 / hard 0 · review default · cycles 1 · agents 5

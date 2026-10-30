@@ -182,6 +182,7 @@ func serve(args []string) int {
 		Photos: photoList{idxDB},
 		Index:  idxDB,
 		Tags:   &api.TagDeps{App: db, Index: idxDB},
+		Places: db,
 		Geo: geo.New(geo.Options{
 			BaseURL: geoCfg.BaseURL,
 			Contact: geoCfg.Contact,

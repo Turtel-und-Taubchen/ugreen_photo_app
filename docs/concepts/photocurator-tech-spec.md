@@ -240,7 +240,7 @@ täglich gelöscht.
 | GET | `/api/jobs`, `/api/jobs/{id}` | Status, Ergebnis pro Datei |
 | POST | `/api/jobs/{id}/undo` | Rückgängig |
 | GET | `/api/geo/search?q=`, `/api/geo/reverse?lat&lon` | Nominatim-Proxy |
-| GET/POST/DELETE | `/api/places` | Lieblingsorte |
+| GET/POST/PATCH/DELETE | `/api/places`, `/api/places/{id}` | Lieblingsorte (eine Liste für alle Nutzer): Liste, anlegen, umbenennen, löschen |
 | GET | `/api/stats?filter…` | Fortschritt |
 | POST | `/api/scan` | Neu einlesen |
 

@@ -16,3 +16,18 @@ export async function scrollToTile(page: Page, id: number, direction: 'down' | '
 export async function openTile(page: Page, id: number, direction: 'down' | 'up'): Promise<void> {
   await (await scrollToTile(page, id, direction)).click();
 }
+
+const TAGGED = '2024/07/tagged.jpg';
+
+// The month picker lists folders (YYYY/MM), not dates: the fixtures without EXIF date sit in a 2022 group but in their 2024 folder.
+export const folderLabel = (rel: string) => {
+  const [year, month] = rel.split('/');
+  return new Date(`${year}-${month}-15T12:00:00`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+};
+
+/** Jumps to the photo's folder and returns its tile; the two files without EXIF date are dated by mtime (2022) and sit at the very end of the grid. */
+export async function showTile(page: Page, id: number, rel: string): Promise<Locator> {
+  await page.getByRole('button', { name: 'Zeitraum' }).click();
+  await page.getByRole('button', { name: folderLabel(rel), exact: true }).click();
+  return scrollToTile(page, id, rel === TAGGED ? 'down' : 'up');
+}

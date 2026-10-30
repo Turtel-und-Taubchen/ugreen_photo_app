@@ -62,6 +62,8 @@ var migrations = []string{
 	`ALTER TABLE jobs ADD COLUMN undo_of INTEGER REFERENCES jobs(id);
 	CREATE UNIQUE INDEX jobs_undo_of ON jobs(undo_of) WHERE undo_of IS NOT NULL`,
 	`CREATE TABLE recent_tags (path TEXT PRIMARY KEY, seq INTEGER NOT NULL)`,
+	// AUTOINCREMENT: ids of deleted favourites are never handed out again.
+	`CREATE TABLE favorite_places (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, lat REAL NOT NULL, lon REAL NOT NULL, sublocation TEXT NOT NULL DEFAULT '', city TEXT NOT NULL DEFAULT '', state TEXT NOT NULL DEFAULT '', country TEXT NOT NULL DEFAULT '', country_code TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.

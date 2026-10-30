@@ -32,6 +32,8 @@ type LibraryDeps struct {
 	Tags *TagDeps
 	// Geo serves /api/geo; nil leaves the routes unregistered.
 	Geo Geocoder
+	// Places serves /api/places; nil leaves the routes unregistered.
+	Places *sql.DB
 	// Writes runs the metadata write jobs.
 	Writes *writer.Queue
 }

@@ -1,7 +1,7 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { compose, NOMINATIM_MOCK_PORT } from './compose';
 import { users } from './helpers/auth';
-import { scrollToTile } from './helpers/grid';
+import { showTile } from './helpers/grid';
 import { waitForLibrary } from './helpers/library';
 import { stubTiles, watchLeaflet } from './helpers/map';
 import { HEADERS, idsByPath } from './helpers/photos';
@@ -16,19 +16,6 @@ const TAGGED = '2024/07/tagged.jpg';
 interface Job {
   id: number;
   status: string;
-}
-
-// The month picker lists folders (YYYY/MM), not dates: the fixtures without EXIF date sit in a 2022 group but in their 2024 folder.
-const folderLabel = (rel: string) => {
-  const [year, month] = rel.split('/');
-  return new Date(`${year}-${month}-15T12:00:00`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-};
-
-async function showTile(page: Page, id: number, rel: string) {
-  await page.getByRole('button', { name: 'Zeitraum' }).click();
-  await page.getByRole('button', { name: folderLabel(rel), exact: true }).click();
-  // The two files without EXIF date are dated by mtime (2022) and sit at the very end of the grid.
-  return scrollToTile(page, id, rel === TAGGED ? 'down' : 'up');
 }
 
 const mockLogLength = async (): Promise<number> => ((await (await fetch(`${MOCK}/__mock/requests`)).json()) as unknown[]).length;

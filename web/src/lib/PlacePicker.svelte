@@ -12,6 +12,7 @@
 <script lang="ts">
   import { errorMessage } from './api';
   import PlaceMap from './map/PlaceMap.svelte';
+  import { createFavorite, deleteFavorite, listFavorites, renameFavorite, sortFavorites, type Favorite } from './places';
   import { emptyParts, parseCoordinate, reversePlace, searchPlaces, type Place } from './geo';
 
   let {
@@ -29,6 +30,33 @@
   let name = $state('');
   let parts = $state<PlaceParts>({ ...emptyParts });
 
+  let favorites = $state<Favorite[]>([]);
+  let favoritesLoaded = $state(false);
+  let favoritesError = $state('');
+  let favoriteError = $state('');
+  let renaming = $state<number | null>(null);
+  let renameValue = $state('');
+  let deleting = $state<number | null>(null);
+  let saving = $state(false);
+  let saveName = $state('');
+
+  $effect(() => {
+    let alive = true;
+    listFavorites().then(
+      (list) => {
+        if (!alive) return;
+        favorites = list;
+        favoritesLoaded = true;
+      },
+      (e) => {
+        if (alive) favoritesError = errorMessage(e);
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  });
+
   const point = $derived.by(() => {
     const la = parseCoordinate(lat);
     const lo = parseCoordinate(lon);
@@ -37,6 +65,58 @@
 
   function emit() {
     onchange?.(point ? { ...point, name, parts: { ...parts } } : null);
+  }
+
+  async function favoriteAction(run: () => Promise<void>): Promise<boolean> {
+    favoriteError = '';
+    try {
+      await run();
+      return true;
+    } catch (e) {
+      favoriteError = errorMessage(e);
+      return false;
+    }
+  }
+
+  function startRename(f: Favorite) {
+    renaming = f.id;
+    renameValue = f.name;
+    deleting = null;
+    favoriteError = '';
+  }
+
+  async function commitRename(event: SubmitEvent, f: Favorite) {
+    event.preventDefault();
+    const ok = await favoriteAction(async () => {
+      const saved = await renameFavorite(f.id, renameValue);
+      favorites = sortFavorites(favorites.map((x) => (x.id === saved.id ? saved : x)));
+    });
+    if (ok) renaming = null;
+  }
+
+  async function confirmDelete(f: Favorite) {
+    const ok = await favoriteAction(async () => {
+      await deleteFavorite(f.id);
+      favorites = favorites.filter((x) => x.id !== f.id);
+    });
+    if (ok) deleting = null;
+  }
+
+  function startSave() {
+    saveName = name;
+    saving = true;
+    favoriteError = '';
+  }
+
+  async function commitSave(event: SubmitEvent) {
+    event.preventDefault();
+    if (!point) return;
+    const target = point;
+    const ok = await favoriteAction(async () => {
+      const saved = await createFavorite({ name: saveName, lat: target.lat, lon: target.lon, parts: { ...parts } });
+      favorites = sortFavorites([...favorites, saved]);
+    });
+    if (ok) saving = false;
   }
 
   async function search(event: SubmitEvent) {
@@ -91,6 +171,47 @@
 </script>
 
 <div class="picker">
+  <section aria-labelledby="favorites-title">
+    <h3 id="favorites-title">Lieblingsorte</h3>
+    {#if favoritesError}
+      <p role="alert">{favoritesError}</p>
+    {/if}
+    {#if favoriteError}
+      <p role="alert">{favoriteError}</p>
+    {/if}
+    {#if favoritesLoaded && favorites.length === 0}
+      <p>Noch keine Lieblingsorte.</p>
+    {/if}
+    <ul role="list" class="favorites" aria-label="Lieblingsorte">
+      {#each favorites as f (f.id)}
+        <li>
+          {#if renaming === f.id}
+            <form class="field" onsubmit={(e) => commitRename(e, f)}>
+              <label class="sr-label" for="favorite-rename-{f.id}">Neuer Name</label>
+              <input id="favorite-rename-{f.id}" type="text" bind:value={renameValue} autocomplete="off" />
+              <button type="submit">Speichern</button>
+              <button type="button" onclick={() => (renaming = null)}>Abbrechen</button>
+            </form>
+          {:else}
+            <div class="favorite">
+              <button type="button" class="hit" onclick={() => apply({ lat: f.lat, lon: f.lon, name: f.name, parts: f.parts })}>
+                <strong>{f.name}</strong>
+                {#if f.parts.city}<small>{f.parts.city}</small>{/if}
+              </button>
+              {#if deleting === f.id}
+                <button type="button" aria-label="„{f.name}“ endgültig löschen" onclick={() => confirmDelete(f)}>Wirklich löschen</button>
+                <button type="button" onclick={() => (deleting = null)}>Abbrechen</button>
+              {:else}
+                <button type="button" aria-label="„{f.name}“ umbenennen" onclick={() => startRename(f)}>Umbenennen</button>
+                <button type="button" aria-label="„{f.name}“ löschen" onclick={() => { deleting = f.id; favoriteError = ''; }}>Löschen</button>
+              {/if}
+            </div>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+
   <form onsubmit={search}>
     <label for="place-query">Ort suchen</label>
     <div class="field">
@@ -140,6 +261,16 @@
       <dt>State</dt><dd>{parts.state}</dd>
       <dt>Country</dt><dd>{parts.country}</dd>
     </dl>
+    {#if saving}
+      <form class="field" onsubmit={commitSave}>
+        <label class="sr-label" for="favorite-name">Name des Lieblingsorts</label>
+        <input id="favorite-name" type="text" bind:value={saveName} autocomplete="off" />
+        <button type="submit">Speichern</button>
+        <button type="button" onclick={() => (saving = false)}>Abbrechen</button>
+      </form>
+    {:else}
+      <button type="button" onclick={startSave} disabled={!point}>Als Lieblingsort speichern</button>
+    {/if}
     {#if point}
       <p data-testid="chosen-summary">{name || 'Ohne Namen'} ({point.lat}, {point.lon})</p>
     {/if}
@@ -155,6 +286,10 @@
   label { display: block; margin: 0.5rem 0 0.25rem; }
   .results { list-style: none; margin: 0.5rem 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
   .hit { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; }
+  .favorites { list-style: none; margin: 0.5rem 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+  .favorite { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+  .favorite .hit { flex: 1 1 10rem; width: auto; }
+  .sr-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.75rem; margin: 0.75rem 0; }
   dd { margin: 0; }
 </style>

@@ -48,6 +48,9 @@ func NewHandler(static fs.FS, deps AuthDeps, lib LibraryDeps) http.Handler {
 	if lib.Geo != nil {
 		registerGeo(mux, lib.Geo)
 	}
+	if lib.Places != nil {
+		registerPlaces(mux, lib.Places)
+	}
 	// Unknown API paths must never fall through to the SPA's index.html.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})

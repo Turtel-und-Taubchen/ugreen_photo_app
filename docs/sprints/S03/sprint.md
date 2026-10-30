@@ -22,7 +22,7 @@ oder Lieblingsort; Taggen wird durch zuletzt verwendete Tags und Autovervollstä
 - [x] 012 — Tags im Batch zuweisen und entfernen
 - [x] 013 — Zuletzt verwendete Tags und Autovervollständigung
 - [x] 015 — Standort im Batch setzen — per Suche oder Karte
-- [ ] 016 — Lieblingsorte speichern und wiederverwenden
+- [x] 016 — Lieblingsorte speichern und wiederverwenden
 
 ## Notes
 

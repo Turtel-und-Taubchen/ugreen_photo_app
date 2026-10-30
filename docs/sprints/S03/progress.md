@@ -104,3 +104,15 @@
 - 2026-10-30 23:06:01 · 015 · D7 review fixes · done
 - 2026-10-30 23:06:01 · 015 · verify · started
 - 2026-10-30 23:18:07 · 015 · story · done
+- 2026-10-30 23:18:18 · 016 · build · started
+- 2026-10-30 23:18:37 · 016 · D1 favorite_places storage · started
+- 2026-10-30 23:24:39 · 016 · D1 favorite_places storage · done
+- 2026-10-30 23:24:39 · 016 · D2 API places · started
+- 2026-10-30 23:30:57 · 016 · D2 API places · done
+- 2026-10-30 23:30:57 · 016 · D3 UI + e2e · started
+- 2026-10-30 23:42:49 · 016 · D3 UI + e2e · done
+- 2026-10-30 23:42:49 · 016 · verify · started
+- 2026-10-30 23:50:39 · 016 · verify · done
+- 2026-10-30 23:50:39 · 016 · review 1 · started
+- 2026-10-30 23:51:34 · 016 · review 1 · done
+- 2026-10-30 23:51:34 · 016 · story · done
