@@ -121,3 +121,5 @@
 - 2026-10-30 23:59:28 · gate · attribution · started
 - 2026-10-31 00:02:06 · gate · attribution · done (places flaky; smoke→009; write-jobs→012)
 - 2026-10-31 00:02:06 · gate · fix 009 smoke · started
+- 2026-10-31 00:04:08 · gate · fix 009 smoke · done
+- 2026-10-31 00:04:08 · gate · fix 012 write-jobs · started

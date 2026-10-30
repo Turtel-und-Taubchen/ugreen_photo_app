@@ -211,3 +211,5 @@ Commit: `012: batch tag assign/remove — fresh-read tag args, skip-before-backu
 AC → Test (alle gelaufen und grün; die `tagwrite_test`-Namen sind Subtests von `TestTagArgs`): AC1 e2e batch-tagging + writer „tagging a selection…"; AC2 e2e + api „selection tags lists…" + metadata „removing a tag clears it…"; AC3 writer „removing Anlass/Geburtstag…" + metadata „assigning a hierarchical…", „removing a path keeps a parent…"; AC4 writer „a file that already carries the tag is skipped…"; AC5 api „assigning a new tag creates it…" + e2e; AC6 writer „a tag job resolves single, range, day and month…" + Fünf-Formate-Test. Manual residue: keine.
 
 tiers: D 4 / hard 1 · review default · cycles 1 · agents 7
+
+- Regression gate S03: write-jobs e2e expected a write to tagged.jpg that 012 now (correctly) skips; spec now writes a tag no fixture has (commit "012: fix regression from sprint gate").
