@@ -146,6 +146,13 @@ func registerJobs(mux *http.ServeMux, q *writer.Queue, idx *sql.DB, td *TagDeps)
 			logInternal(w, "create job", err)
 			return
 		}
+		// The job is queued and will run whatever happens here, so a failure only costs the
+		// recent-tags hint and is not reported to the client.
+		if req.Action == actionTagsAdd {
+			if err := tags.TouchRecent(r.Context(), td.App, paths); err != nil {
+				slog.Error("touch recent tags", "err", err)
+			}
+		}
 		writeJSON(w, http.StatusAccepted, map[string]int64{"id": id})
 	})
 

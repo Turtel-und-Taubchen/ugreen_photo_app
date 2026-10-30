@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, ApiError } from '../lib/api';
+  import { api, errorMessage } from '../lib/api';
 
   let username = $state('');
   let password = $state('');
@@ -14,7 +14,7 @@
       await api('/api/login', { method: 'POST', body: { username, password }, allowUnauthorized: true });
       location.assign('/');
     } catch (e) {
-      error = e instanceof ApiError && e.body?.error ? e.body.error : 'Anmeldung fehlgeschlagen.';
+      error = errorMessage(e, 'Anmeldung fehlgeschlagen.');
       busy = false;
     }
   }

@@ -22,8 +22,14 @@ export async function fetchTags(): Promise<TagNode[]> {
   return sortTree(res.tags ?? []);
 }
 
-export async function createTag(path: string): Promise<void> {
-  await api('/api/tags', { method: 'POST', body: { path } });
+/** Resolves to the canonical path the server stored. */
+export async function createTag(path: string): Promise<string> {
+  return (await api<{ path: string }>('/api/tags', { method: 'POST', body: { path } })).path;
+}
+
+/** Most recently used tag paths, newest first. */
+export async function fetchRecentTags(): Promise<string[]> {
+  return (await api<{ tags: string[] | null }>('/api/tags/recent')).tags ?? [];
 }
 
 export async function deleteTag(path: string): Promise<void> {

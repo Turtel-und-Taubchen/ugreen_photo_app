@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { api, ApiError } from './api';
+import { api, ApiError, errorMessage } from './api';
 
 describe('api', () => {
   it('sends the X-Requested-With header on every request', async () => {
@@ -26,5 +26,11 @@ describe('api', () => {
       api('/api/login', { fetchFn, allowUnauthorized: true, redirect: (p) => paths.push(p) }),
     ).rejects.toMatchObject({ body: { error: 'x' } });
     expect(paths).toEqual([]);
+  });
+
+  it('uses the server message or the given fallback as error text', () => {
+    expect(errorMessage(new ApiError(400, { error: 'kaputt' }), 'x')).toBe('kaputt');
+    expect(errorMessage(new ApiError(500, null), 'x')).toBe('x');
+    expect(errorMessage(new Error('boom'))).toBe('Anfrage fehlgeschlagen');
   });
 });

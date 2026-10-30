@@ -61,6 +61,7 @@ var migrations = []string{
 	// The unique index lets the database decide which of two quick undos of one job wins.
 	`ALTER TABLE jobs ADD COLUMN undo_of INTEGER REFERENCES jobs(id);
 	CREATE UNIQUE INDEX jobs_undo_of ON jobs(undo_of) WHERE undo_of IS NOT NULL`,
+	`CREATE TABLE recent_tags (path TEXT PRIMARY KEY, seq INTEGER NOT NULL)`,
 }
 
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.

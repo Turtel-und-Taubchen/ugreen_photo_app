@@ -1,7 +1,7 @@
 ---
 id: 013
 title: Zuletzt verwendete Tags und Autovervollständigung
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E3 Tags & Kategorien
 estimate: 3
@@ -15,19 +15,19 @@ längeren Namen reichen ein paar Buchstaben — auch am Handy.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Der Tag-Dialog zeigt die zuletzt verwendeten Tags (Platzhalter: 8) als
+- [x] **AC1** — Der Tag-Dialog zeigt die zuletzt verwendeten Tags (Platzhalter: 8) als
   antippbare Chips, der zuletzt verwendete zuerst.
-- [ ] **AC2** — Die Eingabe schlägt ab dem ersten Zeichen passende bekannte Tags vor —
+- [x] **AC2** — Die Eingabe schlägt ab dem ersten Zeichen passende bekannte Tags vor —
   Teilstring auch innerhalb des Pfades, unabhängig von Groß-/Kleinschreibung und mit Umlauten
   (z. B. „öst" findet `Reise/Österreich`).
-- [ ] **AC3** — Bei 1.000 bekannten Tags erscheinen die Vorschläge ohne Wartezeit: Sie entstehen
+- [x] **AC3** — Bei 1.000 bekannten Tags erscheinen die Vorschläge ohne Wartezeit: Sie entstehen
   im Browser aus der beim Öffnen des Dialogs einmal geladenen Tag-Liste, Tippen löst keine
   Server-Anfrage aus, und ein Tastendruck normalisiert nur die Eingabe, nicht die 1.000 Tags
   (Nachweis per Zählung im Test, nicht per Stoppuhr). *(Refine: umformuliert von „innerhalb von
   100 ms (Messung im Test)" — siehe Decisions.)*
-- [ ] **AC4** — Enter oder Tippen auf „neu anlegen" übernimmt einen noch unbekannten Begriff als
+- [x] **AC4** — Enter oder Tippen auf „neu anlegen" übernimmt einen noch unbekannten Begriff als
   neuen Tag; die Validierung aus Story 011 gilt.
-- [ ] **AC5** — Bei 390 px Breite sind Chips und Vorschläge ohne Scrollen der Seite erreichbar
+- [x] **AC5** — Bei 390 px Breite sind Chips und Vorschläge ohne Scrollen der Seite erreichbar
   und mindestens 44 px hoch.
 
 ## Open Questions
@@ -72,7 +72,7 @@ Reihenfolge D1 → D2 → D3 → D4 (D3 ist unabhängig von D1/D2 und darf paral
 
 ## Deliverables
 
-- [ ] **D1 — `recent_tags` in `app.db` mit Erfassen und Auflisten.** Dateien:
+- [x] **D1 — `recent_tags` in `app.db` mit Erfassen und Auflisten.** Dateien:
   `internal/store/appdb.go` (Migration als nächsten Eintrag an `migrations` **anhängen**, nie einen
   bestehenden ändern), neu `internal/tags/recent.go`, neu `internal/tags/recent_test.go`. Vorbild
   für DB-Zugriff und Tests: `internal/tags/definitions.go` / `definitions_test.go`.
@@ -91,7 +91,7 @@ Reihenfolge D1 → D2 → D3 → D4 (D3 ist unabhängig von D1/D2 und darf paral
     ein Aufruf mit `[A, B]` → `B` vor `A`. Der bestehende Migrationstest in
     `internal/store/appdb_test.go` bleibt grün.
 
-- [ ] **D2 — `GET /api/tags/recent` und Erfassen beim Zuweisen-Job.** Dateien:
+- [x] **D2 — `GET /api/tags/recent` und Erfassen beim Zuweisen-Job.** Dateien:
   `internal/api/tags.go` (Route in `registerTags`, nutzt `TagDeps.App`), `internal/api/tags_test.go`,
   der Handler, der in Story 012 den Job „Tags zuweisen" annimmt (`POST /api/jobs`; Datei und
   Aktionsname stehen in 012 unter `## Deliverables`/`## Done`, vermutlich `internal/api/jobs.go`),
@@ -110,7 +110,7 @@ Reihenfolge D1 → D2 → D3 → D4 (D3 ist unabhängig von D1/D2 und darf paral
     `GET /api/tags/recent` `["Wir zwei", "Reise/Österreich"]`; ein Entfernen-Job mit einem
     anderen Tag ändert die Liste nicht.
 
-- [ ] **D3 — Vorschlagslogik im Client und Fehler-Helfer.** Dateien: neu
+- [x] **D3 — Vorschlagslogik im Client und Fehler-Helfer.** Dateien: neu
   `web/src/lib/tagSuggest.ts`, neu `web/src/lib/tagSuggest.test.ts`, `web/src/lib/tags.ts`
   (`fetchRecentTags()` ergänzen, `createTag` erweitern; Typ `TagNode` und `fetchTags()` dort
   wiederverwenden), `web/src/lib/api.ts`, `web/src/routes/Tags.svelte`,
@@ -145,7 +145,7 @@ Reihenfolge D1 → D2 → D3 → D4 (D3 ist unabhängig von D1/D2 und darf paral
     korrekt. (Der Spy auf dem Prototyp fängt auch Inline-Aufrufe — ein Zähler nur auf einer
     eigenen Hilfsfunktion wäre umgehbar.) Kein Zeitbudget im Test.
 
-- [ ] **D4 — `TagPicker` im Zuweisen-Dialog und E2E-Flow.** Dateien: neu
+- [x] **D4 — `TagPicker` im Zuweisen-Dialog und E2E-Flow.** Dateien: neu
   `web/src/lib/TagPicker.svelte`, der Zuweisen-Dialog aus Story 012 (Datei siehe 012
   `## Deliverables`/`## Done`; dessen freies Tag-Eingabefeld wird durch `TagPicker` ersetzt), neu
   `web/tests/e2e/tag-quick-select.spec.ts`. Nutzt aus `web/src/lib/tags.ts` `fetchTags`,
@@ -214,3 +214,21 @@ Vitest- und Playwright-Tests tragen ihn wörtlich.
 Abdeckung: AC1 → D1+D2+D4 · AC2 → D3+D4 · AC3 → D3+D4 · AC4 → D4 (+011) · AC5 → D4.
 
 ## Done
+
+Zuletzt verwendete Tags (global, serverseitig beim Zuweisen-Job erfasst) und Autovervollständigung im Zuweisen-Dialog: `recent_tags`, `GET /api/tags/recent`, clientseitige Vorschlagslogik, `TagPicker` ersetzt `TagListInput`.
+
+Change type: feat
+
+Commit: `013: recent tags + tag autocomplete — recent_tags store/API, client-side suggest, TagPicker in assign dialog + e2e`
+
+Verification (narrow gate; `test-story: none` → full `test`): build, `docker build --target test` + vitest (54), lint, `svelte-check` grün; e2e `npx playwright test tests/e2e/tag-quick-select.spec.ts` grün. Review 1 (default): UNCLEAR → Test-Lücke (Segmentanfang-Reihenfolge war tautologisch) behoben, Unit-Lauf grün. Voller Gate offen (Sprint).
+AC → Test: AC1 → recent_test.go, tags_test.go (Go-Pakete `ok`, Einzelnamen ohne `-v` nicht gelistet), e2e · AC2/AC3 → tagSuggest.test.ts, e2e (Request-Zähler 0) · AC4 → e2e + path_test.go (011) · AC5 → e2e. Kein manual residue.
+
+Decisions:
+- 012 hatte `errorMessage` schon zusammengeführt; D3 ergänzte nur den `fallback`-Parameter und Login.svelte.
+- `TagListInput.svelte` gelöscht (nur der Dialog nutzte ihn); `batch-tagging.spec.ts` auf die Combobox umgestellt, nicht abgeschwächt.
+- Neu angelegter Tag kommt flach in den Index (Eltern erst nach erneutem Öffnen vorgeschlagen); nicht geändert.
+- Offen: das e2e lässt zugewiesene Tags (`Wir zwei <ts>`, `Reise/Österreich`) an `tagged.jpg` zurück (Löschen von Tags mit Fotos wird abgelehnt) — der Sprint-Gate zeigt, ob andere Flows darüber stolpern. Nicht verifiziert: Pfeiltasten/Escape/Enter-auf-bekannten-Tag im UI (nur Unit-Logik).
+- e2e-Image: der Stack nutzt `photocurator:dev`; vor e2e neu bauen (`build`-Befehl).
+
+tiers: D 4 / hard 0 · review default · cycles 1 · agents 6

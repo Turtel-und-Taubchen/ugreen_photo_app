@@ -76,6 +76,47 @@ func findTag(nodes []tagNode, path string) *tagNode {
 	return nil
 }
 
+func recentTags(t *testing.T, s *testServer, sess reqOpt) []string {
+	t.Helper()
+	rec := s.do(http.MethodGet, "/api/tags/recent", "", sess)
+	wantJSONStatus(t, "recent tags", rec, http.StatusOK)
+	var got struct {
+		Tags []string `json:"tags"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Tags == nil {
+		t.Fatalf("tags must be an array, body %s", rec.Body.String())
+	}
+	return got.Tags
+}
+
+func TestAssigningTagsMakesThemRecentForBothUsers(t *testing.T) {
+	s, _ := jobsServer(t)
+	anna := s.signedIn(t, "anna")
+	ben := s.signedIn(t, "ben")
+	wantJSONStatus(t, "no session", s.do(http.MethodGet, "/api/tags/recent", ""), http.StatusUnauthorized)
+	if got := recentTags(t, s, ben); len(got) != 0 {
+		t.Fatalf("recent before any assignment = %v, want empty", got)
+	}
+
+	rec := s.do(http.MethodPost, "/api/jobs",
+		`{"selection":{"include_ids":[1]},"action":"tags.add","payload":{"tags":["Reise/Österreich","Wir zwei"]}}`, anna, withXRW)
+	wantJSONStatus(t, "assign", rec, http.StatusAccepted)
+	want := []string{"Wir zwei", "Reise/Österreich"}
+	if got := recentTags(t, s, ben); !reflect.DeepEqual(got, want) {
+		t.Fatalf("recent for ben = %v, want %v", got, want)
+	}
+
+	rec = s.do(http.MethodPost, "/api/jobs",
+		`{"selection":{"include_ids":[1]},"action":"tags.remove","payload":{"tags":["Anlass/Geburtstag"]}}`, anna, withXRW)
+	wantJSONStatus(t, "remove", rec, http.StatusAccepted)
+	if got := recentTags(t, s, ben); !reflect.DeepEqual(got, want) {
+		t.Errorf("recent after a remove job = %v, want unchanged %v", got, want)
+	}
+}
+
 func TestDeletingATagThatPhotosCarryIsRefused(t *testing.T) {
 	idx := emptyIndex(t)
 	if _, err := idx.Exec(`INSERT INTO photos (id, rel_path, folder, media_type, format, size, mtime_ns, taken_at, taken_source, scanned_at)

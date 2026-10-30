@@ -69,8 +69,9 @@ test('assigning and removing tags on a selection shows in the detail view and in
     await page.getByRole('button', { name: 'Tags zuweisen' }).click();
     const assign = page.getByRole('dialog', { name: 'Tags zuweisen' });
     for (const tag of [BATCH, NEU]) {
-      await assign.getByLabel('Tag', { exact: true }).fill(tag);
-      await assign.getByRole('button', { name: 'Hinzufügen' }).click();
+      await assign.getByRole('combobox', { name: 'Tag suchen oder neu anlegen' }).fill(tag);
+      await page.keyboard.press('Enter');
+      await expect(assign.getByRole('button', { name: `${tag} entfernen` })).toBeVisible();
     }
     await assign.getByRole('button', { name: 'Zuweisen' }).click();
     await expect(assign).toBeHidden();

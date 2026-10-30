@@ -39,6 +39,18 @@ func registerTags(mux *http.ServeMux, d *TagDeps) {
 		writeJSON(w, http.StatusOK, map[string]any{"tags": tree})
 	})
 
+	mux.HandleFunc("GET /api/tags/recent", func(w http.ResponseWriter, r *http.Request) {
+		recent, err := tags.ListRecent(r.Context(), d.App)
+		if err != nil {
+			tagsFailed(w, "list recent tags", err)
+			return
+		}
+		if recent == nil {
+			recent = []string{} // never null: the UI expects an array
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"tags": recent})
+	})
+
 	mux.HandleFunc("POST /api/tags", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxTagBody)
 		var body struct {

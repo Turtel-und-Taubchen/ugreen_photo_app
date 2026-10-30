@@ -3,7 +3,7 @@
   import { createJob } from './jobs';
   import { toRequest } from './selection';
   import { selection } from './selectionStore.svelte';
-  import TagListInput from './TagListInput.svelte';
+  import TagPicker from './TagPicker.svelte';
 
   let { onClose }: { onClose: () => void } = $props();
 
@@ -34,7 +34,7 @@
 
 <dialog use:modal aria-labelledby="assign-title" onclose={onClose}>
   <h2 id="assign-title">Tags zuweisen</h2>
-  <TagListInput bind:tags />
+  <TagPicker bind:selected={tags} />
   {#if error}
     <p role="alert">{error}</p>
   {/if}
