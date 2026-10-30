@@ -218,7 +218,13 @@ func TestOnlyARequestWithTheCurrentKeyIsCacheableForever(t *testing.T) {
 
 type fakeLister struct{ rows []library.Photo }
 
-func (f fakeLister) List(after *library.ListCursor, limit int) ([]library.Photo, error) {
+func (fakeLister) Groups(context.Context) (library.Groups, error) { return library.Groups{}, nil }
+
+func (fakeLister) Detail(context.Context, int64) (library.Detail, bool, error) {
+	return library.Detail{}, false, nil
+}
+
+func (f fakeLister) List(_ context.Context, _ string, after *library.ListCursor, limit int) ([]library.Photo, error) {
 	var out []library.Photo
 	for _, p := range f.rows {
 		if after != nil {

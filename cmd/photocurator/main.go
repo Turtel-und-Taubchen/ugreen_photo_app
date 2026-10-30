@@ -172,8 +172,19 @@ func thumbEntry(p library.Photo) thumbs.Entry {
 
 type photoList struct{ db *sql.DB }
 
-func (l photoList) List(after *library.ListCursor, limit int) ([]library.Photo, error) {
+func (l photoList) List(ctx context.Context, month string, after *library.ListCursor, limit int) ([]library.Photo, error) {
+	if month != "" {
+		return library.ListMonth(ctx, l.db, month, after, limit)
+	}
 	return library.ListPhotos(l.db, after, limit)
+}
+
+func (l photoList) Groups(ctx context.Context) (library.Groups, error) {
+	return library.GroupCounts(ctx, l.db)
+}
+
+func (l photoList) Detail(ctx context.Context, id int64) (library.Detail, bool, error) {
+	return library.PhotoDetail(ctx, l.db, id)
 }
 
 // checkStart (paths, users file, scan settings) must pass before any port is opened.

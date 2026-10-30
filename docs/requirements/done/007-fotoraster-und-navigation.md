@@ -1,7 +1,7 @@
 ---
 id: 007
 title: Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E1 Index & Ansicht
 estimate: 5
@@ -17,18 +17,18 @@ Betrachter-Galerie (das bleibt UGREEN Fotos).
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Die Startansicht zeigt alle Fotos und Videos nach Aufnahmedatum absteigend,
+- [x] **AC1** — Die Startansicht zeigt alle Fotos und Videos nach Aufnahmedatum absteigend,
   gruppiert nach Monat und Tag, jeweils mit Überschrift und Anzahl.
-- [ ] **AC2** — Eine Navigation nach Jahr/Monat (aus der Ordnerstruktur JJJJ/MM) springt zur
+- [x] **AC2** — Eine Navigation nach Jahr/Monat (aus der Ordnerstruktur JJJJ/MM) springt zur
   entsprechenden Gruppe.
-- [ ] **AC3** — Bei 5.000 Einträgen in der Fixture-Datenbank enthält die Seite zu jedem Zeitpunkt
+- [x] **AC3** — Bei 5.000 Einträgen in der Fixture-Datenbank enthält die Seite zu jedem Zeitpunkt
   höchstens eine begrenzte Zahl Bildelemente (Platzhalter: 300); beim Scrollen werden weitere
   Einträge nachgeladen.
-- [ ] **AC4** — Ein Klick bzw. Tippen außerhalb des Auswahlmodus öffnet eine Detailansicht mit
+- [x] **AC4** — Ein Klick bzw. Tippen außerhalb des Auswahlmodus öffnet eine Detailansicht mit
   großer Vorschau, Aufnahmedatum (mit Hinweis, wenn es nur aus Dateiname/Änderungszeit stammt),
   Tags, Ortsname, Prüfstatus und Dateipfad.
-- [ ] **AC5** — In der Detailansicht wechseln Pfeiltasten bzw. Wischen zum vorigen/nächsten Foto.
-- [ ] **AC6** — Bei 390 px Breite zeigt das Raster mindestens 3 Spalten ohne horizontales
+- [x] **AC5** — In der Detailansicht wechseln Pfeiltasten bzw. Wischen zum vorigen/nächsten Foto.
+- [x] **AC6** — Bei 390 px Breite zeigt das Raster mindestens 3 Spalten ohne horizontales
   Scrollen; bei 1440 px Breite mindestens 6 Spalten.
 
 ## Open Questions
@@ -245,3 +245,19 @@ AC2 D1+D2+D3 · AC3 D1+D2+D3 · AC4 D1+D4 · AC5 D1+D4 · AC6 D2+D3 — jedes Kr
 Deliverable und Test, keine manual residue.
 
 ## Done
+
+Raster nach Monat/Tag (virtualisiert, max. 300 Kacheln im DOM), Zeitraum-Navigation aus `JJJJ/MM`, Detailansicht als Überlagerung mit Blättern per Pfeiltasten/Wischen; Lese-API `/api/photos/groups`, `/api/photos` (erweitert um `month`), `/api/photos/{id}`.
+
+**Commit message:** `007: Fotoraster mit Gruppierung, Monatsnavigation und Detailansicht + Lese-API`
+
+**Verification (narrow gate):** `npm --prefix web run build` + runtime-Image, `docker build --target test .` + `npm --prefix web run test` (33 Vitest), `docker build --target lint .` + `web run lint`, `web run check`: grün. e2e (`e2e-story`, `npx playwright test library-grid.spec.ts photo-detail.spec.ts`): 2/2 grün; nach Review-Fix `thumbnails.spec.ts` + `photo-detail.spec.ts` grün (Fix-Agent). Full gate (`e2e-all`/Gesamtlauf) steht aus (Sprint).
+AC → Test: AC1/2/3/6 → e2e library-grid + query_test/layout.test/loader.test; AC4/5 → e2e photo-detail + query_test; alle ran + passed, keine manual residue.
+
+**Decisions:**
+- Items von `/api/photos` bleiben camelCase (006-Vertrag), Groups/Detail snake_case wie spezifiziert; Undatierte Dateien zählen in `total`, aber in keinem Monat; im Detail-Blättern gelten sie als älteste.
+- `PreviewList.svelte` entfernt; `AppHeader` trägt h1 + Version; `ScanStatus` bekam `onStatus` für Neuladen nach Scan.
+- Bulk-Fixture startet bei WA1001 (keine Kollision mit `IMG-20240812-WA0001.jpg`), Fixture-mtime 2022-06; `library-scan.spec` erwartet 5010 Dateien.
+- Review-Befund: `thumbnails.spec.ts` war auf API-Ebene abgeschwächt — Browser-Test (loaded/Video-Icon/failed/Cache-Reuse über das Raster) wiederhergestellt, Helfer `helpers/grid.ts`; Tie-Test für Nachbarn ergänzt.
+- Bewusst offen: Neighbour-SQL nutzt `COALESCE(taken_at,'')` (kein Index, ok bei 5.000); neuer Thumbnail-Browser-Test dauert ~4,7 min (Single-Worker-Render der Fixtures); Detail-Tag-Assertion prüft nur „Geburtstag".
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 7

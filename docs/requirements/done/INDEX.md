@@ -11,3 +11,4 @@ second roadmap.
 - 004 — Einfache Anmeldung für zwei Nutzer · S01 · Argon2id-Login mit Sessions, Limiter, Default-deny und CSRF-Schutz, Login-UI und E2E-Flow
 - 005 — Bibliotheks-Index aus den Dateien in Sortiert · S02 · Scanner + index.db aus den Dateien, Scheduler, /api/scan, Scan-Anzeige mit E2E
 - 006 — Thumbnails mit Cache für Fotos und Videos · S02 · WebP-Thumbnails per vips/ffmpeg mit Prioritäts-Queue, immutable Cache-Header und Vorschaukacheln.
+- 007 — Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht · S02 · virtualisiertes Raster nach Monat/Tag, Zeitraum-Navigation, Detailansicht mit Blättern und Lese-API

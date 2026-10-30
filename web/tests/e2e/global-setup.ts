@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compose, ROOT_FILE } from './compose';
+import { createBulkLibrary } from './helpers/bulk-library';
 
 const LIBRARY = fileURLToPath(new URL('../../../testdata/library', import.meta.url));
 
@@ -13,6 +14,7 @@ export default async function globalSetup(): Promise<void> {
   await fs.writeFile(ROOT_FILE, tmp);
   compose(['down', '-v']);
   await fs.cp(LIBRARY, path.join(tmp, 'photos'), { recursive: true });
+  await createBulkLibrary(path.join(tmp, 'photos'));
   await fs.mkdir(path.join(tmp, 'data'));
   await fs.mkdir(path.join(tmp, 'backup'));
   // The app refuses to start unless all three mounts are writable for PUID:PGID; where the

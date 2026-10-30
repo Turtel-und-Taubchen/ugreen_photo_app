@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { login, users } from './helpers/auth';
+import { EXPECTED_TOTAL } from './helpers/bulk-library';
 
 interface Scan {
   state: string;
@@ -9,9 +10,12 @@ interface Scan {
 }
 
 test('the library is read at start and on demand, unreadable files are flagged', async ({ page }) => {
+  test.setTimeout(300_000);
+  const settle = { timeout: 240_000 };
+  const filesText = `${EXPECTED_TOTAL} Dateien`;
   await login(page, users.anna);
   const status = page.getByRole('status');
-  await expect(status).toContainText('10 Dateien');
+  await expect(status).toContainText(filesText, settle);
 
   const unreadable = page.getByRole('listitem').filter({ hasText: '2024/08/defekt.jpg' });
   await expect(unreadable).toContainText('nicht lesbar');
@@ -19,7 +23,7 @@ test('the library is read at start and on demand, unreadable files are flagged',
 
   const read = async () => (await (await page.request.get('/api/scan')).json()) as Scan;
   const before = await read();
-  expect(before.files).toBe(10);
+  expect(before.files).toBe(EXPECTED_TOTAL);
   expect(before.finished_at).not.toBeNull();
 
   await page.getByRole('button', { name: 'Neu einlesen' }).click();
@@ -32,6 +36,6 @@ test('the library is read at start and on demand, unreadable files are flagged',
     })
     .not.toBe(before.finished_at);
   await expect(page.getByRole('button', { name: 'Neu einlesen' })).toBeEnabled();
-  await expect(status).toContainText('10 Dateien');
+  await expect(status).toContainText(filesText);
   await expect(unreadable).toContainText('nicht lesbar');
 });

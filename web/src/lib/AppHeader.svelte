@@ -1,6 +1,8 @@
 <script lang="ts">
   import { api } from './api';
+  import { fetchHealth } from './health';
 
+  const health = fetchHealth();
   const me = api<{ username: string }>('/api/me');
 
   async function logout() {
@@ -13,7 +15,14 @@
 </script>
 
 <header>
-  <strong>PhotoCurator</strong>
+  <h1>PhotoCurator</h1>
+  {#await health}
+    <small></small>
+  {:then h}
+    <small>Version {h?.version}</small>
+  {:catch}
+    <small role="alert">Server nicht erreichbar</small>
+  {/await}
   {#await me then user}
     <span data-testid="current-user">{user.username}</span>
   {:catch}
@@ -23,6 +32,7 @@
 </header>
 
 <style>
+  h1 { margin: 0; font-size: 1.25rem; }
   header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
   button { min-height: 44px; min-width: 44px; padding: 0 0.75rem; font-size: 1rem; }
 </style>

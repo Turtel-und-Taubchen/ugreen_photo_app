@@ -1,6 +1,7 @@
 package library
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 )
@@ -49,16 +50,16 @@ func ListPhotos(db *sql.DB, after *ListCursor, limit int) ([]Photo, error) {
 	}
 	q += ` ORDER BY COALESCE(taken_at, '') DESC, id DESC LIMIT ?`
 	args = append(args, limit)
-	return queryPhotos(db, q, args)
+	return queryPhotos(context.Background(), db, q, args)
 }
 
 // AllPhotos returns every indexed file in the order of ListPhotos.
 func AllPhotos(db *sql.DB) ([]Photo, error) {
-	return queryPhotos(db, `SELECT `+photoColumns+` FROM photos ORDER BY COALESCE(taken_at, '') DESC, id DESC`, nil)
+	return queryPhotos(context.Background(), db, `SELECT `+photoColumns+` FROM photos ORDER BY COALESCE(taken_at, '') DESC, id DESC`, nil)
 }
 
-func queryPhotos(db *sql.DB, q string, args []any) ([]Photo, error) {
-	rows, err := db.Query(q, args...)
+func queryPhotos(ctx context.Context, db *sql.DB, q string, args []any) ([]Photo, error) {
+	rows, err := db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}

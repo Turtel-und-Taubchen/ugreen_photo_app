@@ -5,6 +5,12 @@
   const POLL_RUNNING_MS = 2000;
   const POLL_IDLE_MS = 30000;
 
+  interface Props {
+    /** Called with every status the server returned. */
+    onStatus?: (status: ScanStatus) => void;
+  }
+  let { onStatus }: Props = $props();
+
   let status = $state<ScanStatus | null>(null);
   let failed = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -17,6 +23,7 @@
     clearTimeout(timer);
     try {
       status = await request();
+      onStatus?.(status);
       failed = false;
     } catch {
       failed = true;
