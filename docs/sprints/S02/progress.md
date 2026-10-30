@@ -111,3 +111,6 @@
 - 2026-10-30 14:37:35 · gate · short-suites · started
 - 2026-10-30 14:38:33 · gate · e2e · started
 - 2026-10-30 14:44:44 · gate · e2e · done
+- 2026-10-30 14:47:04 · gate · roadmap-check · started
+- 2026-10-30 14:47:32 · gate · release-verify · started
+- 2026-10-30 14:49:02 · gate · release-verify · done
