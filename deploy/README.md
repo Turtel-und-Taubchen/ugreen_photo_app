@@ -38,8 +38,12 @@ Kopiere `.env.example` nach `.env` und trage die Werte ein:
 - `PORT`: Port im Heimnetz (Standard 8470)
 - `BIND_IP`: optionale Bindung an die LAN-IP des NAS
 - `PC_IMAGE`: Image-Name und Tag (Standard `photocurator:latest`)
+- `PC_SCAN_INTERVAL` (optional, Standard `15m`, mindestens `1m`): Abstand zwischen zwei automatischen Bibliotheks-Scans; bei Bedarf als Eintrag unter `environment:` der Compose-Datei setzen, nicht in `.env`
+- `PC_SCAN_QUIET` (optional, Standard `5m`, ebenfalls unter `environment:` der Compose-Datei): Ruhezeit; Dateien, die jünger als diese Zeit geändert wurden, werden erst im nächsten Scan erfasst. Das schützt vor halb verschobenen Phockup-Dateien.
 
 Beim Start prüft die App, dass der Fotopfad nicht `Inbox` enthält.
+
+Die App legt den Bibliotheksindex als `index.db` im Datenordner an. Löschen von `index.db` und ein Neustart bauen den Index neu auf.
 
 ## Nutzer anlegen
 

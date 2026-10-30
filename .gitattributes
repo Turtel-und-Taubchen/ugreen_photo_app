@@ -1,0 +1,2 @@
+# Fixture media must stay byte-exact: no EOL conversion, no text diff.
+testdata/library/** binary

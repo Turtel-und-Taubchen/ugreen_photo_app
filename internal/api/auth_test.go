@@ -53,7 +53,10 @@ type testServer struct {
 	checks   atomic.Int32 // password verifications actually run
 }
 
-func newTestServer(t *testing.T) *testServer {
+func newTestServer(t *testing.T) *testServer { return newTestServerWith(t, nil) }
+
+// newTestServerWith wires scan into the library deps; nil leaves the scan routes unregistered.
+func newTestServerWith(t *testing.T, scan api.ScanControl) *testServer {
 	t.Helper()
 	db, err := store.OpenAppDB(t.TempDir())
 	if err != nil {
@@ -77,7 +80,7 @@ func newTestServer(t *testing.T) *testServer {
 			}
 			return ok, err
 		},
-	})
+	}, api.LibraryDeps{Scan: scan})
 	return s
 }
 

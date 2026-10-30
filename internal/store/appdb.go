@@ -1,4 +1,4 @@
-// Package store opens the durable application database (app.db).
+// Package store opens the SQLite databases: the durable app.db and the index.db cache.
 package store
 
 import (
@@ -22,8 +22,7 @@ var migrations = []string{
 // OpenAppDB opens <dataDir>/app.db in WAL mode and applies pending migrations.
 func OpenAppDB(dataDir string) (*sql.DB, error) {
 	path := filepath.Join(dataDir, "app.db")
-	dsn := "file:" + filepath.ToSlash(path) + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
-	db, err := sql.Open("sqlite", dsn)
+	db, err := openSQLite(path)
 	if err != nil {
 		return nil, fmt.Errorf("app database %q cannot be opened: %v", path, err)
 	}

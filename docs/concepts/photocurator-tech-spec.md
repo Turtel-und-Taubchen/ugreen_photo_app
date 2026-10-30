@@ -22,7 +22,7 @@ dem UGREEN-Indexer).
 │   ├─ HTTP-Server: REST-API + statisches Svelte-Frontend (go:embed)             │
 │   ├─ Auth: Sessions, Login-Rate-Limit                                          │
 │   ├─ Scanner: Dateisystem-Walk, Delta über (Pfad, Größe, mtime)                │
-│   ├─ ExifTool-Pool: 1 Leseprozess + 1 Schreibprozess, je `-stay_open`          │
+│   ├─ ExifTool: Lesen je Block, 1 Schreibprozess `-stay_open`                    │
 │   ├─ Thumbnailer: Queue, N Worker → vipsthumbnail / ffmpeg (nice 10)           │
 │   ├─ Writer: serielle Job-Queue → Backup → ExifTool → Read-back → Index         │
 │   ├─ Geocoder: Nominatim-Proxy, globaler Limiter 1/s, Cache                    │
@@ -34,8 +34,8 @@ dem UGREEN-Indexer).
 ```
 
 **Ein Prozess, ein Container.** Kein Redis, kein separater DB-Server, keine Node-Laufzeit.
-ExifTool (Perl) läuft als Dauerprozess, weil ein Perl-Start pro Datei auf dem Pentium
-~150–300 ms kostet.
+ExifTool (Perl) schreibt über einen Dauerprozess, weil ein Perl-Start pro Datei auf dem Pentium
+~150–300 ms kostet. Lesen: ein ExifTool-Aufruf je Block, kein Dauerprozess.
 
 ### Komponenten (Go-Pakete, vorläufig)
 
@@ -208,7 +208,7 @@ täglich gelöscht.
 - Walk über `/photos`, Endungen `jpg jpeg heic heif png mp4 mov` (Groß/Klein egal), versteckte
   Ordner und `@eaDir`-artige Systemordner ignoriert.
 - Delta: neue oder geänderte (Größe/mtime) Dateien werden in Blöcken von ~200 an den
-  ExifTool-Leseprozess gegeben (`-json -n -G1 -struct -fast2` + gezielte Tag-Liste).
+  ExifTool-Aufruf gegeben (`-json -n -G1 -a`, kein `-fast2` (Videos mit moov hinter mdat verlieren sonst Datum und GPS), + gezielte Tag-Liste).
 - Gelöschte Dateien werden aus dem Index entfernt.
 - Aufnahmedatum: `DateTimeOriginal` → `CreateDate` (QuickTime, UTC-Korrektur) → Dateiname
   (`IMG-JJJJMMTT-WA…`, `VID-…`, `JJJJMMTT_hhmmss`) → mtime; die Quelle wird gespeichert.

@@ -36,6 +36,9 @@ describe('gitignore rules', () => {
 		for (const p of [
 			'deploy/.env.example',
 			'testdata/library/2024/07/sample.heic',
+			'testdata/library/2024/07/tagged.jpg',
+			'testdata/library/2024/08/clip.mp4',
+			'internal/metadata/photocurator.config',
 			'web/src/lib/data/x.ts'
 		]) {
 			expect(checkIgnore(p), p).toBe(1);

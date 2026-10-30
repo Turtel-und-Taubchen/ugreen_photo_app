@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchHealth } from './lib/health';
   import AppHeader from './lib/AppHeader.svelte';
+  import ScanStatus from './lib/ScanStatus.svelte';
   import Login from './routes/Login.svelte';
 
   const isLogin = location.pathname === '/login';
@@ -11,6 +12,7 @@
   <Login />
 {:else}
   <AppHeader />
+  <ScanStatus />
   <main>
     <h1>PhotoCurator</h1>
     {#await health}
