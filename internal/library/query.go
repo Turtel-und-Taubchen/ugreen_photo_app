@@ -51,6 +51,22 @@ type Detail struct {
 	NextID      *int64
 }
 
+// Group keys of the grid: the day is the first ten characters of taken_at, the month the first
+// seven. GroupCounts and selection resolution both build their keys from these, so a group
+// header and the files a selection takes for it can never disagree.
+const (
+	DayKeySQL   = `substr(taken_at, 1, 10)`
+	MonthKeySQL = `substr(taken_at, 1, 7)`
+)
+
+// MonthKey is the month group key ("2024-07") of a day key ("2024-07-12"); "" if too short.
+func MonthKey(day string) string {
+	if len(day) < 7 {
+		return ""
+	}
+	return day[:7]
+}
+
 // GroupCounts counts files per month and day of their taken date, newest first, and per
 // folder that follows the JJJJ/MM layout. Files without a taken date only add to Total.
 func GroupCounts(ctx context.Context, db *sql.DB) (Groups, error) {
@@ -58,7 +74,7 @@ func GroupCounts(ctx context.Context, db *sql.DB) (Groups, error) {
 	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM photos`).Scan(&g.Total); err != nil {
 		return g, err
 	}
-	rows, err := db.QueryContext(ctx, `SELECT substr(taken_at, 1, 10) AS day, count(*) FROM photos
+	rows, err := db.QueryContext(ctx, `SELECT `+DayKeySQL+` AS day, count(*) FROM photos
 		WHERE taken_at IS NOT NULL GROUP BY day ORDER BY day DESC`)
 	if err != nil {
 		return g, err
@@ -69,11 +85,12 @@ func GroupCounts(ctx context.Context, db *sql.DB) (Groups, error) {
 		if err := rows.Scan(&d.Day, &d.Count); err != nil {
 			return g, err
 		}
-		if len(d.Day) < 7 {
+		month := MonthKey(d.Day)
+		if month == "" {
 			continue
 		}
-		if n := len(g.Months); n == 0 || g.Months[n-1].Month != d.Day[:7] {
-			g.Months = append(g.Months, MonthGroup{Month: d.Day[:7], Days: []DayCount{}})
+		if n := len(g.Months); n == 0 || g.Months[n-1].Month != month {
+			g.Months = append(g.Months, MonthGroup{Month: month, Days: []DayCount{}})
 		}
 		m := &g.Months[len(g.Months)-1]
 		m.Count += d.Count

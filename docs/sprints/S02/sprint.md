@@ -22,7 +22,7 @@ Nominatim.
 - [x] 005 — Bibliotheks-Index aus den Dateien in Sortiert
 - [x] 006 — Thumbnails mit Cache für Fotos und Videos
 - [x] 007 — Fotoraster mit Gruppierung, Ordnernavigation und Detailansicht
-- [ ] 008 — Mehrfach-, Bereichs- und Gruppenauswahl
+- [x] 008 — Mehrfach-, Bereichs- und Gruppenauswahl
 - [ ] 011 — Hierarchische Kategorien definieren und als Baum anzeigen
 - [ ] 014 — Ortssuche und Reverse-Geocoding über Nominatim
 

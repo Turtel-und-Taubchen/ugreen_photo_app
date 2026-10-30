@@ -1,7 +1,7 @@
 import type { PhotoGroups } from '../photos';
 
 export const MONTH_HEADER_HEIGHT = 48;
-export const DAY_HEADER_HEIGHT = 36;
+export const DAY_HEADER_HEIGHT = 44;
 /** Upper bound of tiles in one window, overscan included, whatever the screen size. */
 export const MAX_TILES = 300;
 const MIN_COLUMNS = 3;

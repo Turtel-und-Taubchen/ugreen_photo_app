@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Thumbnail from '../Thumbnail.svelte';
-  import { fetchGroups, type PhotoGroups } from '../photos';
+  import { fetchGroups, type PhotoGroups, type PhotoItem } from '../photos';
   import { buildRows, columnsFor, monthForFolder, offsetOfMonth, tileSizeFor, windowAt, type Row } from './layout';
   import { createPhotoLoader } from './loader';
   import { dayLabel, monthLabel } from './labels';
   import MonthNav from './MonthNav.svelte';
+  import SelectionBar from '../SelectionBar.svelte';
+  import { selection } from '../selectionStore.svelte';
+  import { longpress } from '../longpress';
 
   interface Props {
     onOpen: (id: number) => void;
@@ -85,13 +88,40 @@
     });
   }
 
+  function onTileClick(event: MouseEvent, item: PhotoItem) {
+    const ref = { id: item.id, takenAt: item.takenAt };
+    if (event.shiftKey) selection.selectRange(ref);
+    else if (selection.active) selection.toggle(ref);
+    else onOpen(item.id);
+  }
+
+  // Photo whose action menu is open; only ever set while selecting.
+  let menuFor = $state<PhotoItem | null>(null);
+
+  function onTileLongPress(item: PhotoItem) {
+    const ref = { id: item.id, takenAt: item.takenAt };
+    if (selection.active) menuFor = item;
+    else selection.toggle(ref);
+  }
+
+  function rangeToMenuPhoto() {
+    if (menuFor) selection.selectRange({ id: menuFor.id, takenAt: menuFor.takenAt });
+    menuFor = null;
+  }
+
   const fileName = (relPath: string) => relPath.split('/').pop() ?? relPath;
 </script>
 
 <section class="grid" aria-label="Fotos">
   {#if groups}
-    <MonthNav folders={groups.folders} onPick={jump} />
+    <div class="toolbar">
+      <MonthNav folders={groups.folders} onPick={jump} />
+      {#if !selection.active}
+        <button type="button" class="action" onclick={() => selection.start()}>Auswählen</button>
+      {/if}
+    </div>
   {/if}
+  <SelectionBar />
   {#if failed}
     <p role="alert">Fotos konnten nicht geladen werden</p>
   {:else if groups && groups.total === 0}
@@ -112,11 +142,13 @@
             <div class="head">
               <h2>{monthLabel(row.month)}</h2>
               <span data-testid="group-count">{row.count}</span>
+              <button type="button" class="action" disabled={selection.isGroupFullySelected(row.month)} onclick={() => selection.selectGroup(row.month)}>Alle auswählen</button>
             </div>
           {:else if row.kind === 'day'}
             <div class="head">
               <h3>{dayLabel(row.day)}</h3>
               <span data-testid="group-count">{row.count}</span>
+              <button type="button" class="action" disabled={selection.isGroupFullySelected(row.day)} onclick={() => selection.selectGroup(row.day)}>Alle auswählen</button>
             </div>
           {:else}
             {#each photosOf(row) as { index, item } (index)}
@@ -124,14 +156,21 @@
                 {#if item}
                   <button
                     type="button"
+                    class="tile"
+                    class:selected={selection.active && selection.isSelected({ id: item.id, takenAt: item.takenAt })}
                     data-testid="grid-tile"
                     data-id={item.id}
                     data-taken={item.takenAt ?? ''}
                     aria-label={fileName(item.relPath)}
-                    onclick={() => onOpen(item.id)}
+                    aria-pressed={selection.active ? selection.isSelected({ id: item.id, takenAt: item.takenAt }) : undefined}
+                    onclick={(e) => onTileClick(e, item)}
+                    use:longpress={() => onTileLongPress(item)}
                   >
                     <Thumbnail id={item.id} mediaType={item.mediaType} thumbKey={item.thumbKey} label={fileName(item.relPath)} />
                   </button>
+                  {#if selection.active}
+                    <button type="button" class="detail" aria-label="Details öffnen" onclick={() => onOpen(item.id)}>⤢</button>
+                  {/if}
                 {:else}
                   <div class="placeholder" data-testid="grid-tile"></div>
                 {/if}
@@ -144,6 +183,16 @@
   </div>
 </section>
 
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape') menuFor = null; }} />
+
+{#if menuFor}
+  <!-- The backdrop turns any tap outside the menu into "close". -->
+  <div class="backdrop" role="presentation" onclick={() => (menuFor = null)}></div>
+  <div class="menu" role="menu" aria-label="Aktionen">
+    <button type="button" role="menuitem" disabled={!selection.state.anchor} onclick={rangeToMenuPhoto}>Bereich bis hier</button>
+  </div>
+{/if}
+
 <style>
   .grid { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .scroller { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; }
@@ -152,6 +201,15 @@
   .head { display: flex; align-items: baseline; gap: 0.5rem; height: 100%; padding: 0 4px; box-sizing: border-box; }
   h2, h3 { margin: 0; }
   .cell { position: absolute; top: 0; padding: 2px; box-sizing: border-box; }
-  button { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+  .toolbar { display: flex; gap: 0.5rem; }
+  .action { min-height: 44px; min-width: 44px; padding: 0 0.75rem; font-size: 1rem; }
+  .head .action { margin-left: auto; }
+  .tile { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+  .backdrop { position: fixed; inset: 0; z-index: 10; }
+  .menu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; display: flex; flex-direction: column; padding: 0.5rem; background: #fff; box-shadow: 0 -2px 8px #0004; }
+  .menu button { min-height: 44px; font-size: 1rem; }
+  .tile.selected { outline: 4px solid #1a73e8; outline-offset: -4px; opacity: 0.8; }
+  .detail { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; font-size: 1.25rem; background: #fffc; border-radius: 4px; }
+  button.tile { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
   .placeholder { width: 100%; height: 100%; background: #eee; }
 </style>

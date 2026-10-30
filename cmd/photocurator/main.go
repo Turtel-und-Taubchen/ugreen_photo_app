@@ -146,6 +146,7 @@ func serve(args []string) int {
 			CacheDir: thumbDir,
 		},
 		Photos: photoList{idxDB},
+		Index:  idxDB,
 	}), ReadHeaderTimeout: 10 * time.Second}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()

@@ -1,7 +1,7 @@
 ---
 id: 008
 title: Mehrfach-, Bereichs- und Gruppenauswahl
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-10-29
 epic: E1 Index & Ansicht
 estimate: 3
@@ -15,17 +15,17 @@ ganzen Tag oder Monat — auch Fotos, die noch nicht geladen sind. Am Handy ohne
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Im Auswahlmodus markiert ein Klick/Tippen ein Foto bzw. hebt die Markierung auf;
+- [x] **AC1** — Im Auswahlmodus markiert ein Klick/Tippen ein Foto bzw. hebt die Markierung auf;
   ein Zähler zeigt „n ausgewählt".
-- [ ] **AC2** — Am PC wählt Shift+Klick alle Fotos zwischen dem zuletzt markierten und dem
+- [x] **AC2** — Am PC wählt Shift+Klick alle Fotos zwischen dem zuletzt markierten und dem
   angeklickten aus.
-- [ ] **AC3** — Am Handy startet langes Drücken den Auswahlmodus; die Aktion „Bereich bis hier"
+- [x] **AC3** — Am Handy startet langes Drücken den Auswahlmodus; die Aktion „Bereich bis hier"
   wählt alle Fotos zwischen dem zuletzt markierten und dem aktuellen aus.
-- [ ] **AC4** — „Alle auswählen" an einer Tages- oder Monatsüberschrift wählt alle Fotos dieser
+- [x] **AC4** — „Alle auswählen" an einer Tages- oder Monatsüberschrift wählt alle Fotos dieser
   Gruppe aus, auch die noch nicht geladenen; der Zähler zeigt die richtige Gesamtzahl.
-- [ ] **AC5** — Die Auswahl bleibt beim Scrollen und beim Öffnen/Schließen der Detailansicht
+- [x] **AC5** — Die Auswahl bleibt beim Scrollen und beim Öffnen/Schließen der Detailansicht
   erhalten; „Auswahl aufheben" leert sie.
-- [ ] **AC6** — Die Auswahl wird an den Server als Filter plus ein-/ausgeschlossene IDs
+- [x] **AC6** — Die Auswahl wird an den Server als Filter plus ein-/ausgeschlossene IDs
   übertragen; eine Auswahl „ganzer Monat" mit 2.000 Fotos ergibt eine Anfrage mit höchstens den
   Ausnahmen als Einzel-IDs, und der Server löst sie in genau die erwarteten Dateien auf.
 
@@ -97,7 +97,7 @@ Reihenfolge: D1 → D2 → D3 → D4 → D5 (D3 hängt nicht an D1/D2).
 
 ## Deliverables
 
-- [ ] **D1 — Auswahl-Auflösung im Server** (`internal/library/selection.go`,
+- [x] **D1 — Auswahl-Auflösung im Server** (`internal/library/selection.go`,
   `internal/library/selection_test.go`). Typ `Selection` mit JSON-Form
   `{"filter":{"groups":["2024-07","2024-07-15"],"ranges":[[fromID,toID]]},"include_ids":[…],"exclude_ids":[…]}`.
   Semantik: Treffer = (Foto in einer Gruppe **oder** in einem Bereich **oder** in `include_ids`)
@@ -118,14 +118,14 @@ Reihenfolge: D1 → D2 → D3 → D4 → D5 (D3 hängt nicht an D1/D2).
   whichever end comes first", „an empty selection resolves to nothing", „an excluded id wins over
   its group and over include_ids", „count and resolve agree", „malformed group keys, unknown range
   ids and oversized lists are rejected".
-- [ ] **D2 — Endpunkt `POST /api/selection/count`** (`internal/api/selection.go`,
+- [x] **D2 — Endpunkt `POST /api/selection/count`** (`internal/api/selection.go`,
   `internal/api/selection_test.go`, Registrierung in `internal/api/server.go`; Handler-Muster und
   `writeJSON` wie in `internal/api/auth.go`). Body = `library.Selection`, Antwort
   `200 {"count": n}` aus `CountSelection`; Fehler aus `Validate` oder ungültiges JSON →
   `400 {"error": …}`; Body per `http.MaxBytesReader` auf 1 MiB begrenzt. Session und CSRF kommen von
   der bestehenden Middleware (nichts Eigenes bauen). Tests: „counting a month selection with
   exclusions answers the resolved count", „an invalid selection answers 400".
-- [ ] **D3 — Auswahlmodell im Frontend** (`web/src/lib/selection.ts`,
+- [x] **D3 — Auswahlmodell im Frontend** (`web/src/lib/selection.ts`,
   `web/src/lib/selection.test.ts`). Reines TypeScript, kein Svelte, kein Fetch. Foto-Referenz
   `{id, takenAt}`; Sortierung wie im Raster (`takenAt` absteigend, dann `id` absteigend). Zustand:
   `groups` (Monat/Tag), `ranges` (Endpunkt-Referenzen), `include`, `exclude` (Referenzen, damit die
@@ -142,7 +142,7 @@ Reihenfolge: D1 → D2 → D3 → D4 → D5 (D3 hängt nicht an D1/D2).
   as one group, not as ids", „selecting a group drops the exceptions inside it", „a range runs from
   the last marked photo, not from the last deselected", „clear empties the selection and leaves
   selection mode".
-- [ ] **D4 — Auswahlmodus im Raster (Desktop)** — Dateien: Raster-, Kachel- und
+- [x] **D4 — Auswahlmodus im Raster (Desktop)** — Dateien: Raster-, Kachel- und
   Überschrift-Komponenten aus 007 (erwartet unter `web/src/lib/grid/`), neu
   `web/src/lib/selectionStore.svelte.ts` (Svelte-5-`$state` um das Modell aus
   `web/src/lib/selection.ts` + Server-Zählung), neu `web/src/lib/SelectionBar.svelte`, neu
@@ -168,7 +168,7 @@ Reihenfolge: D1 → D2 → D3 → D4 → D5 (D3 hängt nicht an D1/D2).
   `filter.groups` = [Monat], `include_ids` leer, `exclude_ids` Länge 1, Zähler = Gruppenzahl − 1;
   ans Ende scrollen und zurück, Detail öffnen/schließen → Zähler und Markierung unverändert;
   „Auswahl aufheben" → Leiste weg.
-- [ ] **D5 — Langes Drücken und „Bereich bis hier" (Handy)** (neu `web/src/lib/longpress.ts` als
+- [x] **D5 — Langes Drücken und „Bereich bis hier" (Handy)** (neu `web/src/lib/longpress.ts` als
   Svelte-Action + `web/src/lib/longpress.test.ts`, Kachel-Komponente aus 007 (erwartet unter
   `web/src/lib/grid/`), `web/src/lib/SelectionBar.svelte` bzw. ein kleines Aktionsmenü daneben,
   `web/tests/e2e/selection.spec.ts`). Action: Zeiger (jeder `pointerType`) ≥ 500 ms gedrückt und
@@ -223,3 +223,14 @@ Reihenfolge: D1 → D2 → D3 → D4 → D5 (D3 hängt nicht an D1/D2).
   survives scrolling and the detail view" (abgefangener Request) (D1, D2, D3, D4)
 
 ## Done
+
+Server löst `(Gruppen ∪ Bereiche ∪ include_ids) \ exclude_ids` aus `index.db` auf (`internal/library/selection.go`), `POST /api/selection/count` liefert den Zähler; Frontend: reines Auswahlmodell, Store mit entprelltem Server-Zähler, Auswahlmodus im Raster (Knopf, Klick, Shift+Klick, „Alle auswählen", „Details öffnen"), langes Drücken + „Bereich bis hier".
+
+**Commit:** `008: Mehrfach-/Bereichs-/Gruppenauswahl — Auflösung + /api/selection/count, Auswahlmodell, Rasterauswahl Desktop + Handy + E2E`
+
+**Verifikation (enge Gate):** `npm --prefix web run build` + Docker-Runtime-Image, `docker build --target test .` + vitest (43), `--target lint` + eslint, `svelte-check` (0 Fehler), `cd web && npx playwright test tests/e2e/selection.spec.ts` (2/2) — alles grün. Volle Gate (`e2e`-Gesamtlauf) liegt beim Sprint. Review: clean agent, PASS, 1 Zyklus.
+AC → Test: AC1 e2e „selecting photos one by one…" + selection.test.ts „toggling…"; AC2 e2e + selection.test.ts „a range runs…" + Go „a range between two ids…"; AC3 e2e „on a phone a long press…" + longpress.test.ts (2); AC4 e2e + Go „a day group and an include id…"; AC5 e2e + selection.test.ts „clear empties…"; AC6 Go (4 Tests) + `TestCountingAMonthSelectionWithExclusionsAnswersTheResolvedCount` + selection.test.ts (2) + e2e (Request). Alle gelaufen und grün; Go-Testnamen nur über grüne Docker-Teststufe + Namen in den Dateien belegt (kein `-v`). Keine `manual residue`.
+
+**Decisions:** Plan-Entscheidungen umgesetzt. Zusätzlich: `ErrInvalidSelection` (errors.Is → 400, sonst 500); Bereichsreihenfolge `(COALESCE(taken_at,''), id)`, undatierte Fotos können Endpunkt sein und sortieren zuletzt; Gruppenschlüssel im Client per `slice(0,7|10)` des Textes wie serverseitig `substr`; `DayKeySQL`/`MonthKeySQL`/`MonthKey` aus 007 herausgezogen (query.go dabei CRLF→LF); neues `LibraryDeps.Index`, Route nur bei gesetztem Index; `DAY_HEADER_HEIGHT` 36→44 (Tippziel); Fixture: `weights[2]=8` → Monat 2023-03 mit ca. 540 Fotos (>DOM-Limit); „Bereich bis hier"-Menü als Bottom Sheet in `PhotoGrid.svelte`; E2E läuft gegen das Image `photocurator:dev` (nach Frontend-/Go-Änderung neu bauen).
+**Bewusst nicht behoben (Review-Funde):** keine Tests für Verwerfen veralteter Zähler-Antworten und für `takenAt = null` (Logik implementiert und durch Code geprüft; Store-Test bräuchte Svelte-Runes-Testaufbau); Zähler-Fehler lassen alte Zahl stehen und der Client begrenzt Bereiche nicht auf 500 (Randfall, kein AC); Tech-Spec-Endpunkttabelle um `/api/selection/count` ergänzen bleibt offen; `role="menu"` ohne Fokusverwaltung.
+tiers: D 5 / hard 0 · review default · cycles 0 · agents 7

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"time"
@@ -24,6 +25,8 @@ type LibraryDeps struct {
 	Scan   ScanControl
 	Thumbs *ThumbDeps
 	Photos PhotoLister
+	// Index is index.db; it serves the selection endpoints.
+	Index *sql.DB
 }
 
 type unreadableJSON struct {

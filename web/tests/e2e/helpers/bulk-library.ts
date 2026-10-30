@@ -37,6 +37,8 @@ const pad = (n: number, width = 2) => String(n).padStart(width, '0');
  */
 export function bulkPlan(): BulkPlan {
   const weights = Array.from({ length: MONTHS }, (_, m) => 1 + ((m * 7) % 5));
+  // One month well above the grid's 300-tile DOM limit, so selecting it exercises virtualization.
+  weights[2] = 8;
   const sum = weights.reduce((a, b) => a + b, 0);
   const counts = weights.map((w) => Math.floor((BULK_FILES * w) / sum));
   let rest = BULK_FILES - counts.reduce((a, b) => a + b, 0);
