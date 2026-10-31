@@ -55,7 +55,7 @@ der der Spike auf dem NAS durchgeführt und ausgewertet wird.
 | --- | --- | --- | --- |
 | E7 | Beschreibung im Batch setzen (`dc:description` u. a.) | 3 | Offener Punkt 2 im Konzept — evtl. ins MVP |
 | E7 | Tags umbenennen/zusammenführen über alle Dateien | 8 | Massenschreiben, braucht bewährten Writer |
-| E7 | Aufnahmedatum setzen (WhatsApp-Bilder ohne Datum) | 5 | Achtung: beeinflusst UGREEN-Zeitleiste |
+| E7 | Aufnahmedatum setzen (WhatsApp-Bilder ohne Datum) | 5 | Achtung: beeinflusst UGREEN-Zeitleiste. Arbeitsliste `Sortiert/unknown` (Phockup legt Dateien ohne EXIF-Datum dort ab); Vorschlag: Datum aus Dateiname (`IMG-JJJJMMTT-WA…`, „good enough“), Uhrzeit aus mtime bei gleichem Tag, sonst 00:00; `DateTimeOriginal` per Writer-Job mit Backup/Undo. Kein Verschieben durch PhotoCurator — Zurücklegen in die Inbox manuell, Phockup sortiert ein |
 | E8 | Eigene Timeline- und Kartenansicht zum Durchstöbern | 13 | Laut Auftrag nicht im MVP |
 | E9 | KI-Vorschläge für Tags | 13+ | Ressourcen auf dem NAS kritisch; ggf. extern |
 | E10 | Zugriff von unterwegs | 5 | Sicherheitskonzept nötig (VPN/Reverse-Proxy/2FA) |
